@@ -53,6 +53,8 @@ th{background:#f1f5f9;padding:9px 10px;font-size:9px;font-weight:700;letter-spac
 th:nth-child(2){text-align:center;}th:nth-child(3),th:nth-child(4){text-align:right;}
 td{padding:10px;border-bottom:1px solid #f1f5f9;color:var(--steel);}
 td:nth-child(2){text-align:center;}td:nth-child(3),td:nth-child(4){text-align:right;}
+tr.row-zero td{color:#94a3b8;font-style:italic;}
+tr.row-zero td:nth-child(2),tr.row-zero td:nth-child(3),tr.row-zero td:nth-child(4){font-style:normal;}
 .totals{display:flex;justify-content:flex-end;margin-bottom:18px;padding-top:12px;border-top:2px solid var(--ink);}
 .total-row{display:flex;gap:24px;font-size:18px;font-weight:800;}
 .total-lbl{color:var(--steel);}
@@ -223,9 +225,17 @@ function extractEmail(d){
 
 function renderEstimate(d){
   const isInv=d.type==='invoice';
-  const items=(d.lineItems||[]).filter(li=>(li.desc||'').trim()&&(parseFloat(li.qty)||0)>0);
+  const items=(d.lineItems||[]).filter(li=>(li.desc||'').trim());
   const total=calcTotal(d);
-  const rows=items.map(li=>`<tr><td>${esc(li.desc)}</td><td>${li.qty}</td><td>${fmt(parseFloat(li.price||0))}</td><td>${fmt((parseFloat(li.qty)||0)*(parseFloat(li.price)||0))}</td></tr>`).join('');
+  const rows=items.map(li=>{
+    const qty=parseFloat(li.qty)||0;
+    const price=parseFloat(li.price)||0;
+    if(qty===0){
+      // Zero-qty: show description only, blank out qty/price/total
+      return `<tr class="row-zero"><td>${esc(li.desc)}</td><td>—</td><td>—</td><td>—</td></tr>`;
+    }
+    return `<tr><td>${esc(li.desc)}</td><td>${li.qty}</td><td>${fmt(price)}</td><td>${fmt(qty*price)}</td></tr>`;
+  }).join('');
   const alreadySigned=!!d.signature;
   const html=`
   <div class="head">
