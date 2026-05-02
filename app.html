@@ -1445,6 +1445,8 @@ body:not(.role-owner):not(.role-manager) .role-financial-only{display:none!impor
     <button class="btn btn-ghost btn-sm" onclick="generateCustomerLink()">🔗 Customer Link</button>
     <button class="btn btn-ghost btn-sm" onclick="openWorkOrder()">🔧 Work Order</button>
     <button class="btn btn-ghost btn-sm" onclick="openMaterialOrder()">📦 Material Order</button>
+    <button class="btn btn-ghost btn-sm" onclick="markDocOutcome('won')" id="docWonBtn" title="Mark this estimate as Won (closed/approved)">🏆 Won</button>
+    <button class="btn btn-ghost btn-sm" onclick="markDocOutcome('lost')" id="docLostBtn" title="Mark this estimate as Lost (didn't close)">✗ Lost</button>
     <button class="btn btn-danger btn-sm" onclick="deleteDoc()" title="Delete this document">🗑 Delete</button>
     <button class="btn btn-ghost btn-sm" id="docSendBtn" onclick="sendDoc()">Send →</button>
   </div>
@@ -1964,17 +1966,48 @@ function _docJobType(d){
   return types[0]||'Other';
 }
 
+// When was the deal closed? Used for date-window filtering in Reports.
+// Priority: closed_date (manual mark) > signature_date > doc date > created.
+function _docCloseDate(d){
+  if(d.closedDate){const t=new Date(d.closedDate);if(!isNaN(t))return t;}
+  if(d.signatureDate){const t=new Date(d.signatureDate);if(!isNaN(t))return t;}
+  if(d.date){const t=new Date(d.date);if(!isNaN(t))return t;}
+  if(d.created){const t=new Date(d.created);if(!isNaN(t))return t;}
+  return null;
+}
+// Is this estimate counted as won? Either explicitly marked won OR has a
+// signature on file (real customer-signed via the portal).
+function _isDocWon(d){
+  if(d.outcome==='won') return true;
+  if(d.signatureDate&&d.signatureDate!=='') return true;
+  if(d.signature&&d.signature!=='') return true;
+  // Old code path: status was set to signed by something
+  if(d.status==='signed') return true;
+  return false;
+}
+function _isDocLost(d){return d.outcome==='lost';}
+
 function renderReports(){
   const win=_reportWindow();
-  // ── Filter docs to estimates in window ──────────────────────
+  // ── Filter docs to estimates ────────────────────────────────
   const allEst=docs.filter(d=>d.type==='estimate');
+  // Won estimates: closeDate falls inside the window. closeDate prefers
+  // manual closed_date so old jobs marked today land in today's month.
+  const wonEst=allEst.filter(d=>{
+    if(!_isDocWon(d)) return false;
+    const t=_docCloseDate(d);
+    return t&&t>=win.start&&t<win.end;
+  });
+  // Breakdown: signature-signed vs manually marked
+  const sigSigned=wonEst.filter(d=>(d.signatureDate&&d.signatureDate!=='')||(d.signature&&d.signature!==''));
+  const manualClosed=wonEst.filter(d=>!sigSigned.includes(d));
+  // For "estimates created in window" we still use the original creation date
   const winEst=allEst.filter(d=>{const t=_docDate(d);return t&&t>=win.start&&t<win.end;});
-  const signedEst=winEst.filter(d=>d.status==='signed'||d.signatureDate);
   // ── Filter leads to ones created in window ──────────────────
   const winLeads=leads.filter(l=>{const t=_leadDate(l);return t&&t>=win.start&&t<win.end;});
-  // ── Revenue + cost ───────────────────────────────────────────
+  // ── Revenue + cost (from won estimates) ─────────────────────
   let revenue=0,matCost=0,laborCost=0,otherCost=0,jobsWithCostData=0;
-  signedEst.forEach(d=>{
+  wonEst.forEach(d=>{
     const tot=calcDocTotal(d);
     revenue+=tot.grand||0;
     const mc=parseFloat(d.matCost)||0;
@@ -1986,45 +2019,49 @@ function renderReports(){
   const totalCost=matCost+laborCost+otherCost;
   const profit=revenue-totalCost;
   const margin=revenue>0?(profit/revenue*100):0;
-  // ── Close rate: leads created in window that have a signed estimate ──
-  // Per Blake's spec: lead → signed estimate = win.
+  // ── Close rate: leads created in window that have a won estimate ────
   const wonLeads=winLeads.filter(l=>{
     if(!l.estId) return false;
     const est=docs.find(d=>d.id===l.estId);
-    return est&&(est.status==='signed'||est.signatureDate);
+    return est&&_isDocWon(est);
   });
   const closeRate=winLeads.length>0?(wonLeads.length/winLeads.length*100):0;
-  // ── Avg job value (signed only) ──────────────────────────────
-  const avgJob=signedEst.length>0?(revenue/signedEst.length):0;
+  // ── Avg job value (won only) ────────────────────────────────
+  const avgJob=wonEst.length>0?(revenue/wonEst.length):0;
   // ── Cost-data warning if margin math is questionable ─────────
   const warnEl=document.getElementById('rptCostWarn');
-  if(signedEst.length>0&&jobsWithCostData<signedEst.length){
-    const missing=signedEst.length-jobsWithCostData;
+  if(wonEst.length>0&&jobsWithCostData<wonEst.length){
+    const missing=wonEst.length-jobsWithCostData;
     warnEl.style.display='block';
-    warnEl.textContent=`⚠ Profit margin assumes cost is entered on each estimate. ${missing} of ${signedEst.length} signed estimates this ${reportRange} have no cost data — actual margin is likely lower than shown.`;
+    warnEl.textContent=`⚠ Profit margin assumes cost is entered on each estimate. ${missing} of ${wonEst.length} won estimate${wonEst.length===1?'':'s'} this ${reportRange} have no cost data — actual margin is likely lower than shown.`;
   } else {
     warnEl.style.display='none';
   }
   // ── Render the cards ─────────────────────────────────────────
   const fmt$=v=>'$'+Math.round(v).toLocaleString('en-US');
   const fmtPct=v=>v.toFixed(1)+'%';
+  // Build the "X signature-signed · Y manually closed" sub-line
+  let breakdownTxt='';
+  if(sigSigned.length&&manualClosed.length) breakdownTxt=`${sigSigned.length} signed · ${manualClosed.length} marked won`;
+  else if(sigSigned.length) breakdownTxt=`${sigSigned.length} signed`;
+  else if(manualClosed.length) breakdownTxt=`${manualClosed.length} marked won`;
   document.getElementById('rptRevenue').textContent=fmt$(revenue);
-  document.getElementById('rptRevenueSub').textContent=`${signedEst.length} signed estimate${signedEst.length===1?'':'s'} · ${win.label}`;
+  document.getElementById('rptRevenueSub').textContent=`${wonEst.length} won estimate${wonEst.length===1?'':'s'}${breakdownTxt?' ('+breakdownTxt+')':''} · ${win.label}`;
   document.getElementById('rptMargin').textContent=revenue>0?fmtPct(margin):'—';
   document.getElementById('rptMarginSub').textContent=revenue>0?`${fmt$(profit)} profit on ${fmt$(totalCost)} cost`:'No revenue yet';
   document.getElementById('rptCloseRate').textContent=winLeads.length>0?fmtPct(closeRate):'—';
   document.getElementById('rptCloseRateSub').textContent=winLeads.length>0?`${wonLeads.length} won / ${winLeads.length} new lead${winLeads.length===1?'':'s'}`:'No leads in window';
-  document.getElementById('rptAvgJob').textContent=signedEst.length>0?fmt$(avgJob):'—';
-  document.getElementById('rptAvgJobSub').textContent=signedEst.length>0?`Across ${signedEst.length} signed job${signedEst.length===1?'':'s'}`:'No signed jobs';
+  document.getElementById('rptAvgJob').textContent=wonEst.length>0?fmt$(avgJob):'—';
+  document.getElementById('rptAvgJobSub').textContent=wonEst.length>0?`Across ${wonEst.length} won job${wonEst.length===1?'':'s'}`:'No won jobs';
   // ── Jobs by type ────────────────────────────────────────────
   const typeCounts={};
-  signedEst.forEach(d=>{const t=_docJobType(d);typeCounts[t]=(typeCounts[t]||0)+1;});
+  wonEst.forEach(d=>{const t=_docJobType(d);typeCounts[t]=(typeCounts[t]||0)+1;});
   const typeEntries=Object.entries(typeCounts).sort((a,b)=>b[1]-a[1]);
   const maxCount=typeEntries.length?typeEntries[0][1]:1;
   const typeEmoji={'Roofing':'🏠','Siding':'🪟','Gutters':'🌧️','Soffit & Fascia':'📐','Other':'📦'};
   const jtEl=document.getElementById('rptJobTypes');
   if(!typeEntries.length){
-    jtEl.innerHTML='<div class="rpt-empty">No signed jobs in this window.</div>';
+    jtEl.innerHTML='<div class="rpt-empty">No won jobs in this window. Mark some estimates as Won to see the breakdown.</div>';
   } else {
     jtEl.innerHTML=typeEntries.map(([t,c])=>{
       const pct=Math.round(c/maxCount*100);
@@ -2045,7 +2082,9 @@ function renderReports(){
     ['Total cost',fmt$(totalCost)],
     ['Profit',fmt$(profit)],
     ['Estimates created',String(winEst.length)],
-    ['Estimates signed',String(signedEst.length)],
+    ['Won (total)',String(wonEst.length)],
+    ['  Signature-signed',String(sigSigned.length)],
+    ['  Manually marked',String(manualClosed.length)],
     ['New leads',String(winLeads.length)],
     ['Leads won',String(wonLeads.length)],
   ];
@@ -2910,7 +2949,7 @@ const leadToDb=l=>({id:l.id,name:l.name,contact:l.contact,phone:l.phone,email:l.
 const _parseMoData=v=>{try{return typeof v==='string'?JSON.parse(v||'{}'):(v||{});}catch{return {};}};
 const dbToDoc=r=>{
   const mo=_parseMoData(r.mat_order_data);
-  return {id:r.id,type:r.type||'estimate',status:r.status||'draft',num:r.num||'',clientName:r.client_name||'',clientContact:r.client_contact||'',clientAddr:r.client_addr||'',date:r.date||'',dueDate:r.due_date||'',scope:r.scope||'',lineItems:safeParseArr(r.line_items),tax:r.tax||0,discount:r.discount||0,notes:r.notes||'',manualTotal:r.manual_total||'',created:r.created||Date.now(),signature:r.signature||'',signatureName:r.signature_name||'',signatureDate:r.signature_date||'',leadSource:r.lead_source||'',activity:safeParseArr(r.activity),checklist:safeParseArr(r.checklist),extras:safeParseArr(r.extras),pmId:r.pm_id||'',arrival:r.arrival||'',sourceEstId:r.source_est_id||null,sourceEstNum:r.source_est_num||'',matCost:r.mat_cost!=null?r.mat_cost:'',laborCost:r.labor_cost!=null?r.labor_cost:'',otherCost:r.other_cost!=null?r.other_cost:'',
+  return {id:r.id,type:r.type||'estimate',status:r.status||'draft',num:r.num||'',clientName:r.client_name||'',clientContact:r.client_contact||'',clientAddr:r.client_addr||'',date:r.date||'',dueDate:r.due_date||'',scope:r.scope||'',lineItems:safeParseArr(r.line_items),tax:r.tax||0,discount:r.discount||0,notes:r.notes||'',manualTotal:r.manual_total||'',created:r.created||Date.now(),signature:r.signature||'',signatureName:r.signature_name||'',signatureDate:r.signature_date||'',leadSource:r.lead_source||'',activity:safeParseArr(r.activity),checklist:safeParseArr(r.checklist),extras:safeParseArr(r.extras),pmId:r.pm_id||'',arrival:r.arrival||'',sourceEstId:r.source_est_id||null,sourceEstNum:r.source_est_num||'',matCost:r.mat_cost!=null?r.mat_cost:'',laborCost:r.labor_cost!=null?r.labor_cost:'',otherCost:r.other_cost!=null?r.other_cost:'',outcome:r.outcome||null,closedDate:r.closed_date||null,
   // Material order fields (stored as JSON)
   moJobName:mo.moJobName||'',moPhone:mo.moPhone||'',moEmail:mo.moEmail||'',
   moLayers:mo.moLayers||'',moStories:mo.moStories||'',moCedar:mo.moCedar||'',moRedeck:mo.moRedeck||'',
@@ -2929,7 +2968,7 @@ const docToDb=d=>{
     moMaterialType:d.moMaterialType||'roofing',
     moMaterials:d.moMaterials||{}
   };
-  return {id:d.id,type:d.type||'estimate',status:d.status||'draft',num:d.num||'',client_name:d.clientName||'',client_contact:d.clientContact||'',client_addr:d.clientAddr||'',date:d.date||null,due_date:d.dueDate||null,scope:d.scope||'',line_items:JSON.stringify(d.lineItems||[]),tax:parseFloat(d.tax)||0,discount:parseFloat(d.discount)||0,notes:d.notes||'',manual_total:(d.manualTotal!=null&&d.manualTotal!=='')?parseFloat(d.manualTotal):null,created:d.created||Date.now(),signature:d.signature||'',signature_name:d.signatureName||'',signature_date:d.signatureDate||null,lead_source:d.leadSource||'',activity:JSON.stringify(d.activity||[]),checklist:JSON.stringify(d.checklist||[]),extras:JSON.stringify(d.extras||[]),pm_id:d.pmId||'',arrival:d.arrival||'',source_est_id:d.sourceEstId||null,source_est_num:d.sourceEstNum||'',mat_cost:(d.matCost!=null&&d.matCost!=='')?parseFloat(d.matCost):null,labor_cost:(d.laborCost!=null&&d.laborCost!=='')?parseFloat(d.laborCost):null,other_cost:(d.otherCost!=null&&d.otherCost!=='')?parseFloat(d.otherCost):null,mat_order_data:JSON.stringify(moData),user_id:currentUser?.id||null,updated_at:new Date().toISOString()};
+  return {id:d.id,type:d.type||'estimate',status:d.status||'draft',num:d.num||'',client_name:d.clientName||'',client_contact:d.clientContact||'',client_addr:d.clientAddr||'',date:d.date||null,due_date:d.dueDate||null,scope:d.scope||'',line_items:JSON.stringify(d.lineItems||[]),tax:parseFloat(d.tax)||0,discount:parseFloat(d.discount)||0,notes:d.notes||'',manual_total:(d.manualTotal!=null&&d.manualTotal!=='')?parseFloat(d.manualTotal):null,created:d.created||Date.now(),signature:d.signature||'',signature_name:d.signatureName||'',signature_date:d.signatureDate||null,lead_source:d.leadSource||'',activity:JSON.stringify(d.activity||[]),checklist:JSON.stringify(d.checklist||[]),extras:JSON.stringify(d.extras||[]),pm_id:d.pmId||'',arrival:d.arrival||'',source_est_id:d.sourceEstId||null,source_est_num:d.sourceEstNum||'',mat_cost:(d.matCost!=null&&d.matCost!=='')?parseFloat(d.matCost):null,labor_cost:(d.laborCost!=null&&d.laborCost!=='')?parseFloat(d.laborCost):null,other_cost:(d.otherCost!=null&&d.otherCost!=='')?parseFloat(d.otherCost):null,outcome:d.outcome||null,closed_date:d.closedDate||null,mat_order_data:JSON.stringify(moData),user_id:currentUser?.id||null,updated_at:new Date().toISOString()};
 };
 const dbToTmpl=r=>({id:r.id,name:r.name,scope:r.scope||'',lineItems:safeParseArr(r.line_items),tax:r.tax||0,discount:r.discount||0,notes:r.notes||'',created:r.created||Date.now()});
 const tmplToDb=t=>({id:t.id,name:t.name,scope:t.scope||'',line_items:JSON.stringify(t.lineItems||[]),tax:parseFloat(t.tax)||0,discount:parseFloat(t.discount)||0,notes:t.notes||'',created:t.created||Date.now(),user_id:currentUser?.id||null,updated_at:new Date().toISOString()});
@@ -4131,6 +4170,109 @@ async function deleteDoc(){
   catch(e){setSS('error','Delete failed');console.error(e);}
 }
 
+// ── DEAL OUTCOME (Won / Lost) ────────────────────────────────
+// Manual marking of estimates so old jobs (signed before this app
+// existed) show up in Reports. Updates the `outcome` and `closedDate`
+// columns. Counts equally with signature-signed estimates in Reports.
+function _promptOutcomeDate(defaultDate){
+  // Returns a normalized ISO date string (YYYY-MM-DD) or null if cancelled
+  const today=new Date();
+  const def=defaultDate||today.toISOString().slice(0,10);
+  const input=prompt('When was this deal closed?\n\nEnter a date as YYYY-MM-DD\n(today = '+today.toISOString().slice(0,10)+')',def);
+  if(input===null) return null;
+  const trimmed=input.trim();
+  if(!trimmed) return null;
+  // Accept both YYYY-MM-DD and looser MM/DD/YYYY
+  let d;
+  if(/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) d=new Date(trimmed+'T12:00:00');
+  else d=new Date(trimmed);
+  if(isNaN(d)){alert('Could not understand that date. Please use YYYY-MM-DD format.');return null;}
+  return d.toISOString();
+}
+
+async function markDocOutcome(outcome){
+  if(!editDocId){alert('No estimate open.');return;}
+  const d=docs.find(x=>x.id===editDocId);
+  if(!d){alert('Estimate not found.');return;}
+  if(d.type!=='estimate'){
+    alert('Only estimates can be marked Won or Lost.');
+    return;
+  }
+  const label=outcome==='won'?'Won':'Lost';
+  // Default to existing closed_date if previously set, else signature date, else today
+  const defaultDate=(d.closedDate||d.signatureDate||'').slice(0,10);
+  const iso=_promptOutcomeDate(defaultDate);
+  if(!iso) return;
+  d.outcome=outcome;
+  d.closedDate=iso;
+  // If marking won, also push status to 'signed' for backward compat with
+  // any code path that reads status. Don't undo signature — just status.
+  if(outcome==='won'&&d.status!=='signed') d.status='signed';
+  // Activity log
+  d.activity=d.activity||[];
+  d.activity.push({ts:new Date().toISOString(),msg:'Marked '+label+' on '+iso.slice(0,10)});
+  saveDocs();
+  saveDocSync(d);
+  setSS('syncing','Saving…');
+  try{
+    await sb.upsert('docs',docToDb(d));
+    setSS('synced',label+' ✓');setTimeout(()=>document.getElementById('syncLbl').textContent='',2000);
+    if(typeof renderDocList==='function') renderDocList();
+    // Re-render the editor so the visible status badge updates if it's there
+    if(typeof openDocEditor==='function'&&editDocId===d.id){
+      // Refresh the displayed status without reopening the whole editor
+      updateDocStatusUI();
+    }
+  }catch(e){
+    console.error('mark outcome failed:',e);
+    setSS('error','Save failed');
+    alert('Failed to save. '+(e.message||e));
+  }
+}
+
+// Best-effort UI refresh after marking — finds the status pill if any
+function updateDocStatusUI(){
+  const d=docs.find(x=>x.id===editDocId);if(!d)return;
+  const pill=document.querySelector('#docEditor .doc-status-pill,#docEditor [data-status-pill]');
+  if(pill) pill.textContent=(d.outcome||d.status||'draft').toUpperCase();
+}
+
+async function bulkMarkOutcome(outcome){
+  if(!bulkMode||bulkMode!=='docs'||!bulkSelected.size) return;
+  const ids=Array.from(bulkSelected);
+  // Filter to estimates only
+  const targets=docs.filter(d=>ids.includes(d.id)&&d.type==='estimate');
+  if(!targets.length){
+    alert('No estimates selected. (Work orders and material orders can\'t be marked Won/Lost.)');
+    return;
+  }
+  const label=outcome==='won'?'Won':'Lost';
+  const iso=_promptOutcomeDate();
+  if(!iso) return;
+  if(!confirm(`Mark ${targets.length} estimate${targets.length===1?'':'s'} as ${label} on ${iso.slice(0,10)}?\n\nThis updates Reports immediately.`)) return;
+  setSS('syncing','Saving…');
+  let okCount=0,failCount=0;
+  for(const d of targets){
+    d.outcome=outcome;
+    d.closedDate=iso;
+    if(outcome==='won'&&d.status!=='signed') d.status='signed';
+    d.activity=d.activity||[];
+    d.activity.push({ts:new Date().toISOString(),msg:'Bulk marked '+label+' on '+iso.slice(0,10)});
+    try{
+      await sb.upsert('docs',docToDb(d));
+      okCount++;
+    }catch(e){
+      console.error('bulk outcome',d.id,e);
+      failCount++;
+    }
+  }
+  saveDocs();
+  if(failCount){setSS('error',`Updated ${okCount}, ${failCount} failed`);}
+  else{setSS('synced',`Updated ${okCount} ✓`);setTimeout(()=>document.getElementById('syncLbl').textContent='',2500);}
+  exitBulkMode();
+  if(typeof renderDocList==='function') renderDocList();
+}
+
 // ── BULK DELETE MODE ────────────────────────────────────────
 // Generic system shared by leads list and docs list.
 // When `bulkMode` is set, cards become selectable and the floating
@@ -4155,6 +4297,11 @@ function enterBulkMode(which){
   const btnId=which==='docs'?'docBulkBtn':'leadBulkBtn';
   const btn=document.getElementById(btnId);
   if(btn){btn.textContent='✓ Done';btn.classList.add('active');}
+  // Outcome buttons only make sense for estimates (docs mode)
+  const wonBtn=document.getElementById('bulkWonBtn');
+  const lostBtn=document.getElementById('bulkLostBtn');
+  if(wonBtn)  wonBtn.style.display =(which==='docs')?'':'none';
+  if(lostBtn) lostBtn.style.display=(which==='docs')?'':'none';
   showBulkBar();
   rerenderForBulk();
 }
@@ -4569,6 +4716,11 @@ function saveSignature(){
   d.signature=dataUrl;
   d.signatureName=name;
   d.signatureDate=new Date().toISOString();
+  // Mark the deal as signed + won. Reports counts both signed status
+  // and outcome='won' so this is the single source of truth.
+  d.status='signed';
+  d.outcome=d.outcome||'won';
+  d.closedDate=d.closedDate||d.signatureDate;
   // Make sure it lands in the docs array
   if(!docs.find(x=>x.id===d.id)) docs.push(d);
   saveDoc();
@@ -7634,6 +7786,8 @@ init();
   <span class="bulk-action-count" id="bulkActionCount">0 selected</span>
   <button class="btn btn-ghost btn-sm" onclick="bulkSelectAll()">Select All</button>
   <button class="btn btn-ghost btn-sm" onclick="bulkClear()">Clear</button>
+  <button class="btn btn-ghost btn-sm" onclick="bulkMarkOutcome('won')" id="bulkWonBtn" style="display:none">🏆 Mark Won</button>
+  <button class="btn btn-ghost btn-sm" onclick="bulkMarkOutcome('lost')" id="bulkLostBtn" style="display:none">✗ Mark Lost</button>
   <button class="btn btn-danger btn-sm" onclick="bulkDelete()">🗑 Delete Selected</button>
   <button class="btn btn-ghost btn-sm" onclick="exitBulkMode()">Cancel</button>
 </div>
