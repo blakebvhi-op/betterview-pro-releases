@@ -249,6 +249,18 @@ header{position:fixed;top:0;left:0;right:0;z-index:50;height:calc(var(--hh) + en
 .lcval{font-family:'Bebas Neue',sans-serif;font-size:15px;color:var(--amber);letter-spacing:1px;}
 .lbadge{font-size:9px;padding:2px 7px;border-radius:4px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;}
 .lcaddr{font-size:10px;color:var(--muted);margin-top:3px;}
+
+/* Linked Work Order card on the job modal */
+.linked-wo-card{display:flex;align-items:center;gap:10px;padding:10px 12px;background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.4);border-radius:8px;cursor:pointer;transition:all .12s;}
+.linked-wo-card:hover{background:rgba(245,158,11,.14);border-color:#f59e0b;}
+.linked-mo-card{background:rgba(34,197,94,.08);border-color:rgba(34,197,94,.4);}
+.linked-mo-card:hover{background:rgba(34,197,94,.14);border-color:#22c55e;}
+.linked-mo-card .linked-wo-arrow{color:#22c55e;}
+.linked-wo-icon{font-size:20px;flex-shrink:0;}
+.linked-wo-text{flex:1;min-width:0;}
+.linked-wo-title{font-family:'DM Sans',sans-serif;font-size:13px;color:var(--white);font-weight:600;}
+.linked-wo-sub{font-family:'DM Sans',sans-serif;font-size:11px;color:var(--muted);margin-top:2px;}
+.linked-wo-arrow{font-size:18px;color:var(--amber);flex-shrink:0;}
 .lcact{font-size:10px;color:#64748b;margin-top:5px;padding-top:5px;border-top:1px dashed rgba(148,163,184,.15);font-style:italic;}
 .type-tags{display:flex;flex-wrap:wrap;gap:7px;margin-top:4px;}
 .type-tag{padding:8px 14px;border-radius:20px;border:1px solid var(--iron);background:transparent;color:var(--muted);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:all .15s;-webkit-tap-highlight-color:transparent;user-select:none;}
@@ -802,6 +814,13 @@ select.doc-finput option{background:var(--steel-mid);}
 .assignee-opt{display:flex;align-items:center;gap:5px;padding:5px 10px;border-radius:16px;border:1px solid var(--iron);background:transparent;color:var(--muted);font-size:11px;font-family:'DM Sans',sans-serif;font-weight:600;cursor:pointer;transition:all .12s;}
 .assignee-opt.sel{border-width:2px;color:var(--white);}
 .assignee-opt .av{width:16px;height:16px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:8px;font-weight:700;color:#fff;flex-shrink:0;}
+.assignee-lead-badge{font-size:8px;letter-spacing:.5px;background:var(--amber);color:#1a1e2e;padding:1px 5px;border-radius:6px;font-weight:700;margin-left:3px;}
+.assignee-helper-badge{font-size:8px;letter-spacing:.5px;background:var(--iron);color:var(--white);padding:1px 5px;border-radius:6px;font-weight:700;margin-left:3px;}
+/* Multi-assignee chip on job cards */
+.assignee-chip-multi{padding-right:5px;}
+.assignee-chip .assignee-helpers{display:inline-flex;align-items:center;gap:-2px;margin-left:4px;}
+.assignee-avatar-stacked{margin-left:-4px;border:1px solid var(--steel-light);}
+.assignee-more{font-size:8px;font-weight:700;background:var(--iron);color:var(--white);padding:1px 4px;border-radius:6px;margin-left:2px;}
 
 /* Team management modal */
 .team-modal{background:var(--steel-mid);border-radius:14px;border:2px solid var(--amber);width:min(480px,96vw);max-height:80vh;display:flex;flex-direction:column;overflow:hidden;}
@@ -1632,6 +1651,28 @@ body:not(.role-owner):not(.role-manager) .role-financial-only{display:none!impor
       </div>
     </div>
     <div class="fg"><label class="flbl">Color Tag</label><div class="cprow" id="jCP"></div></div>
+    <!-- Linked Work Order banner (shows only when this job has a linkedDocId set) -->
+    <div class="fg" id="jLinkedWoRow" style="display:none">
+      <div class="linked-wo-card" id="jLinkedWoCard" onclick="openLinkedWO()">
+        <div class="linked-wo-icon">🔧</div>
+        <div class="linked-wo-text">
+          <div class="linked-wo-title" id="jLinkedWoTitle">Work Order</div>
+          <div class="linked-wo-sub" id="jLinkedWoSub">Tap to open</div>
+        </div>
+        <div class="linked-wo-arrow">→</div>
+      </div>
+    </div>
+    <!-- Linked Material Order banner (shows when linkedMoId is set) -->
+    <div class="fg" id="jLinkedMoRow" style="display:none">
+      <div class="linked-wo-card linked-mo-card" id="jLinkedMoCard" onclick="openLinkedMO()">
+        <div class="linked-wo-icon">📦</div>
+        <div class="linked-wo-text">
+          <div class="linked-wo-title" id="jLinkedMoTitle">Material Order</div>
+          <div class="linked-wo-sub" id="jLinkedMoSub">Tap to open</div>
+        </div>
+        <div class="linked-wo-arrow">→</div>
+      </div>
+    </div>
     <div class="macts">
       <button class="btn btn-ghost" onclick="closeMov('jMov')">Cancel</button>
       <button class="btn btn-amber" id="jSave">Add Job</button>
@@ -2941,15 +2982,37 @@ const setSS=(s,l)=>{
   document.getElementById('syncDot').className='sync-dot '+s;
   document.getElementById('syncLbl').textContent=l;
 };
-const dbToJob=r=>({id:r.id,title:r.title,note:r.note||'',color:r.color||'amber',day:r.day||'backlog',endDay:r.end_day||'',leadId:r.lead_id||null,photos:safeParseArr(r.photos),checklist:safeParseArr(r.checklist),apptType:normalizeApptType(r.appt_type),startTime:r.start_time||'',endTime:r.end_time||'',assigneeId:r.assignee_id||null,activity:safeParseArr(r.activity)});
+const dbToJob=r=>({id:r.id,title:r.title,note:r.note||'',color:r.color||'amber',day:r.day||'backlog',endDay:r.end_day||'',leadId:r.lead_id||null,photos:safeParseArr(r.photos),checklist:safeParseArr(r.checklist),apptType:normalizeApptType(r.appt_type),startTime:r.start_time||'',endTime:r.end_time||'',assigneeId:r.assignee_id||null,assigneeIds:_normAssigneeIds(r),activity:safeParseArr(r.activity),linkedDocId:r.linked_doc_id||null,linkedMoId:r.linked_mo_id||null});
 const dbToLead=r=>({id:r.id,name:r.name,contact:r.contact||'',phone:r.phone||'',email:r.email||'',types:r.type?r.type.split(',').filter(Boolean):[],value:r.value||'',stage:r.stage||'new',address:r.address||'',notes:r.notes||'',color:r.color||'blue',estId:r.est_id||null,matList:safeParseArr(r.mat_list),source:r.source||'',activity:safeParseArr(r.activity),createdAt:r.created_at||null});
-const jobToDb=j=>({id:j.id,title:j.title,note:j.note,color:j.color,day:j.day,end_day:j.endDay||'',lead_id:j.leadId||null,photos:JSON.stringify(j.photos||[]),checklist:JSON.stringify(j.checklist||[]),appt_type:normalizeApptType(j.apptType),start_time:j.startTime||'',end_time:j.endTime||'',assignee_id:j.assigneeId||null,user_id:currentUser?.id||null,updated_at:new Date().toISOString(),activity:JSON.stringify(j.activity||[])});
+const jobToDb=j=>({id:j.id,title:j.title,note:j.note,color:j.color,day:j.day,end_day:j.endDay||'',lead_id:j.leadId||null,photos:JSON.stringify(j.photos||[]),checklist:JSON.stringify(j.checklist||[]),appt_type:normalizeApptType(j.apptType),start_time:j.startTime||'',end_time:j.endTime||'',assignee_id:_firstAssigneeId(j),assignee_ids:getJobAssigneeIds(j),user_id:currentUser?.id||null,updated_at:new Date().toISOString(),activity:JSON.stringify(j.activity||[]),linked_doc_id:j.linkedDocId||null,linked_mo_id:j.linkedMoId||null});
+
+// ── ASSIGNEE HELPERS ────────────────────────────────────────
+// A job can have multiple assignees. The first id in assigneeIds is the
+// "lead" (their color shows on the card); the rest are helpers.
+//
+// For backward compat, we still write assignee_id = first array element
+// so older app versions running side-by-side keep working.
+function _normAssigneeIds(r){
+  if(Array.isArray(r.assignee_ids)&&r.assignee_ids.length) return r.assignee_ids.filter(x=>x);
+  if(r.assignee_id) return [r.assignee_id];
+  return [];
+}
+function _firstAssigneeId(j){
+  const ids=getJobAssigneeIds(j);
+  return ids.length?ids[0]:null;
+}
+function getJobAssigneeIds(j){
+  if(!j) return [];
+  if(Array.isArray(j.assigneeIds)&&j.assigneeIds.length) return j.assigneeIds.filter(x=>x);
+  if(j.assigneeId) return [j.assigneeId];
+  return [];
+}
 const leadToDb=l=>({id:l.id,name:l.name,contact:l.contact,phone:l.phone,email:l.email,type:(l.types||[]).join(','),value:l.value,stage:l.stage,address:l.address,notes:l.notes,color:l.color,est_id:l.estId||null,mat_list:JSON.stringify(l.matList||[]),source:l.source||'',activity:JSON.stringify(l.activity||[]),user_id:currentUser?.id||null,updated_at:new Date().toISOString()});
 // Helper: parse material order data from a JSON string or object
 const _parseMoData=v=>{try{return typeof v==='string'?JSON.parse(v||'{}'):(v||{});}catch{return {};}};
 const dbToDoc=r=>{
   const mo=_parseMoData(r.mat_order_data);
-  return {id:r.id,type:r.type||'estimate',status:r.status||'draft',num:r.num||'',clientName:r.client_name||'',clientContact:r.client_contact||'',clientAddr:r.client_addr||'',date:r.date||'',dueDate:r.due_date||'',scope:r.scope||'',lineItems:safeParseArr(r.line_items),tax:r.tax||0,discount:r.discount||0,notes:r.notes||'',manualTotal:r.manual_total||'',created:r.created||Date.now(),signature:r.signature||'',signatureName:r.signature_name||'',signatureDate:r.signature_date||'',leadSource:r.lead_source||'',activity:safeParseArr(r.activity),checklist:safeParseArr(r.checklist),extras:safeParseArr(r.extras),pmId:r.pm_id||'',arrival:r.arrival||'',sourceEstId:r.source_est_id||null,sourceEstNum:r.source_est_num||'',matCost:r.mat_cost!=null?r.mat_cost:'',laborCost:r.labor_cost!=null?r.labor_cost:'',otherCost:r.other_cost!=null?r.other_cost:'',outcome:r.outcome||null,closedDate:r.closed_date||null,
+  return {id:r.id,type:r.type||'estimate',status:r.status||'draft',num:r.num||'',clientName:r.client_name||'',clientContact:r.client_contact||'',clientAddr:r.client_addr||'',date:r.date||'',dueDate:r.due_date||'',scope:r.scope||'',lineItems:safeParseArr(r.line_items),tax:r.tax||0,discount:r.discount||0,notes:r.notes||'',manualTotal:r.manual_total||'',created:r.created||Date.now(),signature:r.signature||'',signatureName:r.signature_name||'',signatureDate:r.signature_date||'',leadSource:r.lead_source||'',activity:safeParseArr(r.activity),checklist:safeParseArr(r.checklist),extras:safeParseArr(r.extras),pmId:r.pm_id||'',arrival:r.arrival||'',sourceEstId:r.source_est_id||null,sourceEstNum:r.source_est_num||'',matCost:r.mat_cost!=null?r.mat_cost:'',laborCost:r.labor_cost!=null?r.labor_cost:'',otherCost:r.other_cost!=null?r.other_cost:'',outcome:r.outcome||null,closedDate:r.closed_date||null,linkedJobId:r.linked_job_id||null,
   // Material order fields (stored as JSON)
   moJobName:mo.moJobName||'',moPhone:mo.moPhone||'',moEmail:mo.moEmail||'',
   moLayers:mo.moLayers||'',moStories:mo.moStories||'',moCedar:mo.moCedar||'',moRedeck:mo.moRedeck||'',
@@ -2968,7 +3031,7 @@ const docToDb=d=>{
     moMaterialType:d.moMaterialType||'roofing',
     moMaterials:d.moMaterials||{}
   };
-  return {id:d.id,type:d.type||'estimate',status:d.status||'draft',num:d.num||'',client_name:d.clientName||'',client_contact:d.clientContact||'',client_addr:d.clientAddr||'',date:d.date||null,due_date:d.dueDate||null,scope:d.scope||'',line_items:JSON.stringify(d.lineItems||[]),tax:parseFloat(d.tax)||0,discount:parseFloat(d.discount)||0,notes:d.notes||'',manual_total:(d.manualTotal!=null&&d.manualTotal!=='')?parseFloat(d.manualTotal):null,created:d.created||Date.now(),signature:d.signature||'',signature_name:d.signatureName||'',signature_date:d.signatureDate||null,lead_source:d.leadSource||'',activity:JSON.stringify(d.activity||[]),checklist:JSON.stringify(d.checklist||[]),extras:JSON.stringify(d.extras||[]),pm_id:d.pmId||'',arrival:d.arrival||'',source_est_id:d.sourceEstId||null,source_est_num:d.sourceEstNum||'',mat_cost:(d.matCost!=null&&d.matCost!=='')?parseFloat(d.matCost):null,labor_cost:(d.laborCost!=null&&d.laborCost!=='')?parseFloat(d.laborCost):null,other_cost:(d.otherCost!=null&&d.otherCost!=='')?parseFloat(d.otherCost):null,outcome:d.outcome||null,closed_date:d.closedDate||null,mat_order_data:JSON.stringify(moData),user_id:currentUser?.id||null,updated_at:new Date().toISOString()};
+  return {id:d.id,type:d.type||'estimate',status:d.status||'draft',num:d.num||'',client_name:d.clientName||'',client_contact:d.clientContact||'',client_addr:d.clientAddr||'',date:d.date||null,due_date:d.dueDate||null,scope:d.scope||'',line_items:JSON.stringify(d.lineItems||[]),tax:parseFloat(d.tax)||0,discount:parseFloat(d.discount)||0,notes:d.notes||'',manual_total:(d.manualTotal!=null&&d.manualTotal!=='')?parseFloat(d.manualTotal):null,created:d.created||Date.now(),signature:d.signature||'',signature_name:d.signatureName||'',signature_date:d.signatureDate||null,lead_source:d.leadSource||'',activity:JSON.stringify(d.activity||[]),checklist:JSON.stringify(d.checklist||[]),extras:JSON.stringify(d.extras||[]),pm_id:d.pmId||'',arrival:d.arrival||'',source_est_id:d.sourceEstId||null,source_est_num:d.sourceEstNum||'',mat_cost:(d.matCost!=null&&d.matCost!=='')?parseFloat(d.matCost):null,labor_cost:(d.laborCost!=null&&d.laborCost!=='')?parseFloat(d.laborCost):null,other_cost:(d.otherCost!=null&&d.otherCost!=='')?parseFloat(d.otherCost):null,outcome:d.outcome||null,closed_date:d.closedDate||null,linked_job_id:d.linkedJobId||null,mat_order_data:JSON.stringify(moData),user_id:currentUser?.id||null,updated_at:new Date().toISOString()};
 };
 const dbToTmpl=r=>({id:r.id,name:r.name,scope:r.scope||'',lineItems:safeParseArr(r.line_items),tax:r.tax||0,discount:r.discount||0,notes:r.notes||'',created:r.created||Date.now()});
 const tmplToDb=t=>({id:t.id,name:t.name,scope:t.scope||'',line_items:JSON.stringify(t.lineItems||[]),tax:parseFloat(t.tax)||0,discount:parseFloat(t.discount)||0,notes:t.notes||'',created:t.created||Date.now(),user_id:currentUser?.id||null,updated_at:new Date().toISOString()});
@@ -3182,7 +3245,7 @@ function mobileCard(j,dates,dayKey){
     <div class="jcard-summary">${summaryParts.map(p=>esc(p)).join(' · ')}</div>
     <div class="jcard-body">
       <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:2px 0">${mSpanLabel}${getApptTypeLabel(normalizeApptType(j.apptType))}${j.startTime?`<div class='jtime'><span class='jtime-icon'>🕐</span>${fmtTimeRange(j.startTime,j.endTime)}</div>`:''}</div>
-      <div class="jassignee">${getAssigneeChip(j.assigneeId)}</div>
+      <div class="jassignee">${getAssigneeChip(j)}</div>
       ${j.note?`<div class="jnote">${esc(j.note)}</div>`:''}${lr?`<div class="jref">🔗 ${esc(lr.name)}</div>`:''}
       <div class="cbar">${COLORS.map(c=>`<div class="cdot${j.color===c.id?' active':''}" style="background:${c.hex}" data-id="${j.id}" data-c="${c.id}"></div>`).join('')}</div>
       <div class="mdr"><span style="font-size:9px;color:var(--muted);align-self:center">Move:</span>${opts}${j.day!=='backlog'?`<button class="mdbtn blbtn" data-jid="${j.id}" data-day="backlog">📦 Backlog</button>`:''}</div>
@@ -3240,7 +3303,7 @@ function desktopContCard(j,dayKey){
       <span style="font-size:9px;color:${c.hex};flex-shrink:0">${isLast?'⬛':'▶'}</span>
       <span class="job-card-cont-title">${esc(j.title)}</span>
       <span class="job-card-cont-day">Day ${info.idx+1}/${info.total}</span>
-      ${getAssigneeChip(j.assigneeId)}
+      ${getAssigneeChip(j)}
     </div>
   </div>`;
 }
@@ -3260,7 +3323,7 @@ function desktopCard(j,dayKey){
     <div class="jcard-body">
       ${spanTotal>1?`<div class="multiday-strip" style="background:${c.hex}"></div>`:''}
       <div style="margin:2px 0">${spanLabel}${getApptTypeLabel(normalizeApptType(j.apptType))}${j.startTime?`<span class="jtime" style="display:inline-flex">🕐 ${fmtTimeRange(j.startTime,j.endTime)}</span>`:''}</div>
-      ${getAssigneeChip(j.assigneeId)}
+      ${getAssigneeChip(j)}
       ${j.note?`<div class="jnote">${esc(j.note)}</div>`:''}${lr?`<div class="jref">🔗 ${esc(lr.name)}</div>`:''}
       <div class="cbar">${COLORS.map(c=>`<div class="cdot${j.color===c.id?' active':''}" style="background:${c.hex}" data-id="${j.id}" data-c="${c.id}"></div>`).join('')}</div>
     </div>
@@ -3379,7 +3442,7 @@ function ddCard(j,d){
     <div class="jcard-summary">${[fmtTimeRange(j.startTime,j.endTime),j.note].filter(Boolean).map(p=>esc(p)).join(' · ')}</div>
     <div class="jcard-body">
       ${j.startTime?`<div class='jtime'><span class='jtime-icon'>🕐</span>${fmtTimeRange(j.startTime,j.endTime)}</div>`:''}
-      ${getAssigneeChip(j.assigneeId)}
+      ${getAssigneeChip(j)}
       ${j.note?`<div class="jnote">${esc(j.note)}</div>`:''}${lr?`<div class="jref">🔗 ${esc(lr.name)}</div>`:''}
       <div class="cbar">${COLORS.map(c=>`<div class="cdot${j.color===c.id?' active':''}" style="background:${c.hex}" data-id="${j.id}" data-c="${c.id}" data-day="${dateKey(d)}"></div>`).join('')}</div>
     </div>
@@ -3996,6 +4059,8 @@ function openJobMov(day,editId){
           </div>`;
       }
     }
+    // Phase 4: show "View Work Order →" if this job is linked to a WO
+    renderJobLinkedWO(j);
   } else {
     document.getElementById('jName').value='';
     document.getElementById('jNote').value='';
@@ -4005,9 +4070,10 @@ function openJobMov(day,editId){
     buildDaySelect(day||'backlog');
     buildEndDaySelect(day||'backlog');
     const edSel=document.getElementById('jEndDay');if(edSel)edSel.value='';
+    renderJobLinkedWO(null);
   }
   initApptTypePicker(editId?normalizeApptType((jobs.find(x=>x.id===editId)||{}).apptType):'sales');
-  renderAssigneePicker(editId?(jobs.find(x=>x.id===editId)||{}).assigneeId||null:null);
+  renderAssigneePicker(editId?getJobAssigneeIds(jobs.find(x=>x.id===editId)||{}):[]);
   buildCP('jCP',selColor,c=>selColor=c);
   // Update end day options when start day changes
   const jDayEl=document.getElementById('jDay');
@@ -4024,8 +4090,8 @@ document.getElementById('jSave').addEventListener('click',async()=>{
   const endTime=document.getElementById('jEndTime').value;
   const endDay=document.getElementById('jEndDay')?.value||'';
   let j;
-  if(editJobId){j=jobs.find(x=>x.id===editJobId);if(j){j.title=name;j.note=note;j.color=selColor;j.day=td;j.endDay=endDay;j.apptType=selApptType||'sales';j.startTime=startTime;j.endTime=endTime;j.assigneeId=jAssigneeId||null;if(jLinkedLeadId)j.leadId=jLinkedLeadId;}}
-  else{j={id:uid(),title:name,note,color:selColor,day:td,endDay,leadId:jLinkedLeadId||null,apptType:selApptType||'sales',startTime,endTime,assigneeId:jAssigneeId||null};jobs.push(j);}
+  if(editJobId){j=jobs.find(x=>x.id===editJobId);if(j){j.title=name;j.note=note;j.color=selColor;j.day=td;j.endDay=endDay;j.apptType=selApptType||'sales';j.startTime=startTime;j.endTime=endTime;j.assigneeIds=jAssigneeIds.slice();j.assigneeId=jAssigneeIds[0]||null;if(jLinkedLeadId)j.leadId=jLinkedLeadId;}}
+  else{j={id:uid(),title:name,note,color:selColor,day:td,endDay,leadId:jLinkedLeadId||null,apptType:selApptType||'sales',startTime,endTime,assigneeIds:jAssigneeIds.slice(),assigneeId:jAssigneeIds[0]||null};jobs.push(j);}
   renderSched();closeMov('jMov');await saveJob(j);
 });
 document.getElementById('jName').addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('jSave').click();});
@@ -5558,6 +5624,9 @@ function openWorkOrder(woId){
       // Add to docs immediately so collectWorkOrder() can find it
       docs.push(wo);
       saveDocs();
+      // Note: backlog job is NOT auto-spawned on open. It's spawned on
+      // first SAVE (see saveWorkOrder) — that way "create WO" is separate
+      // from "send to production."
     }
   }
   editWoId=wo.id;
@@ -5706,11 +5775,143 @@ function saveWorkOrder(quiet){
   if(!docs.find(x=>x.id===wo.id)) docs.push(wo);
   saveDocs();
   saveDocSync(wo);
+  // Phase 4 / production hand-off: on first save, drop the WO into the
+  // schedule backlog as an unassigned job. Skipped on every save after that
+  // because tryAddBacklogJobForWO checks for an existing linkedJobId.
+  tryAddBacklogJobForWO(wo);
   if(!quiet){
     // Visual confirmation
     const btn=document.querySelector('.wo-hdr .btn-amber');
     if(btn){const o=btn.textContent;btn.textContent='✓ Saved';setTimeout(()=>btn.textContent=o,1500);}
   }
+}
+
+// ── BACKLOG JOB AUTO-SPAWN FROM WORK ORDER ───────────────────
+// When a fresh work order is created, ask the user if they want a
+// matching job placed in the schedule's backlog so it can be assigned
+// to a day later. Two-way link: job.linkedDocId = wo.id, wo.linkedJobId = job.id.
+function tryAddBacklogJobForWO(wo){
+  if(!wo||wo.type!=='workorder') return;
+  // Already has a linked job? skip (handles double-clicks / resaves)
+  if(wo.linkedJobId&&jobs.find(j=>j.id===wo.linkedJobId)) return;
+  // Build a sensible title: address first, then customer name as fallback
+  const title=(wo.clientAddr||'').trim()
+            ||(wo.clientName||'').trim()
+            ||('Work Order '+(wo.num||''));
+  // Carry over the lead link so the schedule + lead views stay in sync
+  let leadId=null;
+  if(wo.sourceEstId){
+    const lead=leads.find(l=>l.estId===wo.sourceEstId);
+    if(lead) leadId=lead.id;
+  }
+  const job={
+    id:uid(),
+    title,
+    note:'',
+    color:'amber',
+    day:'backlog',
+    endDay:'',
+    leadId,
+    photos:[],
+    checklist:[],
+    apptType:'',           // user picks when scheduling
+    startTime:'',
+    endTime:'',
+    assigneeId:null,
+    assigneeIds:[],
+    linkedDocId:wo.id,     // ← job knows its WO
+    activity:[{ts:new Date().toISOString(),msg:'Created from work order '+(wo.num||'')}]
+  };
+  jobs.push(job);
+  // Link the WO back to the job
+  wo.linkedJobId=job.id;
+  saveJob(job);
+  saveDocSync(wo);
+  // If a material order already exists for the same source estimate, link
+  // it to the same job so the crew sees both attached. Two-way link.
+  if(wo.sourceEstId){
+    const mo=docs.find(d=>d.type==='matorder'&&d.sourceEstId===wo.sourceEstId);
+    if(mo&&!mo.linkedJobId){
+      mo.linkedJobId=job.id;
+      saveDocSync(mo);
+      // Job tracks its linked MO separately from the WO
+      job.linkedMoId=mo.id;
+      saveJob(job);
+    }
+  }
+  setSS('synced','Sent to backlog ✓');
+  setTimeout(()=>document.getElementById('syncLbl').textContent='',2500);
+  // Re-render schedule so the new backlog item appears
+  if(typeof renderSched==='function') renderSched();
+}
+
+// Render the "View Work Order →" / "View Material Order →" cards on the job modal
+function renderJobLinkedWO(j){
+  // WO card
+  const woRow=document.getElementById('jLinkedWoRow');
+  if(woRow){
+    if(j&&j.linkedDocId){
+      const wo=docs.find(d=>d.id===j.linkedDocId&&d.type==='workorder');
+      if(wo){
+        const items=Array.isArray(wo.checklist)?wo.checklist:[];
+        const done=items.filter(x=>x.done).length;
+        const total=items.length;
+        document.getElementById('jLinkedWoTitle').textContent='Work Order '+(wo.num||'');
+        document.getElementById('jLinkedWoSub').textContent=total
+          ? `${done}/${total} checklist items · Tap to open`
+          : 'Tap to open';
+        woRow.style.display='';
+      } else {
+        woRow.style.display='none';
+      }
+    } else {
+      woRow.style.display='none';
+    }
+  }
+  // MO card
+  const moRow=document.getElementById('jLinkedMoRow');
+  if(moRow){
+    if(j&&j.linkedMoId){
+      const mo=docs.find(d=>d.id===j.linkedMoId&&d.type==='matorder');
+      if(mo){
+        // Count materials in the MO
+        const matCount=Object.keys(mo.moMaterials||{}).filter(k=>{
+          const v=mo.moMaterials[k];
+          return v&&Object.values(v).some(x=>x&&String(x).trim());
+        }).length;
+        document.getElementById('jLinkedMoTitle').textContent='Material Order '+(mo.num||'');
+        document.getElementById('jLinkedMoSub').textContent=matCount
+          ? `${matCount} material${matCount===1?'':'s'} · Tap to open`
+          : 'Tap to open';
+        moRow.style.display='';
+      } else {
+        moRow.style.display='none';
+      }
+    } else {
+      moRow.style.display='none';
+    }
+  }
+}
+
+// Click handlers
+function openLinkedWO(){
+  if(!editJobId) return;
+  const j=jobs.find(x=>x.id===editJobId);
+  if(!j||!j.linkedDocId){alert('No linked work order.');return;}
+  const wo=docs.find(d=>d.id===j.linkedDocId&&d.type==='workorder');
+  if(!wo){alert('Linked work order not found. It may have been deleted.');return;}
+  closeMov('jMov');
+  setTimeout(()=>openWorkOrder(wo.id),100);
+}
+
+function openLinkedMO(){
+  if(!editJobId) return;
+  const j=jobs.find(x=>x.id===editJobId);
+  if(!j||!j.linkedMoId){alert('No linked material order.');return;}
+  const mo=docs.find(d=>d.id===j.linkedMoId&&d.type==='matorder');
+  if(!mo){alert('Linked material order not found. It may have been deleted.');return;}
+  closeMov('jMov');
+  setTimeout(()=>openMaterialOrder(mo.id),100);
 }
 
 function updateWoPreview(){
@@ -6082,6 +6283,21 @@ function saveMaterialOrder(quiet){
   if(!docs.find(x=>x.id===mo.id)) docs.push(mo);
   saveDocs();
   saveDocSync(mo);
+  // If there's already a backlog/scheduled job for this source estimate,
+  // link the MO to that job so it shows alongside the WO.
+  if(mo.sourceEstId&&!mo.linkedJobId){
+    const job=jobs.find(j=>{
+      if(!j.linkedDocId) return false;
+      const wo=docs.find(d=>d.id===j.linkedDocId&&d.type==='workorder');
+      return wo&&wo.sourceEstId===mo.sourceEstId;
+    });
+    if(job){
+      mo.linkedJobId=job.id;
+      job.linkedMoId=mo.id;
+      saveDocSync(mo);
+      saveJob(job);
+    }
+  }
   if(!quiet){
     const btn=document.querySelector('#moOverlay .btn-amber');
     if(btn){const o=btn.textContent;btn.textContent='✓ Saved';setTimeout(()=>btn.textContent=o,1500);}
@@ -6810,7 +7026,7 @@ function passesScheduleFilter(j){
   const sub=apptSubFilter[scheduleGroup];
   if(sub&&sub!=='all'&&t!==sub) return false;
   // Existing assignee filter
-  if(assigneeFilter!=='all'&&j.assigneeId!==assigneeFilter) return false;
+  if(assigneeFilter!=='all'&&!getJobAssigneeIds(j).includes(assigneeFilter)) return false;
   return true;
 }
 
@@ -6894,7 +7110,46 @@ function initApptTypePicker(currentType){
 // `id` = auth user UUID, used as assignee_id / pm_id on jobs and docs.
 const TEAM_COLORS=['#f59e0b','#22c55e','#3b82f6','#a855f7','#ef4444','#14b8a6','#f97316','#ec4899'];
 let teamRoster=[]; // [{id,name,role,color,initials,phone,email}] — id is auth user UUID
-let jAssigneeId=null; // selected in modal
+let jAssigneeIds=[]; // selected assignees in modal (array of user IDs, first=lead)
+
+// Render assignee picker inside job modal — multi-select
+function renderAssigneePicker(currentIds){
+  loadTeam();
+  // Accept either an array (new) or a single string (legacy callers)
+  if(Array.isArray(currentIds)) jAssigneeIds=currentIds.slice();
+  else if(currentIds) jAssigneeIds=[currentIds];
+  else jAssigneeIds=[];
+  const picker=document.getElementById('jAssigneePicker');
+  if(!picker)return;
+  if(!teamRoster.length){
+    picker.innerHTML='<span style="font-size:11px;color:var(--muted);font-style:italic">No team members — add them via ⚙ Manage Team</span>';
+    return;
+  }
+  const renderOne=m=>{
+    const idx=jAssigneeIds.indexOf(m.id);
+    const sel=idx>=0;
+    const isLead=idx===0;
+    const badge=sel?(isLead?`<span class="assignee-lead-badge" title="Lead crew">★ LEAD</span>`:`<span class="assignee-helper-badge">+${idx}</span>`):'';
+    return `<button class="assignee-opt${sel?' sel':''}" data-mid="${m.id}"
+      style="${sel?'border-color:'+m.color+';background:'+m.color+'22':''}"
+      onclick="toggleAssignee('${m.id}','${m.color}',this)">
+      <span class="av" style="background:${m.color}">${m.initials}</span>${esc(m.name)}${badge}
+    </button>`;
+  };
+  picker.innerHTML=teamRoster.map(renderOne).join('');
+}
+
+function toggleAssignee(mid,color,btn){
+  const idx=jAssigneeIds.indexOf(mid);
+  if(idx>=0){
+    // already selected — remove
+    jAssigneeIds.splice(idx,1);
+  } else {
+    jAssigneeIds.push(mid);
+  }
+  // Re-render so lead/helper badges update for the whole picker
+  renderAssigneePicker(jAssigneeIds);
+}
 let assigneeFilter='all'; // 'all' or member auth-user UUID
 let newMemberColor=TEAM_COLORS[0];
 
@@ -6938,22 +7193,26 @@ function cleanupLegacyAssignees(){
   // the current teamRoster gets nulled out and re-saved to Supabase.
   if(localStorage.getItem('legacy_assignee_cleanup_v2.5')==='done') return;
   if(!Array.isArray(jobs)||!jobs.length){
-    // Try again later when jobs are loaded
     setTimeout(cleanupLegacyAssignees,2000);
     return;
   }
   const validIds=new Set(teamRoster.map(m=>m.id));
-  const toFix=jobs.filter(j=>j.assigneeId&&!validIds.has(j.assigneeId));
+  const toFix=jobs.filter(j=>{
+    const ids=getJobAssigneeIds(j);
+    return ids.length&&ids.some(id=>!validIds.has(id));
+  });
   if(!toFix.length){
     localStorage.setItem('legacy_assignee_cleanup_v2.5','done');
     return;
   }
   console.log(`Cleaning up ${toFix.length} jobs with legacy assignees`);
   toFix.forEach(j=>{
-    j.assigneeId=null;
+    // Filter the array to only valid IDs; nuke completely if none survive
+    const cleaned=getJobAssigneeIds(j).filter(id=>validIds.has(id));
+    j.assigneeIds=cleaned;
+    j.assigneeId=cleaned[0]||null;
     queueSave('jobs',j);
   });
-  // Persist cache + re-render
   try{localStorage.setItem('jobs_cache',JSON.stringify(jobs.map(jobToDb)));}catch{}
   if(typeof renderSched==='function') renderSched();
   localStorage.setItem('legacy_assignee_cleanup_v2.5','done');
@@ -7002,7 +7261,7 @@ function closeTeamModal(){
   // Kept for backward compat — Team Manager has its own close path
   closeTeamManager();
   // Refresh assignee picker in job modal
-  renderAssigneePicker(jAssigneeId);
+  renderAssigneePicker(jAssigneeIds);
   renderAssigneeFilters();
 }
 document.getElementById('teamOverlay')?.addEventListener('click',e=>{
@@ -7051,40 +7310,6 @@ function removeTeamMember(idx){
   alert('Team is now managed in Manage Team (click your avatar).');
 }
 
-// Render assignee picker inside job modal
-function renderAssigneePicker(currentId){
-  loadTeam();
-  jAssigneeId=currentId||null;
-  const picker=document.getElementById('jAssigneePicker');
-  if(!picker)return;
-  if(!teamRoster.length){
-    picker.innerHTML='<span style="font-size:11px;color:var(--muted);font-style:italic">No team members — add them via ⚙ Manage Team</span>';
-    return;
-  }
-  picker.innerHTML=teamRoster.map(m=>`
-    <button class="assignee-opt${jAssigneeId===m.id?' sel':''}" data-mid="${m.id}"
-      style="${jAssigneeId===m.id?'border-color:'+m.color+';background:'+m.color+'22':''}"
-      onclick="toggleAssignee('${m.id}','${m.color}',this)">
-      <span class="av" style="background:${m.color}">${m.initials}</span>${esc(m.name)}
-    </button>`).join('');
-}
-
-function toggleAssignee(mid,color,btn){
-  if(jAssigneeId===mid){
-    // deselect
-    jAssigneeId=null;
-    btn.classList.remove('sel');
-    btn.style.borderColor='';btn.style.background='';
-  } else {
-    jAssigneeId=mid;
-    document.querySelectorAll('#jAssigneePicker .assignee-opt').forEach(b=>{
-      b.classList.remove('sel');b.style.borderColor='';b.style.background='';
-    });
-    btn.classList.add('sel');
-    btn.style.borderColor=color;btn.style.background=color+'22';
-  }
-}
-
 // Render assignee filter buttons in the appt filter bar
 function renderAssigneeFilters(){
   loadTeam();
@@ -7128,12 +7353,34 @@ function setAssigneeFilter(mid,color,btn){
 }
 
 // Show assignee chip on a job card
-function getAssigneeChip(assigneeId){
-  if(!assigneeId)return'';
+function getAssigneeChip(assigneeOrJob){
+  // Accept either:
+  //   - a job object {assigneeIds, assigneeId, ...}  ← preferred (new)
+  //   - an array of ids
+  //   - a single id string  ← legacy
   loadTeam();
-  const m=teamRoster.find(x=>x.id===assigneeId);
-  if(!m)return'';
-  return `<span class="assignee-chip" style="background:${m.color}22;color:${m.color};border:1px solid ${m.color}44"><span class="assignee-avatar" style="background:${m.color};width:14px;height:14px;font-size:7px">${m.initials}</span>${esc(m.name)}</span>`;
+  let ids=[];
+  if(!assigneeOrJob) return '';
+  if(typeof assigneeOrJob==='string') ids=[assigneeOrJob];
+  else if(Array.isArray(assigneeOrJob)) ids=assigneeOrJob.filter(x=>x);
+  else if(typeof assigneeOrJob==='object') ids=getJobAssigneeIds(assigneeOrJob);
+  if(!ids.length) return '';
+  const lead=teamRoster.find(x=>x.id===ids[0]);
+  if(!lead) return '';
+  // One assignee → show full chip with name
+  if(ids.length===1){
+    return `<span class="assignee-chip" style="background:${lead.color}22;color:${lead.color};border:1px solid ${lead.color}44"><span class="assignee-avatar" style="background:${lead.color};width:14px;height:14px;font-size:7px">${lead.initials}</span>${esc(lead.name)}</span>`;
+  }
+  // Multiple assignees → lead name + "+N" helpers, hover shows everyone
+  const helpers=ids.slice(1).map(id=>teamRoster.find(x=>x.id===id)).filter(Boolean);
+  const tooltip=`Lead: ${lead.name}\nHelpers: ${helpers.map(h=>h.name).join(', ')}`;
+  const helperAvatars=helpers.slice(0,3).map(h=>`<span class="assignee-avatar assignee-avatar-stacked" style="background:${h.color};width:12px;height:12px;font-size:6px" title="${esc(h.name)}">${h.initials}</span>`).join('');
+  const moreCount=helpers.length>3?`+${helpers.length-3}`:'';
+  return `<span class="assignee-chip assignee-chip-multi" style="background:${lead.color}22;color:${lead.color};border:1px solid ${lead.color}44" title="${esc(tooltip)}">
+    <span class="assignee-avatar" style="background:${lead.color};width:14px;height:14px;font-size:7px">${lead.initials}</span>
+    ${esc(lead.name)}
+    <span class="assignee-helpers">${helperAvatars}${moreCount?`<span class="assignee-more">${moreCount}</span>`:''}</span>
+  </span>`;
 }
 
 
