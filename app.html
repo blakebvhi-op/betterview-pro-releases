@@ -33,7 +33,7 @@ html,body{height:100%;overscroll-behavior:none;}
 body{font-family:'DM Sans',sans-serif;background:var(--steel);color:var(--white);overflow:hidden;}
 
 /* ── HEADER ── */
-header{position:fixed;top:0;left:0;right:0;z-index:50;height:calc(var(--hh) + env(safe-area-inset-top));padding-top:env(safe-area-inset-top);display:flex;align-items:center;justify-content:space-between;padding-left:14px;padding-right:14px;background:var(--steel-mid);border-bottom:2px solid var(--amber);box-shadow:0 2px 16px rgba(0,0,0,.4);}
+header{position:fixed;top:0;left:0;right:0;z-index:50;height:var(--hh);display:flex;align-items:center;justify-content:space-between;padding:0 14px;background:var(--steel-mid);border-bottom:2px solid var(--amber);box-shadow:0 2px 16px rgba(0,0,0,.4);}
 .logo{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:2px;color:var(--amber);display:flex;align-items:center;gap:7px;}
 .logo span{color:var(--white);}
 .logo-icon{width:26px;height:26px;background:var(--amber);clip-path:polygon(50% 0%,100% 25%,100% 75%,50% 100%,0% 75%,0% 25%);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
@@ -44,7 +44,8 @@ header{position:fixed;top:0;left:0;right:0;z-index:50;height:calc(var(--hh) + en
 .sync-dot.synced{background:var(--green);box-shadow:0 0 5px var(--green);}
 .sync-dot.error{background:var(--danger);}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
-.sync-lbl{font-size:10px;color:var(--muted);}
+.sync-lbl{font-size:10px;color:var(--muted);cursor:pointer;user-select:none;}
+.sync-lbl:hover{color:var(--white);}
 /* desktop tabs */
 .dtabs{display:none;gap:3px;background:var(--steel);border-radius:8px;padding:4px;}
 .dtab{padding:5px 16px;border-radius:6px;border:none;cursor:pointer;font-family:'Bebas Neue',sans-serif;font-size:12px;letter-spacing:2px;background:transparent;color:var(--muted);display:flex;align-items:center;gap:5px;transition:all .15s;}
@@ -55,7 +56,7 @@ header{position:fixed;top:0;left:0;right:0;z-index:50;height:calc(var(--hh) + en
 .dadd{display:none;padding:6px 13px;border-radius:6px;border:none;cursor:pointer;background:var(--amber);color:var(--steel);font-family:'DM Sans',sans-serif;font-weight:600;font-size:12px;align-items:center;gap:5px;}
 
 /* ── BOTTOM NAV ── */
-.bnav{position:fixed;bottom:0;left:0;right:0;z-index:50;height:calc(var(--bnh) + env(safe-area-inset-bottom));padding-bottom:env(safe-area-inset-bottom);background:var(--steel-mid);border-top:1px solid var(--iron);display:flex;box-shadow:0 -4px 20px rgba(0,0,0,.3);}
+.bnav{position:fixed;bottom:0;left:0;right:0;z-index:50;height:var(--bnh);background:var(--steel-mid);border-top:1px solid var(--iron);display:flex;box-shadow:0 -4px 20px rgba(0,0,0,.3);}
 .bnbtn{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;border:none;background:transparent;cursor:pointer;color:var(--muted);transition:color .15s;padding-bottom:env(safe-area-inset-bottom,0);position:relative;}
 .bnbtn.active{color:var(--amber);}
 .bnbtn.active::after{content:'';position:absolute;top:0;left:20%;right:20%;height:2px;background:var(--amber);border-radius:0 0 3px 3px;}
@@ -65,7 +66,7 @@ header{position:fixed;top:0;left:0;right:0;z-index:50;height:calc(var(--hh) + en
 .bnbadge.show{display:block;}
 
 /* ── APP BODY ── */
-.abody{position:fixed;top:calc(var(--hh) + env(safe-area-inset-top));bottom:calc(var(--bnh) + env(safe-area-inset-bottom));left:0;right:0;overflow:hidden;}
+.abody{position:fixed;top:var(--hh);bottom:var(--bnh);left:0;right:0;overflow:hidden;}
 .view{display:none;height:100%;overflow:hidden;}
 .view.active{display:flex;flex-direction:column;}
 .fab{position:fixed;right:14px;bottom:calc(var(--bnh) + 12px);width:50px;height:50px;background:var(--amber);color:var(--steel);border:none;border-radius:50%;font-size:24px;display:flex;align-items:center;justify-content:center;box-shadow:0 4px 20px rgba(245,158,11,.5);cursor:pointer;z-index:40;transition:transform .15s;}
@@ -237,6 +238,9 @@ header{position:fixed;top:0;left:0;right:0;z-index:50;height:calc(var(--hh) + en
 .lead-search-clear{background:rgba(239,68,68,.15);color:var(--danger);border:none;border-radius:6px;width:28px;height:28px;cursor:pointer;font-size:16px;display:none;flex-shrink:0;align-items:center;justify-content:center;}
 .lead-search-clear:hover{background:rgba(239,68,68,.25);}
 .lead-search-bar.has-query .lead-search-clear{display:flex;}
+.lead-sort-select{background:var(--steel-light);border:1px solid var(--iron);border-radius:6px;padding:5px 8px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:11px;cursor:pointer;flex-shrink:0;}
+.lead-sort-select:focus{outline:none;border-color:var(--amber);}
+.lead-sort-select option{background:var(--steel-mid);}
 .stab{flex-shrink:0;padding:7px 12px;font-family:'Bebas Neue',sans-serif;font-size:10px;letter-spacing:1.5px;color:var(--muted);background:transparent;border:none;cursor:pointer;border-bottom:2px solid transparent;display:flex;align-items:center;gap:4px;white-space:nowrap;}
 .stab.active{color:var(--white);border-bottom-color:var(--sc,var(--amber));}
 .stabdot{width:5px;height:5px;border-radius:50%;background:var(--sc,var(--muted));}
@@ -269,7 +273,10 @@ header{position:fixed;top:0;left:0;right:0;z-index:50;height:calc(var(--hh) + en
 .lcacts{display:flex;gap:4px;margin-top:8px;flex-wrap:wrap;}
 .abanner{background:linear-gradient(135deg,rgba(34,197,94,.15),rgba(34,197,94,.05));border:1px solid rgba(34,197,94,.3);border-radius:5px;padding:5px 9px;margin-top:6px;font-size:10px;color:var(--green);display:flex;align-items:center;gap:5px;}
 .lempty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px 24px;gap:12px;text-align:center;}
-.stage-new{--sc:#3b82f6;}.stage-contact{--sc:#a855f7;}.stage-quote{--sc:#f59e0b;}.stage-accepted{--sc:#22c55e;}.stage-declined{--sc:#ef4444;}.stage-done{--sc:#14b8a6;}
+.stage-new{--sc:#3b82f6;}.stage-contact{--sc:#a855f7;}.stage-quote{--sc:#f59e0b;}.stage-accepted{--sc:#22c55e;}.stage-invoiced{--sc:#0ea5e9;}.stage-paid{--sc:#10b981;}.stage-declined{--sc:#ef4444;}.stage-done{--sc:#14b8a6;}
+/* Invoiced/Paid badges — independent of stage so a card can show both */
+.invoiced-badge{background:rgba(14,165,233,.12)!important;color:#0ea5e9!important;border:1px solid rgba(14,165,233,.4)!important;font-weight:700;}
+.invoiced-badge.paid-badge{background:rgba(16,185,129,.12)!important;color:#10b981!important;border-color:rgba(16,185,129,.4)!important;}
 
 /* ── BUTTONS ── */
 .btn{padding:10px 16px;border-radius:8px;border:none;cursor:pointer;font-family:'DM Sans',sans-serif;font-weight:600;font-size:13px;display:flex;align-items:center;gap:5px;-webkit-tap-highlight-color:transparent;transition:all .15s;}
@@ -472,6 +479,16 @@ body.resizing{user-select:none;-webkit-user-select:none;}
 .doc-toolbar{display:flex;align-items:center;gap:8px;padding:8px 14px;background:var(--steel-mid);border-bottom:1px solid var(--iron);flex-shrink:0;flex-wrap:wrap;}
 .doc-toolbar-title{font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:2px;color:var(--amber);}
 .doc-toolbar-spacer{flex:1;}
+/* Document list search box (sits in the toolbar) */
+.doc-search-wrap{display:flex;align-items:center;flex-shrink:0;}
+.doc-search-input{background:var(--steel-light);border:1px solid var(--iron);border-radius:6px;padding:5px 10px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:12px;width:200px;transition:border-color .12s,width .15s;}
+.doc-search-input:focus{outline:none;border-color:var(--amber);width:260px;}
+.doc-search-input::placeholder{color:var(--muted);}
+@media(max-width:600px){.doc-search-input{width:140px;}.doc-search-input:focus{width:180px;}}
+/* Line-item search inside an open estimate */
+.li-search-input{background:var(--steel-light);border:1px solid var(--iron);border-radius:6px;padding:4px 9px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:11px;width:180px;margin-left:auto;}
+.li-search-input:focus{outline:none;border-color:var(--amber);}
+.li-search-input::placeholder{color:var(--muted);}
 /* Tasks */
 .task-view{display:flex;flex-direction:column;height:100%;overflow:hidden;}
 .task-toolbar{display:flex;align-items:center;gap:8px;padding:8px 14px;background:var(--steel-mid);border-bottom:1px solid var(--iron);flex-shrink:0;flex-wrap:wrap;}
@@ -645,7 +662,35 @@ body.resizing{user-select:none;-webkit-user-select:none;}
 .sig-status{font-size:10px;color:var(--muted);}
 .sig-status.saved{color:var(--green);font-weight:600;}
 .li-add-row{display:flex;gap:6px;flex-wrap:wrap;}
-.li-section-lbl{font-family:'Bebas Neue',sans-serif;font-size:11px;letter-spacing:2px;color:var(--amber);padding:10px 16px 0;border-top:1px solid var(--iron);margin-top:4px;}
+.li-section-lbl{font-family:'Bebas Neue',sans-serif;font-size:11px;letter-spacing:2px;color:var(--amber);padding:10px 16px 0;border-top:1px solid var(--iron);margin-top:4px;display:flex;align-items:center;gap:10px;}
+
+/* Customer File panel — collapsible section inside the lead modal */
+.cust-file{margin-top:14px;border-top:1px solid var(--iron);padding-top:10px;}
+.cust-file-hdr{display:flex;align-items:center;justify-content:space-between;cursor:pointer;padding:6px 10px;background:var(--steel-mid);border-radius:6px;user-select:none;}
+.cust-file-hdr:hover{background:var(--iron);}
+.cust-file-title{font-family:'Bebas Neue',sans-serif;font-size:13px;letter-spacing:2px;color:var(--amber);}
+.cust-file-toggle{color:var(--muted);font-size:11px;transition:transform .15s;}
+.cust-file.closed .cust-file-toggle{transform:rotate(-90deg);}
+.cust-file.closed .cust-file-body{display:none;}
+.cust-file-body{padding:10px 4px 4px;}
+.cust-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:12px;}
+.cust-stat{background:var(--steel-mid);border-radius:6px;padding:8px 6px;text-align:center;}
+.cust-stat-label{font-size:9px;letter-spacing:1.2px;color:var(--muted);font-family:'Bebas Neue',sans-serif;}
+.cust-stat-value{font-size:15px;font-weight:700;color:var(--white);margin-top:2px;}
+.cust-stat-value.amber{color:var(--amber);}
+.cust-section{margin-bottom:12px;}
+.cust-section-hdr{font-family:'Bebas Neue',sans-serif;font-size:11px;letter-spacing:1.5px;color:var(--muted);padding:4px 0 6px;border-bottom:1px solid var(--iron);margin-bottom:6px;}
+.cust-list{display:flex;flex-direction:column;gap:4px;max-height:200px;overflow-y:auto;}
+.cust-item{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:6px 8px;background:var(--steel-mid);border-radius:5px;font-size:11px;cursor:pointer;transition:background .12s;}
+.cust-item:hover{background:var(--iron);}
+.cust-item-left{display:flex;align-items:center;gap:6px;flex:1;min-width:0;}
+.cust-item-num{font-family:'Bebas Neue',sans-serif;color:var(--amber);font-size:10px;letter-spacing:1px;flex-shrink:0;}
+.cust-item-label{color:var(--white);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.cust-item-meta{color:var(--muted);font-size:10px;flex-shrink:0;}
+.cust-empty{color:var(--muted);font-size:11px;font-style:italic;padding:6px 4px;}
+.cust-activity-row{padding:4px 8px;background:var(--steel-mid);border-radius:5px;font-size:10px;color:var(--muted);}
+.cust-activity-row .cust-activity-ts{color:var(--amber);font-family:'Bebas Neue',sans-serif;letter-spacing:1px;margin-right:6px;}
+@media(max-width:480px){.cust-stats{grid-template-columns:repeat(2,1fr);}}
 .doc-field-group{padding:0 16px;display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:4px;}
 .doc-field-group.full{grid-template-columns:1fr;}
 .doc-field{display:flex;flex-direction:column;gap:3px;}
@@ -957,11 +1002,17 @@ select.doc-finput option{background:var(--steel-mid);}
 /* Conditional sections — hidden when current type doesn't match */
 .wo-fields[data-type="vinyl"] .mo-only-roofing,
 .wo-fields[data-type="lpsmartside"] .mo-only-roofing{display:none;}
-.mo-mat-row{background:var(--steel-light);border-radius:6px;padding:8px 10px;display:grid;grid-template-columns:120px repeat(3,1fr);gap:6px;align-items:center;border-left:3px solid var(--amber);}
-@media(max-width:760px){.mo-mat-row{grid-template-columns:100px 1fr 1fr;gap:5px;}.mo-mat-row .mo-mat-input:nth-of-type(3){grid-column:span 2;}}
-@media(max-width:520px){.mo-mat-row{grid-template-columns:1fr;gap:4px;}.mo-mat-row .mo-mat-input:nth-of-type(3){grid-column:auto;}}
+.mo-mat-row{background:var(--steel-light);border-radius:6px;padding:8px 10px;display:grid;grid-template-columns:160px repeat(3,1fr) 32px;gap:6px;align-items:center;border-left:3px solid var(--amber);}
+@media(max-width:760px){.mo-mat-row{grid-template-columns:130px 1fr 1fr 32px;gap:5px;}.mo-mat-row .mo-mat-input:nth-of-type(3){grid-column:span 2;}}
+@media(max-width:520px){.mo-mat-row{grid-template-columns:1fr 32px;gap:4px;}.mo-mat-row .mo-mat-input{grid-column:1 / -1;}.mo-mat-row .mo-mat-label-select{grid-column:1;}.mo-mat-row .mo-mat-del{grid-column:2;grid-row:1;}}
 .mo-mat-label{font-size:11px;font-weight:600;color:var(--white);}
+.mo-mat-label-select{background:var(--steel-mid);border:1px solid var(--iron);border-radius:5px;padding:6px 8px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;width:100%;cursor:pointer;}
+.mo-mat-label-select:hover{border-color:var(--amber);}
+.mo-mat-label-select:focus{outline:none;border-color:var(--amber);}
 .mo-mat-input{background:var(--steel-mid);border:1px solid var(--iron);border-radius:5px;padding:6px 8px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:11px;width:100%;}
+.mo-mat-del{background:transparent;border:1px solid var(--iron);border-radius:5px;color:var(--muted);cursor:pointer;font-size:13px;padding:5px 6px;transition:all .12s;}
+.mo-mat-del:hover{border-color:#dc2626;color:#dc2626;background:rgba(220,38,38,.1);}
+.mo-mat-add-row{display:flex;justify-content:center;padding:6px 0;}
 .mo-mat-input:focus{outline:none;border-color:var(--amber);}
 .mo-mat-input::placeholder{color:var(--muted);font-size:10px;}
 
@@ -1109,6 +1160,13 @@ body:not(.role-owner):not(.role-manager) .role-financial-only{display:none!impor
 .user-menu-email{padding:10px 14px 8px;font-size:10px;color:var(--muted);border-bottom:1px solid var(--iron);word-break:break-all;}
 .user-menu-item{padding:10px 14px;font-size:12px;color:var(--white);cursor:pointer;display:flex;align-items:center;gap:8px;transition:background .1s;}
 .user-menu-item:hover{background:var(--steel-light);}
+
+/* "+ New ▾" dropdown on the documents toolbar */
+.new-doc-wrap{position:relative;display:inline-block;}
+.new-doc-menu{position:absolute;top:calc(100% + 4px);right:0;background:var(--steel-mid);border:1px solid var(--iron);border-radius:10px;box-shadow:0 6px 28px rgba(0,0,0,.5);z-index:80;min-width:180px;overflow:hidden;display:none;}
+.new-doc-wrap.open .new-doc-menu{display:block;}
+.new-doc-item{padding:10px 14px;font-size:12px;color:var(--white);cursor:pointer;display:flex;align-items:center;gap:8px;transition:background .1s;font-family:'DM Sans',sans-serif;}
+.new-doc-item:hover{background:var(--steel-light);}
 .user-menu-item.danger{color:var(--danger);}
 </style>
 </head>
@@ -1173,10 +1231,11 @@ body:not(.role-owner):not(.role-manager) .role-financial-only{display:none!impor
       <div class="user-menu-email" id="userMenuEmail"></div>
       <div class="user-menu-item role-owner-only" id="manageTeamMenuItem" onclick="openTeamManager()"><span>👥</span><span>Manage Team</span></div>
       <div class="user-menu-item role-financial-only" id="reportsMenuItem" onclick="openReports()"><span>📊</span><span>Reports</span></div>
+      <div class="user-menu-item" id="resyncMenuItem" onclick="manualResync()"><span>🔄</span><span>Resync</span></div>
       <div class="user-menu-item danger" onclick="doSignOut()"><span>⏏</span><span>Sign Out</span></div>
     </div>
     <div class="sync-dot" id="syncDot"></div>
-    <span class="sync-lbl" id="syncLbl"></span>
+    <span class="sync-lbl" id="syncLbl" onclick="manualResync()" title="Tap to resync"></span>
     <div class="dtabs" id="dtabs">
       <button class="dtab active" id="dtSched" onclick="switchMain('sched')">📅 SCHEDULE <span class="dbadge" id="dtBlBadge">0</span></button>
       <button class="dtab" id="dtCRM" onclick="switchMain('crm')">📋 LEADS <span class="dbadge" id="dtCrmBadge">0</span></button>
@@ -1317,13 +1376,28 @@ body:not(.role-owner):not(.role-manager) .role-financial-only{display:none!impor
       <div class="doc-toolbar">
         <span class="doc-toolbar-title">📄 ESTIMATES & INVOICES</span>
         <div class="doc-toolbar-spacer"></div>
+        <div class="doc-search-wrap">
+          <input type="search" class="doc-search-input" id="docSearchInput" placeholder="🔍 Search…" oninput="onDocSearchChange(this.value)" autocomplete="off">
+        </div>
         <button class="btn btn-ghost btn-sm" id="filterAllDocs" onclick="filterDocs('all')" style="border-color:var(--amber);color:var(--amber)">All</button>
         <button class="btn btn-ghost btn-sm" id="filterEstDocs" onclick="filterDocs('estimate')">Estimates</button>
         <button class="btn btn-ghost btn-sm" id="filterInvDocs" onclick="filterDocs('invoice')">Invoices</button>
+        <button class="btn btn-ghost btn-sm" id="filterCtDocs" onclick="filterDocs('contract')">Contracts</button>
+        <button class="btn btn-ghost btn-sm" id="filterCoDocs" onclick="filterDocs('changeorder')">Change Orders</button>
+        <button class="btn btn-ghost btn-sm" id="filterLwDocs" onclick="filterDocs('lienwaiver')">Lien Waivers</button>
         <button class="btn btn-ghost btn-sm" id="filterWoDocs" onclick="filterDocs('workorder')">Work Orders</button>
         <button class="btn btn-ghost btn-sm" id="filterMoDocs" onclick="filterDocs('matorder')">Material Orders</button>
         <button class="btn btn-ghost btn-sm" id="docBulkBtn" onclick="toggleDocBulkMode()" title="Select multiple to delete">✏️ Edit</button>
-        <button class="btn btn-amber btn-sm" onclick="openDocEditor()">+ New Estimate</button>
+        <div class="new-doc-wrap">
+          <button class="btn btn-amber btn-sm" onclick="toggleNewDocMenu()">+ New ▾</button>
+          <div class="new-doc-menu" id="newDocMenu">
+            <div class="new-doc-item" onclick="openDocEditor(null,'estimate')">📄 New Estimate</div>
+            <div class="new-doc-item" onclick="openDocEditor(null,'contract')">📜 New Contract</div>
+            <div class="new-doc-item" onclick="openDocEditor(null,'changeorder')">✏️ New Change Order</div>
+            <div class="new-doc-item" onclick="openDocEditor(null,'lienwaiver')">⚖️ New Lien Waiver</div>
+            <div class="new-doc-item" onclick="openDocEditor(null,'invoice')">💰 New Invoice</div>
+          </div>
+        </div>
       </div>
       <div class="doc-list" id="docList"></div>
     </div>
@@ -1403,6 +1477,12 @@ body:not(.role-owner):not(.role-manager) .role-financial-only{display:none!impor
       <span class="lead-search-icon">🔍</span>
       <input type="search" id="leadSearch" class="lead-search-input" placeholder="Search by name, phone, email, or address…" autocomplete="off"/>
       <button type="button" class="lead-search-clear" id="leadSearchClear" title="Clear">×</button>
+      <select id="leadSortSelect" class="lead-sort-select" onchange="setLeadSort(this.value)" title="Sort">
+        <option value="default">↕ Default order</option>
+        <option value="revenue_desc">💰 Top revenue</option>
+        <option value="lastjob_desc">📅 Recent activity</option>
+        <option value="name_asc">A–Z by name</option>
+      </select>
       <button type="button" class="btn btn-ghost btn-sm" id="leadBulkBtn" onclick="toggleLeadBulkMode()" title="Select multiple to delete" style="flex-shrink:0">✏️ Edit</button>
     </div>
     <!-- Job-type filter pills (matches schedule sub-filter styling) -->
@@ -1456,6 +1536,9 @@ body:not(.role-owner):not(.role-manager) .role-financial-only{display:none!impor
       <select class="doc-finput" id="docType" onchange="updateDocType()" style="font-size:11px;padding:4px 8px;max-width:120px;">
         <option value="estimate">Estimate</option>
         <option value="invoice">Invoice</option>
+        <option value="contract">Contract</option>
+        <option value="changeorder">Change Order</option>
+        <option value="lienwaiver">Lien Waiver</option>
       </select>
     </div>
     <div class="doc-hotbar-sep"></div>
@@ -1482,6 +1565,14 @@ body:not(.role-owner):not(.role-manager) .role-financial-only{display:none!impor
           <div id="docCustDropdown" style="display:none;position:absolute;top:100%;left:0;right:0;background:var(--steel-mid);border:1px solid var(--iron);border-radius:0 0 8px 8px;z-index:60;max-height:180px;overflow-y:auto;box-shadow:0 6px 20px rgba(0,0,0,.4);"></div>
         </div>
         <div id="docCustLinked" style="display:none;margin-top:6px;"></div>
+      </div>
+      <!-- Parent-estimate picker: only shown for change orders, contracts, lien waivers.
+           Picking an estimate auto-fills customer name/contact/address on this doc. -->
+      <div class="doc-field-group full" id="docParentEstWrap" style="padding:0 16px 8px;border-bottom:1px solid var(--iron);margin-bottom:8px;display:none">
+        <label class="doc-flbl">Link to Parent Estimate <span style="color:var(--muted);font-weight:400;letter-spacing:0;text-transform:none;font-size:9px">(optional — pulls customer info)</span></label>
+        <select class="doc-finput" id="docParentEst" onchange="onDocParentEstChange(this.value)" style="margin-top:4px;">
+          <option value="">— None (standalone) —</option>
+        </select>
       </div>
       <div class="doc-field-group">
         <div class="doc-field">
@@ -1515,7 +1606,10 @@ body:not(.role-owner):not(.role-manager) .role-financial-only{display:none!impor
           <textarea class="doc-finput" id="docScope" rows="2" placeholder="Describe the work to be performed…"></textarea>
         </div>
       </div>
-      <div class="li-section-lbl">LINE ITEMS</div>
+      <div class="li-section-lbl">
+        LINE ITEMS
+        <input type="search" class="li-search-input" id="liSearchInput" placeholder="🔍 Filter rows…" oninput="onLineItemSearchChange(this.value)" autocomplete="off">
+      </div>
       <div id="liEditor" style="padding:8px 16px;display:flex;flex-direction:column;gap:6px;">
         <div style="display:grid;grid-template-columns:22px 1fr 70px 90px 30px;gap:6px;padding:0 0 2px;">
           <span></span><span class="li-row-hdr">Description</span><span class="li-row-hdr" style="text-align:center">Qty</span><span class="li-row-hdr" style="text-align:right">Unit Price</span><span></span>
@@ -1704,6 +1798,7 @@ body:not(.role-owner):not(.role-manager) .role-financial-only{display:none!impor
         <select class="finput" id="lStage">
           <option value="new">🔵 New Lead</option><option value="contact">🟣 Contacted</option>
           <option value="quote">🟡 Quote Sent</option><option value="accepted">🟢 Accepted</option>
+          <option value="invoiced">🟦 Invoiced</option><option value="paid">💚 Paid</option>
           <option value="declined">🔴 Declined</option><option value="done">🩵 Completed</option>
         </select>
       </div>
@@ -1728,6 +1823,32 @@ body:not(.role-owner):not(.role-manager) .role-financial-only{display:none!impor
     </div>
     <div class="fg"><label class="flbl">Address / Site</label><input type="text" class="finput" id="lAddr" placeholder="123 Main St, City, State" autocomplete="off"/></div>
     <div class="fg"><label class="flbl">Notes</label><textarea class="finput" id="lNotes" rows="2" placeholder="Scope of work..."></textarea></div>
+
+    <!-- ── CUSTOMER FILE ────────────────────────────────────── -->
+    <!-- Shows everything linked to this customer: documents, jobs, stats, history.
+         Only visible on existing leads (new leads have no history). -->
+    <div class="cust-file" id="lCustomerFile" style="display:none">
+      <div class="cust-file-hdr" onclick="toggleCustomerFile()">
+        <span class="cust-file-title">📁 CUSTOMER FILE</span>
+        <span class="cust-file-toggle" id="lCustFileToggle">▼</span>
+      </div>
+      <div class="cust-file-body" id="lCustomerFileBody">
+        <div class="cust-stats" id="lCustStats"></div>
+        <div class="cust-section">
+          <div class="cust-section-hdr">📄 Documents</div>
+          <div class="cust-list" id="lCustDocs"></div>
+        </div>
+        <div class="cust-section">
+          <div class="cust-section-hdr">🔨 Jobs</div>
+          <div class="cust-list" id="lCustJobs"></div>
+        </div>
+        <div class="cust-section">
+          <div class="cust-section-hdr">📋 Activity</div>
+          <div class="cust-list" id="lCustActivity"></div>
+        </div>
+      </div>
+    </div>
+
     <div class="macts">
       <button class="btn btn-ghost" onclick="closeMov('lMov')">Cancel</button>
       <button class="btn btn-danger btn-sm" id="lDel" style="display:none" onclick="deleteLead()">Delete</button>
@@ -2031,7 +2152,14 @@ function _isDocLost(d){return d.outcome==='lost';}
 function renderReports(){
   const win=_reportWindow();
   // ── Filter docs to estimates ────────────────────────────────
-  const allEst=docs.filter(d=>d.type==='estimate');
+  // Filter docs to revenue-eligible types. estimates always; contracts
+  // also count toward revenue/profit/close-rate (per DOC_TYPES.countsAsWon).
+  // Change orders + lien waivers don't count — they're document operations,
+  // not deals.
+  const allEst=docs.filter(d=>{
+    const cfg=getDocTypeConfig(d.type);
+    return cfg&&cfg.countsAsWon;
+  });
   // Won estimates: closeDate falls inside the window. closeDate prefers
   // manual closed_date so old jobs marked today land in today's month.
   const wonEst=allEst.filter(d=>{
@@ -2471,8 +2599,23 @@ function toggleUserMenu(){
 function closeUserMenu(){
   document.getElementById('userMenu').classList.remove('open');
 }
+// "+ New ▾" dropdown on the documents toolbar — picks a doc type to create
+function toggleNewDocMenu(){
+  const wrap=document.querySelector('.new-doc-wrap');
+  if(wrap) wrap.classList.toggle('open');
+}
+function closeNewDocMenu(){
+  const wrap=document.querySelector('.new-doc-wrap');
+  if(wrap) wrap.classList.remove('open');
+}
 document.addEventListener('click',e=>{
   if(!e.target.closest('#userBadge')&&!e.target.closest('#userMenu'))closeUserMenu();
+  // Close new-doc-menu when clicking outside it
+  if(!e.target.closest('.new-doc-wrap')) closeNewDocMenu();
+});
+// Close the menu when an item is selected
+document.addEventListener('click',e=>{
+  if(e.target.classList&&e.target.classList.contains('new-doc-item')) closeNewDocMenu();
 });
 async function doSignIn(){
   const email=document.getElementById('siEmail').value.trim();
@@ -2553,20 +2696,74 @@ function lsSet(key,val){try{localStorage.setItem(key,JSON.stringify(val));}catch
 // ── DEBOUNCED SAVE QUEUE ──────────────────────────────────────
 const saveQueue={jobs:{},leads:{},docs:{},templates:{},tasks:{}};
 const saveTimers={jobs:{},leads:{},docs:{},templates:{},tasks:{}};
+// Persistent queue of saves that haven't reached Supabase yet. Survives
+// reload. Each entry = {table, id, item, attempts, firstQueued}.
+// Stored as an array (not keyed) so multiple edits to the same id over
+// time don't overwrite — we always coalesce on flush by keeping latest.
+const PENDING_KEY='pending_sync_queue_v1';
+function _loadPending(){
+  try{return JSON.parse(localStorage.getItem(PENDING_KEY)||'[]');}catch{return [];}
+}
+function _savePending(arr){
+  try{localStorage.setItem(PENDING_KEY,JSON.stringify(arr));}catch(e){console.error('pending save failed',e);}
+}
+function _addPending(table,item){
+  const arr=_loadPending();
+  // Coalesce: if there's already a pending entry for this table+id, replace it
+  const idx=arr.findIndex(p=>p.table===table&&p.id===item.id);
+  const entry={table,id:item.id,item,attempts:idx>=0?arr[idx].attempts:0,firstQueued:idx>=0?arr[idx].firstQueued:Date.now(),lastTry:Date.now()};
+  if(idx>=0) arr[idx]=entry; else arr.push(entry);
+  _savePending(arr);
+  _updatePendingBadge();
+}
+function _removePending(table,id){
+  const arr=_loadPending().filter(p=>!(p.table===table&&p.id===id));
+  _savePending(arr);
+  _updatePendingBadge();
+}
+function getPendingCount(){return _loadPending().length;}
+function _updatePendingBadge(){
+  const lbl=document.getElementById('syncLbl');if(!lbl)return;
+  const count=getPendingCount();
+  if(count>0&&!lbl.textContent.includes('Saving')){
+    lbl.textContent=`📥 ${count} pending`;
+    lbl.style.color='#f59e0b';
+  }
+}
+
+// Helper: serialize an item for a given table using the right converter
+function _toDb(table,item){
+  if(table==='jobs') return jobToDb(item);
+  if(table==='leads') return leadToDb(item);
+  if(table==='docs') return docToDb(item);
+  if(table==='templates') return tmplToDb(item);
+  if(table==='tasks') return taskToDb(item);
+  throw new Error('unknown table '+table);
+}
+
 function queueSave(table,item){
   saveQueue[table][item.id]=item;
+  // Always update local cache immediately — that way a refresh after
+  // an offline edit shows the right data
+  if(table==='jobs') lsSet('jobs_cache',jobs.map(jobToDb));
+  else if(table==='leads') lsSet('leads_cache',leads.map(leadToDb));
+  else if(table==='docs') lsSet('docs_cache',docs.map(docToDb));
+  else if(table==='templates') lsSet('templates_cache',estTemplates.map(tmplToDb));
+  else if(table==='tasks') lsSet('tasks_cache',tasks.map(taskToDb));
+  // Debounce the actual upsert
   clearTimeout(saveTimers[table][item.id]);
   saveTimers[table][item.id]=setTimeout(async()=>{
     const it=saveQueue[table][item.id];if(!it)return;
     delete saveQueue[table][item.id];
     try{
-      if(table==='jobs'){await sb.upsert('jobs',jobToDb(it));lsSet('jobs_cache',jobs.map(jobToDb));}
-      else if(table==='leads'){await sb.upsert('leads',leadToDb(it));lsSet('leads_cache',leads.map(leadToDb));}
-      else if(table==='docs'){await sb.upsert('docs',docToDb(it));lsSet('docs_cache',docs.map(docToDb));}
-      else if(table==='templates'){await sb.upsert('templates',tmplToDb(it));lsSet('templates_cache',estTemplates.map(tmplToDb));}
-      else if(table==='tasks'){await sb.upsert('tasks',taskToDb(it));lsSet('tasks_cache',tasks.map(taskToDb));}
-      setSS('synced','Saved ✓');setTimeout(()=>document.getElementById('syncLbl').textContent='',2000);
-    }catch(e){console.error('Sync error:',e.message||e);setSS('error','Save failed — check console');}
+      await sb.upsert(table,_toDb(table,it));
+      _removePending(table,it.id);
+      setSS('synced','Saved ✓');setTimeout(()=>{const lbl=document.getElementById('syncLbl');if(lbl){lbl.textContent='';lbl.style.color='';}_updatePendingBadge();},2000);
+    }catch(e){
+      console.error('Sync error — queued for retry:',e.message||e);
+      _addPending(table,it);
+      setSS('error','Offline — '+getPendingCount()+' pending');
+    }
   },500);
 }
 function flushSaveQueue(){
@@ -2574,12 +2771,12 @@ function flushSaveQueue(){
   const flush=async(table,items)=>{
     for(const it of Object.values(items)){
       try{
-        if(table==='jobs'){await sb.upsert('jobs',jobToDb(it));}
-        else if(table==='leads'){await sb.upsert('leads',leadToDb(it));}
-        else if(table==='docs'){await sb.upsert('docs',docToDb(it));}
-        else if(table==='templates'){await sb.upsert('templates',tmplToDb(it));}
-        else if(table==='tasks'){await sb.upsert('tasks',taskToDb(it));}
-      }catch(e){console.error('flush error:',e);}
+        await sb.upsert(table,_toDb(table,it));
+        _removePending(table,it.id);
+      }catch(e){
+        console.error('flush error:',e);
+        _addPending(table,it);
+      }
     }
     saveQueue[table]={};
   };
@@ -2589,6 +2786,103 @@ function flushSaveQueue(){
   flush('templates',{...saveQueue.templates});
   flush('tasks',{...saveQueue.tasks});
 }
+
+// Try every persisted pending save. Returns {ok, fail}.
+async function retryPendingSyncs(silent){
+  const arr=_loadPending();
+  if(!arr.length){
+    if(!silent){setSS('synced','Nothing pending ✓');setTimeout(()=>{const lbl=document.getElementById('syncLbl');if(lbl)lbl.textContent='';},1500);}
+    return{ok:0,fail:0};
+  }
+  if(!silent) setSS('syncing',`Retrying ${arr.length}…`);
+  let ok=0,fail=0;
+  // Process newest-first within each table to honor "latest wins"
+  for(const p of arr){
+    try{
+      await sb.upsert(p.table,_toDb(p.table,p.item));
+      _removePending(p.table,p.id);
+      ok++;
+    }catch(e){
+      fail++;
+      // Update attempts counter
+      const cur=_loadPending();
+      const idx=cur.findIndex(x=>x.table===p.table&&x.id===p.id);
+      if(idx>=0){cur[idx].attempts=(cur[idx].attempts||0)+1;cur[idx].lastTry=Date.now();_savePending(cur);}
+    }
+  }
+  if(!silent){
+    if(fail===0) setSS('synced',`Synced ${ok} ✓`);
+    else setSS('error',`${ok} ok, ${fail} still failing`);
+    setTimeout(()=>{const lbl=document.getElementById('syncLbl');if(lbl){lbl.style.color='';}_updatePendingBadge();},2500);
+  }
+  return{ok,fail};
+}
+
+// Manual resync button handler — also re-pulls fresh data from Supabase
+async function manualResync(){
+  // Close user menu if open
+  const um=document.getElementById('userMenu');if(um) um.classList.remove('open');
+  setSS('syncing','Reconnecting…');
+  // 1. Push pending changes
+  await retryPendingSyncs(true);
+  // 2. Re-pull all tables (only if there's no auth issue)
+  try{
+    if(typeof loadAllRemote==='function') await loadAllRemote();
+    const pending=getPendingCount();
+    if(pending===0){
+      setSS('synced','Reconnected ✓');
+    } else {
+      setSS('error',`Reconnected — ${pending} still pending`);
+    }
+  }catch(e){
+    console.error('resync pull error:',e);
+    setSS('error','Could not reach server');
+  }
+  setTimeout(()=>{const lbl=document.getElementById('syncLbl');if(lbl){lbl.style.color='';}_updatePendingBadge();},2500);
+  // Re-render the active view
+  if(typeof renderSched==='function') renderSched();
+  if(typeof renderCRM==='function') renderCRM();
+  if(typeof renderDocList==='function') renderDocList();
+}
+
+// Auto-retry pending saves every 5 minutes in the background
+setInterval(()=>{
+  if(getPendingCount()>0){
+    console.log('Auto-retrying',getPendingCount(),'pending saves');
+    retryPendingSyncs(true);
+  }
+},5*60*1000);
+
+// Re-pull every table from Supabase. Used by the manual Resync button
+// after pushing pending saves. Doesn't touch local state if a fetch
+// fails — just throws so the caller can show the error.
+async function loadAllRemote(){
+  // Pull everything in parallel
+  const[j,l,d,t,tm]=await Promise.all([
+    sb.get('jobs'),
+    sb.get('leads'),
+    sb.get('docs'),
+    sb.get('tasks').catch(()=>[]),         // tasks may not exist for everyone
+    sb.get('templates').catch(()=>[]),     // templates likewise
+  ]);
+  jobs=j.map(dbToJob);
+  leads=l.map(dbToLead);
+  docs=d.map(dbToDoc);
+  if(Array.isArray(t))  tasks=t.map(dbToTask);
+  if(Array.isArray(tm)) estTemplates=tm.map(dbToTmpl);
+  // Refresh local cache so a future offline reload has the latest
+  lsSet('jobs_cache',j);
+  lsSet('leads_cache',l);
+  lsSet('docs_cache',d);
+  if(Array.isArray(t))  lsSet('tasks_cache',t);
+  if(Array.isArray(tm)) lsSet('templates_cache',tm);
+}
+
+// On startup, show the pending badge and try once after a short delay
+setTimeout(()=>{
+  _updatePendingBadge();
+  if(getPendingCount()>0) retryPendingSyncs(true);
+},3000);
 
 const sb={
   async req(method,path,body=null){
@@ -2618,6 +2912,8 @@ const STAGES=[
   {id:'contact',label:'Contacted',color:'#a855f7',cls:'stage-contact'},
   {id:'quote',label:'Quoting',color:'#f59e0b',cls:'stage-quote'},
   {id:'accepted',label:'Accepted',color:'#22c55e',cls:'stage-accepted'},
+  {id:'invoiced',label:'Invoiced',color:'#0ea5e9',cls:'stage-invoiced'},
+  {id:'paid',label:'Paid',color:'#10b981',cls:'stage-paid'},
   {id:'declined',label:'Declined',color:'#ef4444',cls:'stage-declined'},
   {id:'done',label:'Done',color:'#14b8a6',cls:'stage-done'},
 ];
@@ -2638,6 +2934,47 @@ let selectedDay=(new Date().getDay()||7)-1;
 let activeStageFilter='all';
 let leadSearchQuery='';
 let leadJobTypeFilter=lsGet('lead_job_type_filter','all'); // 'all' | one of JOB_TYPES
+let leadSortMode=lsGet('lead_sort_mode','default'); // 'default' | 'revenue_desc' | 'lastjob_desc' | 'name_asc'
+function setLeadSort(mode){
+  leadSortMode=mode||'default';
+  lsSet('lead_sort_mode',leadSortMode);
+  renderCRM();
+}
+// Compute total revenue for a lead by walking docs that count as won.
+// Pulled into its own helper so the sort + Customer File can share it.
+function leadTotalRevenue(lead){
+  if(!docs||!docs.length) return 0;
+  let total=0;
+  for(const d of docs){
+    let belongs=false;
+    if(lead.estId&&(d.id===lead.estId||d.sourceEstId===lead.estId)) belongs=true;
+    if(d.leadId===lead.id) belongs=true;
+    if(!belongs) continue;
+    const cfg=getDocTypeConfig(d.type);
+    if(!cfg.countsAsWon) continue;
+    if(d.outcome==='won'||!!d.signature) total+=(calcDocTotal(d)||0);
+  }
+  return total;
+}
+function leadLastActivity(lead){
+  // Last activity = max(lead.activity ts, any linked doc activity ts)
+  let max='';
+  if(Array.isArray(lead.activity)){
+    for(const a of lead.activity){if(a.ts&&a.ts>max) max=a.ts;}
+  }
+  if(docs&&docs.length){
+    for(const d of docs){
+      let belongs=false;
+      if(lead.estId&&(d.id===lead.estId||d.sourceEstId===lead.estId)) belongs=true;
+      if(d.leadId===lead.id) belongs=true;
+      if(!belongs) continue;
+      if(Array.isArray(d.activity)){
+        for(const a of d.activity){if(a.ts&&a.ts>max) max=a.ts;}
+      }
+    }
+  }
+  return max||lead.createdAt||'';
+}
 
 function setLeadJobType(t){
   leadJobTypeFilter=t;
@@ -3019,7 +3356,8 @@ const dbToDoc=r=>{
   moHouse:mo.moHouse||'',moGarage:mo.moGarage||'',moPitch:mo.moPitch||'',
   moShingleType:mo.moShingleType||'',moSquares:mo.moSquares||'',moShingleColor:mo.moShingleColor||'',
   moMaterialType:mo.moMaterialType||'roofing',
-  moMaterials:mo.moMaterials||{}};
+  moMaterials:mo.moMaterials||{},
+  moRows:Array.isArray(mo.moRows)?mo.moRows:null};
 };
 const docToDb=d=>{
   // Extract MO-specific fields into mat_order_data
@@ -3029,7 +3367,8 @@ const docToDb=d=>{
     moHouse:d.moHouse||'',moGarage:d.moGarage||'',moPitch:d.moPitch||'',
     moShingleType:d.moShingleType||'',moSquares:d.moSquares||'',moShingleColor:d.moShingleColor||'',
     moMaterialType:d.moMaterialType||'roofing',
-    moMaterials:d.moMaterials||{}
+    moMaterials:d.moMaterials||{},
+    moRows:Array.isArray(d.moRows)?d.moRows:null
   };
   return {id:d.id,type:d.type||'estimate',status:d.status||'draft',num:d.num||'',client_name:d.clientName||'',client_contact:d.clientContact||'',client_addr:d.clientAddr||'',date:d.date||null,due_date:d.dueDate||null,scope:d.scope||'',line_items:JSON.stringify(d.lineItems||[]),tax:parseFloat(d.tax)||0,discount:parseFloat(d.discount)||0,notes:d.notes||'',manual_total:(d.manualTotal!=null&&d.manualTotal!=='')?parseFloat(d.manualTotal):null,created:d.created||Date.now(),signature:d.signature||'',signature_name:d.signatureName||'',signature_date:d.signatureDate||null,lead_source:d.leadSource||'',activity:JSON.stringify(d.activity||[]),checklist:JSON.stringify(d.checklist||[]),extras:JSON.stringify(d.extras||[]),pm_id:d.pmId||'',arrival:d.arrival||'',source_est_id:d.sourceEstId||null,source_est_num:d.sourceEstNum||'',mat_cost:(d.matCost!=null&&d.matCost!=='')?parseFloat(d.matCost):null,labor_cost:(d.laborCost!=null&&d.laborCost!=='')?parseFloat(d.laborCost):null,other_cost:(d.otherCost!=null&&d.otherCost!=='')?parseFloat(d.otherCost):null,outcome:d.outcome||null,closed_date:d.closedDate||null,linked_job_id:d.linkedJobId||null,mat_order_data:JSON.stringify(moData),user_id:currentUser?.id||null,updated_at:new Date().toISOString()};
 };
@@ -3513,10 +3852,23 @@ function renderCRM(){
   }
   // Apply search query (matches name, contact, phone, email, address — case-insensitive)
   const q=(leadSearchQuery||'').trim().toLowerCase();
-  const fil=q?fil0.filter(l=>{
+  let fil=q?fil0.filter(l=>{
     const hay=[l.name,l.contact,l.phone,l.email,l.address,l.notes].filter(Boolean).join(' ').toLowerCase();
     return hay.includes(q);
   }):fil0;
+  // Apply sort mode (default = preserves insertion order, which is roughly chronological)
+  const sortSel=document.getElementById('leadSortSelect');
+  if(sortSel&&sortSel.value!==leadSortMode) sortSel.value=leadSortMode;
+  if(leadSortMode&&leadSortMode!=='default'){
+    fil=fil.slice(); // don't mutate the cached fil0
+    if(leadSortMode==='revenue_desc'){
+      fil.sort((a,b)=>leadTotalRevenue(b)-leadTotalRevenue(a));
+    } else if(leadSortMode==='lastjob_desc'){
+      fil.sort((a,b)=>(leadLastActivity(b)||'').localeCompare(leadLastActivity(a)||''));
+    } else if(leadSortMode==='name_asc'){
+      fil.sort((a,b)=>(a.name||'').toLowerCase().localeCompare((b.name||'').toLowerCase()));
+    }
+  }
   const list=document.getElementById('leadList'); list.innerHTML='';
   if(fil.length===0){
     const emptyMsg=q?`No leads match "<strong>${esc(leadSearchQuery)}</strong>".`:'No leads here.<br>Tap + to add.';
@@ -3535,6 +3887,29 @@ function leadCard(l){
   const others=STAGES.filter(s=>s.id!==l.stage).slice(0,2);
   const typeBadges=types.map(t=>{const tc=TC[t]||'#64748b';return `<div class="lbadge" style="background:${tc}22;color:${tc};border:1px solid ${tc}44">${esc(t)}</div>`;}).join('');
   const linkedDoc=l.estId&&docs&&docs.length?docs.find(d=>d.id===l.estId):null;
+  // Detect any invoice tied to this lead. Two ways an invoice can be linked:
+  //   (a) the lead's estId points at a doc that is now type='invoice' (the
+  //       converted-from-estimate path)
+  //   (b) any invoice with sourceEstId pointing at this lead's estimate
+  // The most-recent invoice wins for the badge.
+  let leadInvoice=null;
+  if(docs&&docs.length){
+    const candidates=docs.filter(d=>d.type==='invoice'&&(
+      d.id===l.estId||(l.estId&&d.sourceEstId===l.estId)
+    ));
+    if(candidates.length) leadInvoice=candidates.sort((a,b)=>(b.created||0)-(a.created||0))[0];
+  }
+  const invoiceBadge=leadInvoice
+    ? (leadInvoice.status==='paid'
+        ? `<div class="lbadge invoiced-badge paid-badge" title="Invoice ${esc(leadInvoice.num||'')} paid">💚 PAID</div>`
+        : `<div class="lbadge invoiced-badge" title="Invoice ${esc(leadInvoice.num||'')} sent">📄 INVOICED</div>`)
+    : '';
+  // Revenue badge — only shown when sorted by revenue, so the order is legible at a glance
+  let revenueBadge='';
+  if(leadSortMode==='revenue_desc'){
+    const rev=leadTotalRevenue(l);
+    if(rev>0) revenueBadge=`<div class="lbadge" style="background:rgba(245,158,11,.12);color:var(--amber);border:1px solid rgba(245,158,11,.4);font-weight:700">💰 $${rev.toLocaleString(undefined,{maximumFractionDigits:0})}</div>`;
+  }
   const isSelected=bulkMode==='leads'&&bulkSelected.has(l.id);
   const cardClick=bulkMode==='leads'?`bulkToggle('${l.id}',event)`:'';
   return `<div class="lcard lead-card ${st.cls}${isSelected?' selected':''}" data-id="${l.id}" data-bulk-id="${l.id}"${cardClick?' onclick="'+cardClick+'"':''} style="border-left-color:${c.hex}">
@@ -3545,7 +3920,7 @@ function leadCard(l){
         ${l.contact||l.phone?`<div class="lccon">${l.contact?'👤 '+esc(l.contact):''}${l.phone?' · '+esc(l.phone):''}</div>`:''}
         ${l.source?`<div class="lcsrc">📥 ${esc(l.source)}</div>`:''}
         <div class="lcrow">${l.value?`<div class="lcval">$${Number(l.value).toLocaleString()}</div>`:'<div></div>'}
-        <div class="type-tags-row">${typeBadges}<div class="lbadge" style="background:${st.color}22;color:${st.color};border:1px solid ${st.color}44">${st.label}</div></div></div>
+        <div class="type-tags-row">${typeBadges}<div class="lbadge" style="background:${st.color}22;color:${st.color};border:1px solid ${st.color}44">${st.label}</div>${invoiceBadge}${revenueBadge}</div></div>
         ${l.address?`<div class="lcaddr">📍 ${esc(l.address)}</div>`:''}
         ${on?'<div class="abanner">✅ On Scheduler</div>':''}
         <div class="lcard-est-row">
@@ -4126,13 +4501,148 @@ function openLeadMov(editId){
     document.getElementById('lNotes').value=l.notes||'';leadColor=l.color||'blue';
     const ls=document.getElementById('lSource');if(ls)ls.value=l.source||'';
     buildTypePicker(l.types||[]);
+    // Populate the Customer File panel with all linked records
+    buildCustomerFile(editId);
+    document.getElementById('lCustomerFile').style.display='block';
   }else{
     ['lName','lContact','lPhone','lEmail','lVal','lAddr','lNotes'].forEach(id=>document.getElementById(id).value='');
     document.getElementById('lStage').value='new';leadColor='blue';
     const ls=document.getElementById('lSource');if(ls)ls.value='';
     buildTypePicker([]);
+    // New leads have no history yet, hide the panel
+    document.getElementById('lCustomerFile').style.display='none';
   }
   buildCP('lCP',leadColor,c=>leadColor=c);openMov('lMov');setTimeout(()=>document.getElementById('lName').focus(),100);
+}
+
+// ─── CUSTOMER FILE ───────────────────────────────────────────
+// Compile every doc, job, and activity entry for one lead into one panel.
+// All reads, no writes — entirely safe to add without SQL changes.
+function toggleCustomerFile(){
+  const wrap=document.getElementById('lCustomerFile');
+  if(!wrap)return;
+  wrap.classList.toggle('closed');
+}
+function buildCustomerFile(leadId){
+  const lead=leads.find(l=>l.id===leadId);
+  if(!lead)return;
+  // Collect all docs linked to this lead.
+  // Three ways a doc can belong to a customer:
+  //   (a) lead.estId === doc.id  — the lead points at the doc directly
+  //   (b) doc.sourceEstId === lead.estId  — a child of the original estimate
+  //   (c) doc.leadId === lead.id  — direct link saved on the doc
+  // We dedupe by id at the end.
+  const seen=new Set();
+  const custDocs=[];
+  if(docs&&docs.length){
+    for(const d of docs){
+      let belongs=false;
+      if(lead.estId&&(d.id===lead.estId||d.sourceEstId===lead.estId)) belongs=true;
+      if(d.leadId===lead.id) belongs=true;
+      if(belongs&&!seen.has(d.id)){seen.add(d.id);custDocs.push(d);}
+    }
+  }
+  // Sort docs newest-first by created timestamp
+  custDocs.sort((a,b)=>(b.created||0)-(a.created||0));
+  // Collect jobs linked via doc-chain.
+  // jobs.linked_doc_id (text) or jobs.linkedDocId (camelCase in-memory)
+  // points to a doc.id. If that doc belongs to this customer, the job does too.
+  const docIds=new Set(custDocs.map(d=>d.id));
+  const custJobs=(jobs||[]).filter(j=>{
+    const linked=j.linkedDocId||j.linked_doc_id;
+    return linked&&docIds.has(linked);
+  });
+  custJobs.sort((a,b)=>{
+    // Backlog last, scheduled by day descending
+    if(a.day==='backlog'&&b.day!=='backlog') return 1;
+    if(b.day==='backlog'&&a.day!=='backlog') return -1;
+    return (b.day||'').localeCompare(a.day||'');
+  });
+  // ─── Render stats strip ──────────────────────────────────
+  const won=custDocs.filter(d=>{
+    const cfg=getDocTypeConfig(d.type);
+    return cfg.countsAsWon&&(d.outcome==='won'||!!d.signature);
+  });
+  const totalRevenue=won.reduce((sum,d)=>sum+(calcDocTotal(d)||0),0);
+  const jobCount=custJobs.filter(j=>j.day&&j.day!=='backlog').length;
+  const firstContact=lead.createdAt
+    ? new Date(lead.createdAt).toLocaleDateString()
+    : (Array.isArray(lead.activity)&&lead.activity.length
+        ? new Date(lead.activity[0].ts).toLocaleDateString()
+        : '—');
+  // Combined activity from lead + all docs
+  const allActivity=[];
+  if(Array.isArray(lead.activity)) lead.activity.forEach(a=>allActivity.push({...a,kind:'lead'}));
+  custDocs.forEach(d=>{
+    if(Array.isArray(d.activity)) d.activity.forEach(a=>allActivity.push({...a,kind:'doc',docNum:d.num}));
+  });
+  allActivity.sort((a,b)=>(b.ts||'').localeCompare(a.ts||''));
+  const lastActivityTs=allActivity[0]?.ts;
+  const lastActivity=lastActivityTs?new Date(lastActivityTs).toLocaleDateString():'—';
+  document.getElementById('lCustStats').innerHTML=`
+    <div class="cust-stat">
+      <div class="cust-stat-label">Revenue</div>
+      <div class="cust-stat-value amber">$${totalRevenue.toLocaleString(undefined,{maximumFractionDigits:0})}</div>
+    </div>
+    <div class="cust-stat">
+      <div class="cust-stat-label">Jobs Done</div>
+      <div class="cust-stat-value">${jobCount}</div>
+    </div>
+    <div class="cust-stat">
+      <div class="cust-stat-label">First Contact</div>
+      <div class="cust-stat-value" style="font-size:12px">${firstContact}</div>
+    </div>
+    <div class="cust-stat">
+      <div class="cust-stat-label">Last Activity</div>
+      <div class="cust-stat-value" style="font-size:12px">${lastActivity}</div>
+    </div>`;
+  // ─── Render documents list ───────────────────────────────
+  const docsEl=document.getElementById('lCustDocs');
+  if(!custDocs.length){
+    docsEl.innerHTML='<div class="cust-empty">No documents yet.</div>';
+  } else {
+    docsEl.innerHTML=custDocs.map(d=>{
+      const cfg=getDocTypeConfig(d.type);
+      const total=cfg.countsAsWon||d.type==='invoice'?` · $${(calcDocTotal(d)||0).toLocaleString(undefined,{maximumFractionDigits:0})}`:'';
+      const status=d.status==='paid'?' 💚':d.signature?' ✓':d.status==='invoiced'?' 📄':'';
+      const created=d.created?new Date(d.created).toLocaleDateString():'';
+      return `<div class="cust-item" onclick="closeMov('lMov');setTimeout(()=>openDocEditor('${esc(d.id)}'),120)">
+        <div class="cust-item-left">
+          <span class="cust-item-num">${esc(cfg.label.toUpperCase())} ${esc(d.num||'')}</span>
+          <span class="cust-item-label">${esc(d.scope||d.clientName||'(no scope)')}${status}</span>
+        </div>
+        <span class="cust-item-meta">${created}${total}</span>
+      </div>`;
+    }).join('');
+  }
+  // ─── Render jobs list ────────────────────────────────────
+  const jobsEl=document.getElementById('lCustJobs');
+  if(!custJobs.length){
+    jobsEl.innerHTML='<div class="cust-empty">No jobs scheduled yet.</div>';
+  } else {
+    jobsEl.innerHTML=custJobs.map(j=>{
+      const day=j.day==='backlog'?'Backlog':new Date(j.day).toLocaleDateString();
+      const tag=j.apptType||'';
+      return `<div class="cust-item" onclick="closeMov('lMov');setTimeout(()=>openJobMov('${esc(j.id)}'),120)">
+        <div class="cust-item-left">
+          <span class="cust-item-label">${esc(j.title||'(untitled)')}</span>
+        </div>
+        <span class="cust-item-meta">${esc(tag)} · ${esc(day)}</span>
+      </div>`;
+    }).join('');
+  }
+  // ─── Render activity timeline ────────────────────────────
+  const actEl=document.getElementById('lCustActivity');
+  if(!allActivity.length){
+    actEl.innerHTML='<div class="cust-empty">No activity yet.</div>';
+  } else {
+    // Show last 20 entries to avoid massive panels on long-running customers
+    actEl.innerHTML=allActivity.slice(0,20).map(a=>{
+      const ts=a.ts?new Date(a.ts).toLocaleString(undefined,{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'}):'';
+      const prefix=a.kind==='doc'&&a.docNum?`[${esc(a.docNum)}] `:'';
+      return `<div class="cust-activity-row"><span class="cust-activity-ts">${esc(ts)}</span>${prefix}${esc(a.msg||'')}</div>`;
+    }).join('');
+  }
 }
 document.getElementById('lSave').addEventListener('click',async()=>{
   const name=document.getElementById('lName').value.trim();
@@ -4257,11 +4767,13 @@ function _promptOutcomeDate(defaultDate){
 }
 
 async function markDocOutcome(outcome){
-  if(!editDocId){alert('No estimate open.');return;}
+  if(!editDocId){alert('No document open.');return;}
   const d=docs.find(x=>x.id===editDocId);
-  if(!d){alert('Estimate not found.');return;}
-  if(d.type!=='estimate'){
-    alert('Only estimates can be marked Won or Lost.');
+  if(!d){alert('Document not found.');return;}
+  // Won/Lost only applies to revenue-eligible doc types (estimates + contracts).
+  // Change orders and lien waivers can be signed but they're not deals.
+  if(!getDocTypeConfig(d.type).countsAsWon){
+    alert('Only estimates and contracts can be marked Won or Lost.');
     return;
   }
   const label=outcome==='won'?'Won':'Lost';
@@ -4306,10 +4818,10 @@ function updateDocStatusUI(){
 async function bulkMarkOutcome(outcome){
   if(!bulkMode||bulkMode!=='docs'||!bulkSelected.size) return;
   const ids=Array.from(bulkSelected);
-  // Filter to estimates only
-  const targets=docs.filter(d=>ids.includes(d.id)&&d.type==='estimate');
+  // Filter to deal-eligible doc types (estimates + contracts; not WO/MO/CO/LW)
+  const targets=docs.filter(d=>ids.includes(d.id)&&getDocTypeConfig(d.type).countsAsWon);
   if(!targets.length){
-    alert('No estimates selected. (Work orders and material orders can\'t be marked Won/Lost.)');
+    alert('No estimates or contracts selected. Work orders, material orders, change orders, and lien waivers can\'t be marked Won/Lost.');
     return;
   }
   const label=outcome==='won'?'Won':'Lost';
@@ -4685,6 +5197,23 @@ const BV_LOGO_SVG=`<img class="lh-logo-svg" src="data:image/png;base64,iVBORw0KG
 let docs=[]; // {id, type, status, num, clientName, clientContact, clientAddr, date, dueDate, scope, lineItems, tax, discount, notes, created}
 let editDocId=null;
 let docFilter='all';
+let docSearchQuery=''; // free-text search across name, address, est number
+function onDocSearchChange(v){
+  docSearchQuery=(v||'').toString().trim().toLowerCase();
+  renderDocList();
+}
+// In-estimate line-item search. Hides rows whose description doesn't
+// match. Hidden rows still save normally — this is display-only filtering,
+// not a data filter.
+function onLineItemSearchChange(v){
+  const q=(v||'').toString().trim().toLowerCase();
+  document.querySelectorAll('#liRows .li-row-data').forEach(row=>{
+    if(!q){row.style.display='';return;}
+    const descInp=row.querySelector('.li-desc');
+    const desc=(descInp?.value||'').toLowerCase();
+    row.style.display=desc.includes(q)?'':'none';
+  });
+}
 let liCounter=0;
 let draggedLIRow=null;
 
@@ -4858,16 +5387,40 @@ function startDocPolling(){
 function stopDocPolling(){if(docPollTimer){clearInterval(docPollTimer);docPollTimer=null;}}
 
 function nextDocNum(type){
-  const prefix=type==='invoice'?'INV':'EST';
+  const cfg=DOC_TYPES[type]||DOC_TYPES.estimate;
+  const prefix=cfg.prefix;
   const existing=docs.filter(d=>d.type===type).map(d=>parseInt((d.num||'0').replace(/\D/g,''))||0);
   const next=(existing.length?Math.max(...existing):0)+1;
   return prefix+'-'+String(next).padStart(4,'0');
 }
 
+// Central registry of every doc type the app knows about. New types
+// added here automatically get numbering, list-filter buttons, and
+// editor-title behavior; the rest of the code branches off this map.
+const DOC_TYPES={
+  estimate:    {label:'Estimate',     plural:'Estimates',     prefix:'EST', emoji:'📄', color:'#3b82f6', signable:true,  countsAsWon:true},
+  invoice:     {label:'Invoice',      plural:'Invoices',      prefix:'INV', emoji:'💰', color:'#22c55e', signable:false, countsAsWon:false},
+  workorder:   {label:'Work Order',   plural:'Work Orders',   prefix:'WO',  emoji:'🔧', color:'#f59e0b', signable:false, countsAsWon:false},
+  matorder:    {label:'Material Order',plural:'Material Orders',prefix:'MO',emoji:'📦', color:'#22c55e', signable:false, countsAsWon:false},
+  contract:    {label:'Contract',     plural:'Contracts',     prefix:'CT',  emoji:'📜', color:'#a855f7', signable:true,  countsAsWon:true},
+  changeorder: {label:'Change Order', plural:'Change Orders', prefix:'CO',  emoji:'✏️', color:'#0891b2', signable:true,  countsAsWon:false},
+  lienwaiver:  {label:'Lien Waiver',  plural:'Lien Waivers',  prefix:'LW',  emoji:'⚖️', color:'#dc2626', signable:true,  countsAsWon:false},
+};
+function getDocTypeConfig(type){return DOC_TYPES[type]||DOC_TYPES.estimate;}
+
 function filterDocs(f){
   docFilter=f;
   document.querySelectorAll('#estView .doc-toolbar .btn').forEach(b=>{b.style.borderColor='';b.style.color='';});
-  const map={all:'filterAllDocs',estimate:'filterEstDocs',invoice:'filterInvDocs',workorder:'filterWoDocs',matorder:'filterMoDocs'};
+  const map={
+    all:'filterAllDocs',
+    estimate:'filterEstDocs',
+    invoice:'filterInvDocs',
+    workorder:'filterWoDocs',
+    matorder:'filterMoDocs',
+    contract:'filterCtDocs',
+    changeorder:'filterCoDocs',
+    lienwaiver:'filterLwDocs',
+  };
   const el=document.getElementById(map[f]);
   if(el){el.style.borderColor='var(--amber)';el.style.color='var(--amber)';}
   renderDocList();
@@ -4876,18 +5429,38 @@ function filterDocs(f){
 function renderDocList(){
   loadDocs();
   const list=document.getElementById('docList');
-  const filtered=docFilter==='all'?docs:docs.filter(d=>d.type===docFilter);
+  let filtered=docFilter==='all'?docs:docs.filter(d=>d.type===docFilter);
+  // Apply text search across customer name + address + doc number.
+  // Search is case-insensitive and matches partial strings.
+  if(docSearchQuery){
+    const q=docSearchQuery;
+    filtered=filtered.filter(d=>{
+      const hay=[
+        d.clientName||'',
+        d.clientAddr||'',
+        d.num||'',
+      ].join(' ').toLowerCase();
+      return hay.includes(q);
+    });
+  }
   if(!filtered.length){
-    list.innerHTML=`<div class="doc-empty"><div class="doc-empty-icon">📄</div><div class="doc-empty-txt">No documents yet.<br>Create your first estimate.</div></div>`;
+    const msg=docSearchQuery
+      ? `No documents match "${esc(docSearchQuery)}".<br>Try a different search.`
+      : 'No documents yet.<br>Create your first estimate.';
+    list.innerHTML=`<div class="doc-empty"><div class="doc-empty-icon">📄</div><div class="doc-empty-txt">${msg}</div></div>`;
     return;
   }
   list.innerHTML=filtered.slice().reverse().map(d=>{
     const isWo=d.type==='workorder';
     const isMo=d.type==='matorder';
     const isInv=d.type==='invoice';
+    const cfg=getDocTypeConfig(d.type);
     const total=(isWo||isMo)?null:calcDocTotal(d);
     const signed=!!d.signature;
-    const typeLabel=isMo?'MATERIAL ORDER':isWo?'WORK ORDER':(isInv?'INVOICE':'ESTIMATE');
+    // Pull display label from the central registry. For new types
+    // (contract / changeorder / lienwaiver) this gives us "CONTRACT",
+    // "CHANGE ORDER", "LIEN WAIVER" without further branching.
+    const typeLabel=cfg.label.toUpperCase();
     const pm=isWo&&d.pmId?teamRoster.find(m=>m.id===d.pmId):null;
     // Progress for work orders
     let progressLine='';
@@ -4905,9 +5478,11 @@ function renderDocList(){
       moSummary=[shingle,sq,`${matCount} item${matCount===1?'':'s'}`].filter(Boolean).join(' · ');
     }
     const cardClass=isMo?'doc-card matorder':isWo?'doc-card workorder':(signed?'doc-card signed':'doc-card');
-    // Title color for the type label
-    const typeColor=isMo?'#22c55e':isWo?'var(--amber)':'var(--muted)';
-    const typeWeight=(isMo||isWo)?'700':'400';
+    // Title color for the type label — uses the registry color for the new
+    // doc types so each has its own visual identity.
+    const isNewType=['contract','changeorder','lienwaiver'].includes(d.type);
+    const typeColor=isMo?'#22c55e':isWo?'var(--amber)':(isNewType?cfg.color:'var(--muted)');
+    const typeWeight=(isMo||isWo||isNewType)?'700':'400';
     // Display name: matorders use the address since they're per-property
     const displayName=isMo?(d.clientAddr||d.clientName||'Unnamed Job'):(d.clientName||'Unnamed Client');
     // Bulk selection support
@@ -4946,7 +5521,7 @@ function calcDocTotal(d){
   return{sub,disc:0,tax:0,grand};
 }
 
-function openDocEditor(id){
+function openDocEditor(id,newType){
   // If this id points to a work order, route to the WO editor instead
   if(id){
     loadDocs();
@@ -4964,9 +5539,12 @@ function openDocEditor(id){
   loadDocs();
   let doc=editDocId?docs.find(d=>d.id===editDocId):null;
   if(!doc){
-    doc={id:uid(),type:'estimate',status:'draft',num:'',clientName:'',clientContact:'',clientAddr:'',
+    // newType controls which kind of doc we create. Defaults to estimate
+    // when called from legacy entry points.
+    const t=newType||'estimate';
+    doc={id:uid(),type:t,status:'draft',num:'',clientName:'',clientContact:'',clientAddr:'',
       date:new Date().toISOString().split('T')[0],dueDate:'',scope:'',lineItems:[],tax:0,discount:0,notes:'',created:Date.now()};
-    doc.num=nextDocNum('estimate');
+    doc.num=nextDocNum(t);
     editDocId=doc.id; // set immediately so saveDoc knows this is a real doc
   }
   // Reset customer search
@@ -5009,7 +5587,7 @@ function openDocEditor(id){
   setProfitVal('docMatCost',doc.matCost);
   setProfitVal('docLaborCost',doc.laborCost);
   setProfitVal('docOtherCost',doc.otherCost);
-  document.getElementById('docEditorTitle').textContent=(doc.type==='invoice'?'INVOICE ':'ESTIMATE ')+doc.num;
+  document.getElementById('docEditorTitle').textContent=getDocTypeConfig(doc.type).label.toUpperCase()+' '+doc.num;
   document.getElementById('docSendBtn').textContent=doc.type==='invoice'?'Mark Paid →':'Convert to Invoice →';
   // rebuild line items
   liCounter=0;
@@ -5029,6 +5607,11 @@ function openDocEditor(id){
     const el=document.getElementById(fid);
     if(el) el.onchange=liveRefresh;
   });
+  // Reset in-estimate line-item search so the previous filter doesn't carry over
+  const liSearch=document.getElementById('liSearchInput');
+  if(liSearch){liSearch.value='';onLineItemSearchChange('');}
+  // Show/hide and populate the parent-estimate picker for the active doc type
+  toggleParentEstPicker(doc.type||'estimate');
   document.getElementById('docEditor').classList.add('open');
   // Initialize the signature pad after the editor is visible (so canvas has size)
   setTimeout(()=>{
@@ -5051,9 +5634,94 @@ function updateDocType(){
   const t=document.getElementById('docType').value;
   const d=collectDoc({id:editDocId||uid()});
   if(!editDocId) d.num=nextDocNum(t);
-  document.getElementById('docEditorTitle').textContent=(t==='invoice'?'INVOICE ':'ESTIMATE ')+d.num;
+  document.getElementById('docEditorTitle').textContent=getDocTypeConfig(t).label.toUpperCase()+' '+d.num;
   document.getElementById('docSendBtn').textContent=t==='invoice'?'Mark Paid →':'Convert to Invoice →';
+  // Show/hide the parent-estimate picker. Only changeorder/contract/lienwaiver
+  // make sense as "linked to an estimate" — invoices already convert FROM
+  // estimates and material/work orders have their own flow.
+  toggleParentEstPicker(t);
   updateDocPreview(d);
+}
+
+// Show or hide the "Link to Parent Estimate" picker based on the doc type
+// being edited. Returns true if the picker is now visible.
+function toggleParentEstPicker(docType){
+  const wrap=document.getElementById('docParentEstWrap');
+  if(!wrap) return false;
+  const types=['changeorder','contract','lienwaiver'];
+  const show=types.includes(docType);
+  wrap.style.display=show?'':'none';
+  if(show) populateParentEstPicker();
+  return show;
+}
+
+// Fill the parent-estimate dropdown with all estimates in the system.
+// Sorted by created date descending so most-recent appears first.
+// Preserves the currently-selected value if one is set.
+function populateParentEstPicker(){
+  const sel=document.getElementById('docParentEst');
+  if(!sel) return;
+  const cur=sel.value;
+  // Find current doc's existing parent reference if any
+  const curDoc=editDocId?docs.find(x=>x.id===editDocId):null;
+  const preselect=cur||(curDoc&&curDoc.sourceEstId)||'';
+  const ests=(docs||[])
+    .filter(d=>d.type==='estimate'&&d.id!==editDocId)
+    .sort((a,b)=>(b.created||0)-(a.created||0));
+  let html='<option value="">— None (standalone) —</option>';
+  for(const e of ests){
+    const lbl=`${e.num||'(no #)'} · ${e.clientName||'(no name)'}${e.clientAddr?' · '+e.clientAddr:''}`;
+    html+=`<option value="${esc(e.id)}">${esc(lbl)}</option>`;
+  }
+  sel.innerHTML=html;
+  if(preselect) sel.value=preselect;
+}
+
+// User picked an estimate from the dropdown (or cleared it).
+// On a real selection: pull customer info onto this doc, save, log.
+// On clear: leave customer info as-is (they may have typed something).
+function onDocParentEstChange(parentId){
+  if(!editDocId) return;
+  const doc=docs.find(x=>x.id===editDocId);
+  if(!doc) return;
+  if(!parentId){
+    // Cleared the link
+    if(doc.sourceEstId){
+      const oldId=doc.sourceEstId;
+      doc.sourceEstId=null;
+      doc.sourceEstNum=null;
+      try{logDocActivity(doc.id,`Unlinked from parent estimate ${oldId}`);}catch{}
+      saveDoc();
+    }
+    return;
+  }
+  const parent=docs.find(x=>x.id===parentId);
+  if(!parent) return;
+  doc.sourceEstId=parent.id;
+  doc.sourceEstNum=parent.num||'';
+  // Auto-fill customer info from the parent — but ONLY if the current
+  // field is empty. Don't clobber anything the user already typed.
+  const fillIfBlank=(field,parentVal)=>{
+    if(!parentVal) return;
+    const el=document.getElementById(field);
+    if(el&&!el.value.trim()){el.value=parentVal;doc[field.replace('doc','').charAt(0).toLowerCase()+field.replace('doc','').slice(1)]=parentVal;}
+  };
+  // Hit each field individually so the in-memory doc + the DOM input both update
+  if(parent.clientName){
+    const el=document.getElementById('docClientName');
+    if(el&&!el.value.trim()){el.value=parent.clientName;doc.clientName=parent.clientName;}
+  }
+  if(parent.clientContact){
+    const el=document.getElementById('docClientContact');
+    if(el&&!el.value.trim()){el.value=parent.clientContact;doc.clientContact=parent.clientContact;}
+  }
+  if(parent.clientAddr){
+    const el=document.getElementById('docClientAddr');
+    if(el&&!el.value.trim()){el.value=parent.clientAddr;doc.clientAddr=parent.clientAddr;}
+  }
+  try{logDocActivity(doc.id,`Linked to parent estimate ${parent.num||parent.id}`);}catch{}
+  saveDoc();
+  updateDocPreview(collectDoc(doc));
 }
 
 function closeDocEditor(){
@@ -5085,6 +5753,16 @@ function collectDoc(base){
   const labCostEl=document.getElementById('docLaborCost');
   const othCostEl=document.getElementById('docOtherCost');
   const num=el=>{if(!el)return '';const v=el.value;return(v!==''&&v!=null&&!isNaN(parseFloat(v)))?parseFloat(v):'';};
+  // Extract the bare doc number from the editor title. The title format is
+  // "<TYPE LABEL UPPERCASED> <NUM>" — strip the type label prefix so we save
+  // just the number. Previously this only stripped "ESTIMATE "/"INVOICE ",
+  // which mangled change-order/contract/lien-waiver numbers on every save.
+  const titleText=document.getElementById('docEditorTitle').textContent||'';
+  const typeLabels=Object.values(DOC_TYPES).map(c=>c.label.toUpperCase());
+  let bareNum=titleText;
+  for(const lbl of typeLabels){
+    if(bareNum.startsWith(lbl+' ')){bareNum=bareNum.slice(lbl.length+1);break;}
+  }
   return{...base,
     type:document.getElementById('docType').value,
     status:document.getElementById('docStatus').value,
@@ -5099,7 +5777,7 @@ function collectDoc(base){
     notes:document.getElementById('docNotes').value,
     manualTotal:(()=>{const v=document.getElementById('docManualTotal')?.value;return(v!==''&&v!=null)?parseFloat(v):''})(),
     lineItems:items,
-    num:document.getElementById('docEditorTitle').textContent.replace(/ESTIMATE |INVOICE /,''),
+    num:bareNum,
     signature:base.signature||'',
     signatureName:sigNameTyped||base.signatureName||'',
     signatureDate:base.signatureDate||'',
@@ -5144,11 +5822,43 @@ function sendDoc(){
     document.getElementById('docSendBtn').textContent='Mark Paid →';
     saveDoc();
     try{logDocActivity(d.id,`Estimate ${oldNum} converted to Invoice ${d.num}`);}catch{}
+    // Auto-progress the linked lead's stage to "Invoiced"
+    _syncLeadStageFromInvoice(d,'invoiced');
   } else {
     d.status='paid';document.getElementById('docStatus').value='paid';saveDoc();
     try{logDocActivity(d.id,'Marked as paid');}catch{}
+    // Auto-progress the linked lead's stage to "Paid"
+    _syncLeadStageFromInvoice(d,'paid');
   }
   updateDocTotals();updateDocPreview(collectDoc(d));
+}
+
+// Helper: when an invoice is created or marked paid, propagate that to the
+// linked lead's stage. Looks up the lead by its estId pointing at the
+// invoice (or, before conversion, by the estimate ID this invoice came from).
+// Idempotent: skips if the lead is already at or past the target stage.
+function _syncLeadStageFromInvoice(invoiceDoc,targetStage){
+  if(!invoiceDoc) return;
+  // Find the lead — match either by estId pointing at this doc, or via
+  // sourceEstId chain (if the invoice was converted from an estimate).
+  const lead=leads.find(l=>
+    l.estId===invoiceDoc.id||
+    (invoiceDoc.sourceEstId&&l.estId===invoiceDoc.sourceEstId)
+  );
+  if(!lead) return;
+  // Don't move backwards — paid > invoiced > everything else
+  const order=['new','contact','quote','accepted','invoiced','paid'];
+  const cur=order.indexOf(lead.stage);
+  const next=order.indexOf(targetStage);
+  if(cur>=next) return;
+  const oldStage=lead.stage;
+  lead.stage=targetStage;
+  // Activity log on the lead
+  lead.activity=lead.activity||[];
+  lead.activity.push({ts:new Date().toISOString(),msg:`Stage auto-changed to ${targetStage} (invoice ${invoiceDoc.num})`});
+  saveLead(lead);
+  if(typeof renderLeads==='function') renderLeads();
+  if(typeof runStageAutomations==='function') runStageAutomations(lead,oldStage,targetStage);
 }
 
 function addLI(cat,prefill){
@@ -6043,6 +6753,7 @@ let editMoId=null;
 // User picks a job type at the top of the Material Order — the grid swaps accordingly.
 const MO_TYPE_ROWS={
   roofing:[
+    {key:'shingles',       label:'Shingles',                  slots:['BDL count',     'Brand / Type (e.g. Timberline HDZ)','Color']},
     {key:'ridge',          label:'Ridge caps',                slots:['BDL',           '3-tab (Color-Matched)',    'Seal-A-Ridge BDL']},
     {key:'prostart',       label:'Pro Start (120 LF)',        slots:['BDL',           '',                         'Notes']},
     {key:'iceshield',      label:'Ice & Water Shield',        slots:['RL',            '',                         'Notes']},
@@ -6103,13 +6814,39 @@ const MO_TYPE_ROWS={
     {key:'caulk_lp',       label:'Caulk (LP-Approved)',       slots:['Tubes',         'Color',                    'Notes']},
     {key:'remove_existing',label:'Remove Existing Siding',    slots:['Yes / No',      '',                         'Dumpster size']},
   ],
+  // Mixed siding = Vinyl body + LP trim. Starts with rows from BOTH types,
+  // de-duplicated by key (one House Wrap, one Soffit, etc. — first occurrence
+  // wins). User can swap or delete rows after.
+  mixed:[],  // populated below after the literal lands
 };
+// Build the mixed roster from vinyl + lp, dropping duplicate keys
+(function buildMixed(){
+  const seen=new Set();
+  const rows=[];
+  [...MO_TYPE_ROWS.vinyl,...MO_TYPE_ROWS.lpsmartside].forEach(r=>{
+    if(!seen.has(r.key)){seen.add(r.key);rows.push(r);}
+  });
+  MO_TYPE_ROWS.mixed=rows;
+})();
 
 // Backward-compat alias: anywhere that referenced MO_MATERIAL_ROWS without
 // a type now defaults to roofing rows.
 const MO_MATERIAL_ROWS=MO_TYPE_ROWS.roofing;
 
-const MO_TYPE_LABELS={roofing:'Roofing',vinyl:'Vinyl Siding',lpsmartside:'LP SmartSide'};
+const MO_TYPE_LABELS={roofing:'Roofing',vinyl:'Vinyl Siding',lpsmartside:'LP SmartSide',mixed:'Mixed Siding'};
+
+// Master registry of every row (across all types), keyed by row key.
+// Used to build the row-label dropdown so the user can pick any material
+// from any type to swap onto a row. First definition wins on key collision.
+const MO_ALL_ROWS=(function(){
+  const m={};
+  ['roofing','vinyl','lpsmartside'].forEach(t=>{
+    MO_TYPE_ROWS[t].forEach(r=>{if(!m[r.key]) m[r.key]={...r,sourceType:t};});
+  });
+  return m;
+})();
+function getMasterRow(key){return MO_ALL_ROWS[key]||null;}
+function getMasterRowLabel(key){const r=MO_ALL_ROWS[key];return r?r.label:key;}
 
 function getMoRowsFor(type){return MO_TYPE_ROWS[type]||MO_TYPE_ROWS.roofing;}
 
@@ -6205,14 +6942,115 @@ function closeMaterialOrder(){
   editMoId=null;
 }
 
-function renderMoMaterials(saved,type){
-  const rows=getMoRowsFor(type||'roofing');
-  const el=document.getElementById('moMaterials');
-  el.innerHTML=rows.map(r=>{
-    const v=saved[r.key]||{};
-    const slots=r.slots.map((label,i)=>`<input class="mo-mat-input" data-key="${r.key}" data-slot="${i}" placeholder="${esc(label)}" value="${esc(v['s'+i]||'')}" oninput="onMoMatChange()"/>`).join('');
-    return `<div class="mo-mat-row"><div class="mo-mat-label">${esc(r.label)}</div>${slots}</div>`;
+// Generic slot placeholders used for every swappable row. The original
+// per-type slots are still respected for rows that haven't been swapped,
+// but swapped rows fall back to these so the columns remain meaningful.
+const MO_GENERIC_SLOTS=['Qty / Spec','Color / Type','Notes'];
+
+// Build options for the row-label dropdown grouped by source type.
+function _buildMoLabelOptions(currentKey){
+  const groups={
+    roofing:    {label:'Roofing',      keys:MO_TYPE_ROWS.roofing.map(r=>r.key)},
+    vinyl:      {label:'Vinyl Siding', keys:MO_TYPE_ROWS.vinyl.map(r=>r.key)},
+    lpsmartside:{label:'LP SmartSide', keys:MO_TYPE_ROWS.lpsmartside.map(r=>r.key)},
+  };
+  return Object.values(groups).map(g=>{
+    const opts=g.keys.map(k=>{
+      const r=MO_ALL_ROWS[k];if(!r)return'';
+      const sel=k===currentKey?' selected':'';
+      return `<option value="${esc(k)}"${sel}>${esc(r.label)}</option>`;
+    }).join('');
+    return `<optgroup label="${esc(g.label)}">${opts}</optgroup>`;
   }).join('');
+}
+
+function renderMoMaterials(saved,type){
+  const mo=docs.find(x=>x.id===editMoId);
+  if(!mo) return;
+  // moRows = ordered list of row keys for THIS material order. If absent,
+  // fall back to the default roster for the type pill.
+  const defaultRows=getMoRowsFor(type||'roofing').map(r=>r.key);
+  const rowKeys=Array.isArray(mo.moRows)&&mo.moRows.length?mo.moRows.slice():defaultRows;
+  // Make sure the moRows is persisted on the doc so save/load round-trips
+  mo.moRows=rowKeys;
+  const el=document.getElementById('moMaterials');
+  el.innerHTML=rowKeys.map((k,idx)=>{
+    const v=saved[k]||{};
+    // Use generic slots for the visible placeholders (the underlying data
+    // is keyed by row key + slot index, so it survives label swaps).
+    const slots=MO_GENERIC_SLOTS.map((label,i)=>
+      `<input class="mo-mat-input" data-key="${esc(k)}" data-slot="${i}" placeholder="${esc(label)}" value="${esc(v['s'+i]||'')}" oninput="onMoMatChange()"/>`
+    ).join('');
+    const labelDropdown=`<select class="mo-mat-label-select" data-row-idx="${idx}" onchange="onMoRowKeyChange(${idx},this.value)">${_buildMoLabelOptions(k)}</select>`;
+    const delBtn=`<button class="mo-mat-del" type="button" onclick="deleteMoRow(${idx})" title="Remove this row">🗑</button>`;
+    return `<div class="mo-mat-row" data-row-idx="${idx}">${labelDropdown}${slots}${delBtn}</div>`;
+  }).join('');
+  // Add-row button at the bottom
+  el.insertAdjacentHTML('beforeend','<div class="mo-mat-add-row"><button class="btn btn-ghost btn-sm" type="button" onclick="addMoRow()">+ Add Row</button></div>');
+}
+
+// Swap a row to a different material. Doesn't delete its existing slot
+// data — but since the data was keyed under the old row key, it stays
+// attached to that key. We just re-render with the new key.
+function onMoRowKeyChange(idx,newKey){
+  const mo=docs.find(x=>x.id===editMoId);
+  if(!mo)return;
+  // Persist whatever's currently typed before re-rendering
+  collectMaterialOrder();
+  if(!Array.isArray(mo.moRows)) mo.moRows=getMoRowsFor(mo.moMaterialType||'roofing').map(r=>r.key);
+  // If the new key is already in the list, decline (avoids dupes)
+  if(mo.moRows[idx]!==newKey&&mo.moRows.includes(newKey)){
+    alert('That material is already on the sheet. Pick a different one or delete the existing row first.');
+    // Defer re-render so the alert dismisses before the DOM rebuild happens
+    setTimeout(()=>renderMoMaterials(mo.moMaterials||{},mo.moMaterialType||'roofing'),0);
+    return;
+  }
+  mo.moRows[idx]=newKey;
+  // Release focus from the <select> before its parent gets rebuilt. Without
+  // this, the browser keeps tracking a deleted element which can lock up
+  // input focus across the whole editor on some Android/WebKit builds.
+  if(document.activeElement&&document.activeElement.blur) document.activeElement.blur();
+  // Defer DOM rebuild + save until after the current event finishes. Stops
+  // re-rendering the modal while the browser is still mid-event-dispatch.
+  setTimeout(()=>{
+    renderMoMaterials(mo.moMaterials||{},mo.moMaterialType||'roofing');
+    saveMaterialOrder(true);
+  },0);
+}
+
+function deleteMoRow(idx){
+  const mo=docs.find(x=>x.id===editMoId);
+  if(!mo)return;
+  collectMaterialOrder();
+  if(!Array.isArray(mo.moRows)) mo.moRows=getMoRowsFor(mo.moMaterialType||'roofing').map(r=>r.key);
+  const removedKey=mo.moRows[idx];
+  if(!confirm(`Remove the "${getMasterRowLabel(removedKey)}" row from this sheet?`)) return;
+  mo.moRows.splice(idx,1);
+  // Clean up the saved data for that key so it doesn't linger
+  if(mo.moMaterials&&mo.moMaterials[removedKey]) delete mo.moMaterials[removedKey];
+  // Same focus-release + deferred-rebuild pattern as onMoRowKeyChange
+  if(document.activeElement&&document.activeElement.blur) document.activeElement.blur();
+  setTimeout(()=>{
+    renderMoMaterials(mo.moMaterials||{},mo.moMaterialType||'roofing');
+    saveMaterialOrder(true);
+  },0);
+}
+
+function addMoRow(){
+  const mo=docs.find(x=>x.id===editMoId);
+  if(!mo)return;
+  collectMaterialOrder();
+  if(!Array.isArray(mo.moRows)) mo.moRows=getMoRowsFor(mo.moMaterialType||'roofing').map(r=>r.key);
+  // Find the first row in the master list that isn't already on the sheet
+  const used=new Set(mo.moRows);
+  const candidate=Object.keys(MO_ALL_ROWS).find(k=>!used.has(k));
+  if(!candidate){alert('Every available material is already on the sheet.');return;}
+  mo.moRows.push(candidate);
+  if(document.activeElement&&document.activeElement.blur) document.activeElement.blur();
+  setTimeout(()=>{
+    renderMoMaterials(mo.moMaterials||{},mo.moMaterialType||'roofing');
+    saveMaterialOrder(true);
+  },0);
 }
 
 function setMoType(type){
@@ -6222,6 +7060,10 @@ function setMoType(type){
   // even after switching types, in case the user toggles back.
   collectMaterialOrder();
   mo.moMaterialType=type;
+  // Reset the row roster to the default for the new type. Saved values
+  // for individual rows stay in moMaterials keyed by their row key, so if
+  // the user toggles back to a previous type those values reappear.
+  mo.moRows=getMoRowsFor(type).map(r=>r.key);
   // Update pill UI
   document.querySelectorAll('.mo-type-pill').forEach(p=>{
     p.classList.toggle('active',p.dataset.type===type);
@@ -8057,6 +8899,7 @@ init();
             <button type="button" class="mo-type-pill active" data-type="roofing" onclick="setMoType('roofing')">🏠 Roofing</button>
             <button type="button" class="mo-type-pill" data-type="vinyl" onclick="setMoType('vinyl')">🧱 Vinyl Siding</button>
             <button type="button" class="mo-type-pill" data-type="lpsmartside" onclick="setMoType('lpsmartside')">🪵 LP SmartSide</button>
+            <button type="button" class="mo-type-pill" data-type="mixed" onclick="setMoType('mixed')">🏗️ Mixed Siding</button>
           </div>
         </div>
 
