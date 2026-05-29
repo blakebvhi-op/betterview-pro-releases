@@ -1230,6 +1230,8 @@ body:not(.role-owner):not(.role-manager) .role-financial-only{display:none!impor
     <div class="user-menu" id="userMenu">
       <div class="user-menu-email" id="userMenuEmail"></div>
       <div class="user-menu-item role-owner-only" id="manageTeamMenuItem" onclick="openTeamManager()"><span>👥</span><span>Manage Team</span></div>
+      <div class="user-menu-item" id="clockMenuItem" onclick="openClockScreen()"><span id="clockMenuIcon">⏱</span><span id="clockMenuLabel">Clock In/Out</span></div>
+      <div class="user-menu-item role-owner-only" id="qbConnectMenuItem" onclick="openQbConnect()"><span id="qbConnectIcon">🟢</span><span id="qbConnectLabel">Connect QuickBooks</span></div>
       <div class="user-menu-item role-financial-only" id="reportsMenuItem" onclick="openReports()"><span>📊</span><span>Reports</span></div>
       <div class="user-menu-item" id="resyncMenuItem" onclick="manualResync()"><span>🔄</span><span>Resync</span></div>
       <div class="user-menu-item danger" onclick="doSignOut()"><span>⏏</span><span>Sign Out</span></div>
@@ -1550,6 +1552,8 @@ body:not(.role-owner):not(.role-manager) .role-financial-only{display:none!impor
     <button class="btn btn-ghost btn-sm" onclick="markDocOutcome('won')" id="docWonBtn" title="Mark this estimate as Won (closed/approved)">🏆 Won</button>
     <button class="btn btn-ghost btn-sm" onclick="markDocOutcome('lost')" id="docLostBtn" title="Mark this estimate as Lost (didn't close)">✗ Lost</button>
     <button class="btn btn-danger btn-sm" onclick="deleteDoc()" title="Delete this document">🗑 Delete</button>
+    <button class="btn btn-ghost btn-sm" id="docQbSyncBtn" onclick="syncDocWithQb()" title="Check QuickBooks for this invoice's payment status" style="display:none">🔄 Check QuickBooks</button>
+    <button class="btn btn-ghost btn-sm" id="docQbPushBtn" onclick="pushDocToQb()" title="Create this invoice in QuickBooks" style="display:none">📤 Push to QB</button>
     <button class="btn btn-ghost btn-sm" id="docSendBtn" onclick="sendDoc()">Send →</button>
   </div>
 
@@ -1955,6 +1959,9 @@ async function loadProfile(){
     currentCompanyId=p.company_id;
     currentDisplayName=p.display_name||currentUser.name;
     console.log('Profile loaded:',{role:currentRole,company:currentCompanyId});
+    // Refresh QB menu indicator if this is an owner — fire-and-forget,
+    // don't block profile loading on a third-party API check.
+    if(currentRole==='owner') qbRefreshMenuIndicator().catch(()=>{});
     return true;
   }catch(e){console.error('loadProfile error:',e);return false;}
 }
@@ -2038,6 +2045,512 @@ function signOutFromNoProfile(){
   const scr=document.getElementById('noProfileScreen');
   if(scr) scr.remove();
   location.reload();
+}
+
+// ── QUICKBOOKS INTEGRATION (Phase 1: connection only) ─────────
+// Session 1 of the QB integration. Goal: owner clicks "Connect
+// QuickBooks", browser opens Intuit's authorize page, user grants
+// permission, redirected back to qb-oauth-callback Edge Function which
+// stores tokens. No invoice sync yet — that's the next session.
+const QB_CLIENT_ID='ABmsm4kiCdPHiRxw3FB2O6JTrNkBAfgjCL8thTNGkPKYyNykqg';
+const QB_REDIRECT_URI=SB_URL+'/functions/v1/qb-oauth-callback';
+const QB_ENVIRONMENT='production'; // production live as of v1.0.36
+// Intuit's authorize endpoint — same URL for sandbox + production.
+// Intuit decides which company to show based on which app's Client ID we use.
+const QB_AUTH_URL='https://appcenter.intuit.com/connect/oauth2';
+
+// Check whether QB is connected for the current company. Reads the
+// qb_connection_status view (safe — no tokens exposed).
+async function qbCheckConnection(){
+  if(!currentCompanyId||!authAccessToken) return null;
+  try{
+    const r=await fetch(SB_URL+'/rest/v1/qb_connection_status?company_id=eq.'+encodeURIComponent(currentCompanyId)+'&select=realm_id,environment,status,updated_at',{
+      headers:{apikey:SB_KEY,Authorization:'Bearer '+authAccessToken,Accept:'application/json'}
+    });
+    if(!r.ok) return null;
+    const rows=await r.json();
+    return rows.length?rows[0]:null;
+  }catch(e){console.error('qbCheckConnection',e);return null;}
+}
+
+// Update the user-menu indicator based on whether QB is connected.
+// Called once on init and after connect/disconnect.
+async function qbRefreshMenuIndicator(){
+  const conn=await qbCheckConnection();
+  const icon=document.getElementById('qbConnectIcon');
+  const label=document.getElementById('qbConnectLabel');
+  if(!icon||!label) return;
+  if(!conn){
+    icon.textContent='🔌';label.textContent='Connect QuickBooks';
+  } else if(conn.status==='connected'){
+    icon.textContent='✅';label.textContent=`QuickBooks (${conn.environment})`;
+  } else {
+    // refresh_needed or expired
+    icon.textContent='⚠️';label.textContent='QuickBooks (re-auth needed)';
+  }
+}
+
+// Build the OAuth authorize URL with state encoding company_id + user_id
+// so the callback knows who's connecting. Nonce prevents CSRF.
+function qbBuildAuthorizeUrl(){
+  const nonce=Math.random().toString(36).slice(2)+Date.now().toString(36);
+  const state=btoa(JSON.stringify({company_id:currentCompanyId,user_id:currentUser.id,nonce}));
+  const params=new URLSearchParams({
+    client_id:QB_CLIENT_ID,
+    scope:'com.intuit.quickbooks.accounting',
+    redirect_uri:QB_REDIRECT_URI,
+    response_type:'code',
+    state,
+  });
+  return QB_AUTH_URL+'?'+params.toString();
+}
+
+// Click handler for the menu item.
+async function openQbConnect(){
+  if(!isOwner()){alert('Only owners can connect QuickBooks.');return;}
+  // Close the user menu
+  const um=document.getElementById('userMenu');if(um) um.classList.remove('open');
+  // Check current connection state to decide what to show
+  const conn=await qbCheckConnection();
+  if(conn&&conn.status==='connected'){
+    // Already connected — offer to disconnect or re-auth
+    const choice=confirm(
+      `QuickBooks is connected (${conn.environment} environment).\n\n`+
+      `Realm: ${conn.realm_id}\n`+
+      `Last updated: ${new Date(conn.updated_at).toLocaleString()}\n\n`+
+      `OK = Re-authorize (open Intuit again)\n`+
+      `Cancel = Keep current connection`
+    );
+    if(!choice) return;
+  } else if(conn){
+    // Refresh needed or expired — go straight to re-auth
+    if(!confirm('QuickBooks connection needs to be refreshed. Open Intuit to re-authorize?')) return;
+  } else {
+    // Not connected yet
+    if(!confirm(
+      'This will open Intuit in a new tab where you can grant Better View Pro access to your QuickBooks data.\n\n'+
+      'Currently set to: '+QB_ENVIRONMENT.toUpperCase()+' environment.\n\n'+
+      'Continue?'
+    )) return;
+  }
+  // Pop the authorize URL in a new tab
+  const authUrl=qbBuildAuthorizeUrl();
+  window.open(authUrl,'_blank','noopener');
+  // Tell the user what to expect after they finish on Intuit
+  setTimeout(()=>{
+    alert('After authorizing in the Intuit tab, come back here and click Resync (or close/reopen the app) to refresh the connection status.');
+  },800);
+}
+
+// Disconnect — delete the row from qb_tokens. Owner-only via RLS.
+async function qbDisconnect(){
+  if(!isOwner())return;
+  if(!confirm('Disconnect QuickBooks?\n\nYou\'ll need to re-authorize to use the integration again. Invoices already linked won\'t be affected.'))return;
+  try{
+    const r=await fetch(SB_URL+'/rest/v1/qb_tokens?company_id=eq.'+encodeURIComponent(currentCompanyId),{
+      method:'DELETE',
+      headers:{apikey:SB_KEY,Authorization:'Bearer '+authAccessToken}
+    });
+    if(!r.ok){alert('Disconnect failed: '+await r.text());return;}
+    await qbRefreshMenuIndicator();
+    alert('QuickBooks disconnected.');
+  }catch(e){alert('Disconnect error: '+(e.message||e));}
+}
+
+// Click handler for the "📤 Push to QB" button. Calls qb-push-invoice
+// which creates the matching invoice in QuickBooks. If the doc has
+// already been pushed (qb_invoice_id set), warns and asks for confirmation.
+async function pushDocToQb(){
+  if(!editDocId){alert('No invoice open.');return;}
+  // Save any unsaved edits first so QB gets the current state
+  saveDoc();
+  const doc=docs.find(x=>x.id===editDocId);
+  if(!doc){alert('Invoice not found.');return;}
+  // If already pushed, ask if they want to push again (creates a duplicate in QB)
+  let force=false;
+  if(doc.qbInvoiceId){
+    if(!confirm(
+      `This invoice has already been pushed to QuickBooks.\n\n`+
+      `QB Invoice ID: ${doc.qbInvoiceId}\n\n`+
+      `Pushing again will create a DUPLICATE in QuickBooks. Are you sure?`
+    )) return;
+    force=true;
+  } else {
+    // First-time push — confirm
+    if(!confirm(
+      `Push this invoice to QuickBooks?\n\n`+
+      `Customer: ${doc.clientName||'(none)'}\n`+
+      `Number: ${doc.num||'(none)'}\n\n`+
+      `If "${doc.clientName||''}" isn't in QuickBooks yet, they'll be auto-created as a customer.\n\n`+
+      `Tax will be set to non-taxable. Add tax manually in QB if needed.`
+    )) return;
+  }
+  const btn=document.getElementById('docQbPushBtn');
+  if(btn){btn.disabled=true;btn.textContent='⏳ Pushing…';}
+  try{
+    const r=await fetch(SB_URL+'/functions/v1/qb-push-invoice',{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'Authorization':'Bearer '+authAccessToken,
+        'apikey':SB_KEY,
+      },
+      body:JSON.stringify({invoice_id:editDocId,force}),
+    });
+    const data=await r.json();
+    if(!r.ok||!data.ok){
+      alert('Push to QuickBooks failed:\n\n'+(data.error||'Unknown error'));
+      return;
+    }
+    alert(
+      `✓ Pushed to QuickBooks.\n\n`+
+      `QB Invoice ID: ${data.qb_invoice_id}\n`+
+      `QB Doc #: ${data.qb_doc_num||'(auto)'}\n`+
+      `Customer: ${data.qb_customer_name}${data.created_customer?' (created in QB)':''}\n`+
+      `Total: $${data.total.toFixed(2)}`
+    );
+    // Refresh from DB so qbInvoiceId is loaded and the button updates
+    await loadAllRemote();
+    openDocEditor(editDocId);
+  }catch(e){
+    console.error('QB push error:',e);
+    alert('QB push error: '+(e.message||e));
+  } finally {
+    if(btn){btn.disabled=false;}
+  }
+}
+
+// Click handler for the "🔄 Check QuickBooks" button on the invoice editor.
+// Calls qb-sync-invoice with the current doc id, shows the result, and
+// triggers a local re-fetch if status changed.
+async function syncDocWithQb(){
+  if(!editDocId){alert('No invoice open.');return;}
+  // Make sure the doc is currently saved before syncing (in case there
+  // are unsaved edits to the doc number)
+  saveDoc();
+  const btn=document.getElementById('docQbSyncBtn');
+  if(btn){btn.disabled=true;btn.textContent='⏳ Checking…';}
+  try{
+    const r=await fetch(SB_URL+'/functions/v1/qb-sync-invoice',{
+      method:'POST',
+      headers:{
+        'Content-Type':'application/json',
+        'Authorization':'Bearer '+authAccessToken,
+        'apikey':SB_KEY,
+      },
+      body:JSON.stringify({invoice_id:editDocId}),
+    });
+    const data=await r.json();
+    if(!r.ok||!data.ok){
+      alert('QuickBooks sync failed:\n\n'+(data.error||'Unknown error'));
+      return;
+    }
+    if(!data.matched){
+      alert('No matching invoice found in QuickBooks.\n\n'
+        +'Looked for invoice number: '+(docs.find(d=>d.id===editDocId)?.num||'(none)')
+        +'\n\nCreate the invoice in QuickBooks with this number first, then sync again.');
+      return;
+    }
+    if(data.paid){
+      alert(`✓ Invoice is PAID in QuickBooks.\n\n`
+        +`QB Doc #: ${data.qb_doc_num}\n`
+        +`Total: $${data.total.toFixed(2)}\n`
+        +(data.paid_date?`Paid on: ${new Date(data.paid_date).toLocaleDateString()}\n`:'')
+        +`\nThe invoice and linked lead have been marked Paid.`);
+      // Refresh from DB so the UI shows the new status
+      await loadAllRemote();
+      // Re-open the editor so the new status is reflected
+      openDocEditor(editDocId);
+    } else {
+      alert(`Invoice found in QuickBooks but NOT yet paid.\n\n`
+        +`QB Doc #: ${data.qb_doc_num}\n`
+        +`Total: $${data.total.toFixed(2)}\n`
+        +`Balance owed: $${data.balance.toFixed(2)}`);
+    }
+  }catch(e){
+    console.error('QB sync error:',e);
+    alert('QB sync error: '+(e.message||e));
+  } finally {
+    if(btn){btn.disabled=false;btn.textContent='🔄 Check QuickBooks';}
+  }
+}
+
+// ── TIME CLOCK ───────────────────────────────────────────────
+// Phase 1b: Clock In/Out screen. Source of truth is the
+// public.time_entries table in Supabase — we never cache the
+// active entry in localStorage so closing & reopening the app
+// always reflects real state (critical for Blake's Android use).
+//
+// State:
+//   clockActiveEntry — currently-open time_entries row (clock_out null) or null
+//   clockTickInterval — setInterval handle that updates the elapsed timer
+let clockActiveEntry=null;
+let clockTickInterval=null;
+
+// Fetch the user's currently-open entry (if any) and today's entries.
+// Returns {active: row|null, today: row[]}.
+async function clockFetchState(){
+  if(!currentUser?.id||!authAccessToken) return {active:null,today:[]};
+  const headers={apikey:SB_KEY,Authorization:'Bearer '+authAccessToken,Accept:'application/json'};
+  // Active entry: clock_out is null AND user is me. Should be 0 or 1 row.
+  // The DB has a unique partial index preventing more than one open entry.
+  const activeR=await fetch(SB_URL+'/rest/v1/time_entries?user_id=eq.'+encodeURIComponent(currentUser.id)+'&clock_out=is.null&select=*&limit=1',{headers});
+  const activeRows=activeR.ok?await activeR.json():[];
+  // Today's entries: anything for me where clock_in >= start of local today
+  const startOfDay=new Date();startOfDay.setHours(0,0,0,0);
+  const todayR=await fetch(SB_URL+'/rest/v1/time_entries?user_id=eq.'+encodeURIComponent(currentUser.id)
+    +'&clock_in=gte.'+encodeURIComponent(startOfDay.toISOString())
+    +'&select=*&order=clock_in.desc',{headers});
+  const todayRows=todayR.ok?await todayR.json():[];
+  return {active:activeRows[0]||null,today:todayRows};
+}
+
+// Format milliseconds as HH:MM:SS
+function clockFmtElapsed(ms){
+  if(ms<0) ms=0;
+  const s=Math.floor(ms/1000);
+  const hh=String(Math.floor(s/3600)).padStart(2,'0');
+  const mm=String(Math.floor((s%3600)/60)).padStart(2,'0');
+  const ss=String(s%60).padStart(2,'0');
+  return `${hh}:${mm}:${ss}`;
+}
+
+// Format a duration between two ISO timestamps as a friendly "Xh Ym" string.
+function clockFmtDuration(startIso,endIso){
+  const ms=new Date(endIso).getTime()-new Date(startIso).getTime();
+  if(ms<0) return '0m';
+  const m=Math.floor(ms/60000);
+  const h=Math.floor(m/60);
+  return h>0?`${h}h ${m%60}m`:`${m}m`;
+}
+
+// Format an ISO timestamp as a local "h:mm AM/PM" string.
+function clockFmtTime(iso){
+  if(!iso) return '—';
+  return new Date(iso).toLocaleTimeString([],{hour:'numeric',minute:'2-digit'});
+}
+
+// Fill the job picker with only ACTIVE (scheduled) jobs — anything with
+// a real date assigned, not backlog and not in the past beyond 7 days.
+// Matches the doc's "scheduled or in-progress" requirement.
+function clockPopulateJobPicker(){
+  const sel=document.getElementById('clockJobPicker');
+  if(!sel) return;
+  const today=new Date();today.setHours(0,0,0,0);
+  const cutoff=new Date(today);cutoff.setDate(today.getDate()-7); // include recent past for jobs still in-progress
+  const cutoffKey=dateKey(cutoff);
+  const active=(jobs||[]).filter(j=>{
+    if(!j.day||j.day==='backlog') return false; // exclude unscheduled
+    return j.day>=cutoffKey; // include scheduled (any future) + recent past (still working)
+  }).sort((a,b)=>(a.day||'').localeCompare(b.day||''));
+  let html='<option value="">(No job — general work)</option>';
+  for(const j of active){
+    const addr=j.addr?` · ${j.addr}`:'';
+    const dayLabel=j.day==='backlog'?'Backlog':new Date(j.day).toLocaleDateString();
+    html+=`<option value="${esc(j.id)}">${esc(j.name||j.clientName||'(no name)')} — ${esc(dayLabel)}${esc(addr)}</option>`;
+  }
+  sel.innerHTML=html;
+}
+
+// Render the modal based on current state. Called after every state change.
+function clockRender(state){
+  const lbl=document.getElementById('clockStatusLabel');
+  const val=document.getElementById('clockStatusValue');
+  const jobEl=document.getElementById('clockStatusJob');
+  const elapsedEl=document.getElementById('clockStatusElapsed');
+  const pickerWrap=document.getElementById('clockJobPickerWrap');
+  const btn=document.getElementById('clockMainBtn');
+  // CRITICAL: always restore the main click handler. If a previous fetch
+  // failed and the error path replaced the onclick with openClockScreen
+  // ("Try Again"), we must reset it here — otherwise the button keeps
+  // re-opening the modal instead of clocking in/out.
+  btn.onclick=onClockMainBtn;
+  if(state.active){
+    // Clocked in
+    lbl.textContent='Clocked In At';
+    val.textContent=clockFmtTime(state.active.clock_in);
+    // Show linked job name if any
+    if(state.active.job_id){
+      const j=(jobs||[]).find(x=>x.id===state.active.job_id);
+      jobEl.textContent='📍 '+(j?.name||j?.clientName||'(unknown job)');
+      jobEl.style.display='';
+    } else {
+      jobEl.textContent='General work';
+      jobEl.style.display='';
+    }
+    elapsedEl.style.display='';
+    pickerWrap.style.display='none';
+    btn.textContent='Clock Out';
+    btn.className='btn btn-danger';
+    btn.style.cssText='width:100%;padding:14px;font-size:15px;font-weight:600;';
+    btn.disabled=false;
+    // Start the live tick
+    clockStartTick(state.active.clock_in);
+  } else {
+    // Clocked out
+    lbl.textContent='Status';
+    val.textContent='Not Clocked In';
+    jobEl.style.display='none';
+    elapsedEl.style.display='none';
+    pickerWrap.style.display='';
+    clockPopulateJobPicker();
+    btn.textContent='Clock In';
+    btn.className='btn btn-amber';
+    btn.style.cssText='width:100%;padding:14px;font-size:15px;font-weight:600;';
+    btn.disabled=false;
+    clockStopTick();
+  }
+  // Render today's list
+  const todayList=document.getElementById('clockTodayList');
+  if(!state.today.length){
+    todayList.innerHTML='<div style="font-size:12px;color:var(--muted);text-align:center;padding:16px;">No entries today.</div>';
+  } else {
+    todayList.innerHTML=state.today.map(e=>{
+      const j=e.job_id?(jobs||[]).find(x=>x.id===e.job_id):null;
+      const jobName=j?(j.name||j.clientName||'(job)'):'General';
+      const dur=e.clock_out?clockFmtDuration(e.clock_in,e.clock_out):'⏱ Active';
+      const out=e.clock_out?clockFmtTime(e.clock_out):'now';
+      return `<div style="background:var(--steel-mid);padding:8px 12px;border-radius:6px;font-size:12px;display:flex;justify-content:space-between;align-items:center;gap:8px;">
+        <div style="flex:1;min-width:0;">
+          <div style="color:var(--white);font-weight:500;">${esc(jobName)}</div>
+          <div style="color:var(--muted);font-size:11px;">${esc(clockFmtTime(e.clock_in))} → ${esc(out)}</div>
+        </div>
+        <div style="color:var(--amber);font-weight:600;white-space:nowrap;">${esc(dur)}</div>
+      </div>`;
+    }).join('');
+  }
+  clockActiveEntry=state.active;
+}
+
+// Run the live elapsed-time timer for an active entry.
+function clockStartTick(clockInIso){
+  clockStopTick();
+  const startMs=new Date(clockInIso).getTime();
+  const el=document.getElementById('clockStatusElapsed');
+  const tick=()=>{ if(el) el.textContent=clockFmtElapsed(Date.now()-startMs); };
+  tick();
+  clockTickInterval=setInterval(tick,1000);
+}
+function clockStopTick(){
+  if(clockTickInterval){clearInterval(clockTickInterval);clockTickInterval=null;}
+}
+
+// Open the modal. Re-fetches state every time so we never trust stale data.
+async function openClockScreen(){
+  // Close user menu if open
+  const um=document.getElementById('userMenu');if(um) um.classList.remove('open');
+  const overlay=document.getElementById('clockOverlay');
+  if(!overlay) return;
+  overlay.classList.add('open');
+  // Show placeholder state while loading
+  document.getElementById('clockStatusLabel').textContent='Loading…';
+  document.getElementById('clockStatusValue').textContent='—';
+  document.getElementById('clockMainBtn').textContent='Loading…';
+  document.getElementById('clockMainBtn').disabled=true;
+  try{
+    const state=await clockFetchState();
+    clockRender(state);
+  }catch(e){
+    console.error('clock fetch failed:',e);
+    document.getElementById('clockStatusValue').textContent='Error loading';
+    document.getElementById('clockMainBtn').textContent='Try Again';
+    document.getElementById('clockMainBtn').disabled=false;
+    document.getElementById('clockMainBtn').onclick=openClockScreen;
+  }
+}
+
+function closeClockScreen(){
+  clockStopTick();
+  const overlay=document.getElementById('clockOverlay');
+  if(overlay) overlay.classList.remove('open');
+}
+
+// Click handler for the big primary button. Routes to in or out based on state.
+async function onClockMainBtn(){
+  if(clockActiveEntry) return clockDoClockOut();
+  return clockDoClockIn();
+}
+
+async function clockDoClockIn(){
+  if(!currentUser?.id||!currentCompanyId){alert('Not signed in.');return;}
+  const jobId=document.getElementById('clockJobPicker')?.value||null;
+  const btn=document.getElementById('clockMainBtn');
+  btn.disabled=true;btn.textContent='Clocking in…';
+  const row={
+    company_id:currentCompanyId,
+    user_id:currentUser.id,
+    job_id:jobId||null,
+    clock_in:new Date().toISOString(),
+    clock_out:null,
+  };
+  try{
+    const r=await fetch(SB_URL+'/rest/v1/time_entries',{
+      method:'POST',
+      headers:{
+        apikey:SB_KEY,
+        Authorization:'Bearer '+authAccessToken,
+        'Content-Type':'application/json',
+        Prefer:'return=representation',
+      },
+      body:JSON.stringify(row),
+    });
+    if(!r.ok){
+      const errText=await r.text();
+      // Unique partial index violation = user is already clocked in. Refresh.
+      if(errText.includes('unique')||errText.includes('duplicate')||r.status===409){
+        const state=await clockFetchState();
+        clockRender(state);
+        alert('You\'re already clocked in.');
+        return;
+      }
+      alert('Clock in failed:\n'+errText);
+      return;
+    }
+    // Refresh from DB (don't trust the local row alone — DB defaults may differ)
+    const state=await clockFetchState();
+    clockRender(state);
+  }catch(e){
+    console.error('clock in error:',e);
+    alert('Clock in error: '+(e.message||e));
+  } finally {
+    btn.disabled=false;
+  }
+}
+
+async function clockDoClockOut(){
+  if(!clockActiveEntry){alert('Not clocked in.');return;}
+  // No notes prompt — Electron silently blocks window.prompt() in newer
+  // versions, which made clock-out fail without any visible error. Notes
+  // are optional per the spec anyway; if we want them back, we'll add
+  // an in-modal text field rather than a popup dialog.
+  const btn=document.getElementById('clockMainBtn');
+  btn.disabled=true;btn.textContent='Clocking out…';
+  const patch={
+    clock_out:new Date().toISOString(),
+  };
+  try{
+    const r=await fetch(SB_URL+'/rest/v1/time_entries?id=eq.'+encodeURIComponent(clockActiveEntry.id),{
+      method:'PATCH',
+      headers:{
+        apikey:SB_KEY,
+        Authorization:'Bearer '+authAccessToken,
+        'Content-Type':'application/json',
+        Prefer:'return=representation',
+      },
+      body:JSON.stringify(patch),
+    });
+    if(!r.ok){
+      alert('Clock out failed:\n'+await r.text());
+      return;
+    }
+    const state=await clockFetchState();
+    clockRender(state);
+  }catch(e){
+    console.error('clock out error:',e);
+    alert('Clock out error: '+(e.message||e));
+  } finally {
+    btn.disabled=false;
+  }
 }
 
 // ── TEAM MANAGER ─────────────────────────────────────────────
@@ -3349,7 +3862,7 @@ const leadToDb=l=>({id:l.id,name:l.name,contact:l.contact,phone:l.phone,email:l.
 const _parseMoData=v=>{try{return typeof v==='string'?JSON.parse(v||'{}'):(v||{});}catch{return {};}};
 const dbToDoc=r=>{
   const mo=_parseMoData(r.mat_order_data);
-  return {id:r.id,type:r.type||'estimate',status:r.status||'draft',num:r.num||'',clientName:r.client_name||'',clientContact:r.client_contact||'',clientAddr:r.client_addr||'',date:r.date||'',dueDate:r.due_date||'',scope:r.scope||'',lineItems:safeParseArr(r.line_items),tax:r.tax||0,discount:r.discount||0,notes:r.notes||'',manualTotal:r.manual_total||'',created:r.created||Date.now(),signature:r.signature||'',signatureName:r.signature_name||'',signatureDate:r.signature_date||'',leadSource:r.lead_source||'',activity:safeParseArr(r.activity),checklist:safeParseArr(r.checklist),extras:safeParseArr(r.extras),pmId:r.pm_id||'',arrival:r.arrival||'',sourceEstId:r.source_est_id||null,sourceEstNum:r.source_est_num||'',matCost:r.mat_cost!=null?r.mat_cost:'',laborCost:r.labor_cost!=null?r.labor_cost:'',otherCost:r.other_cost!=null?r.other_cost:'',outcome:r.outcome||null,closedDate:r.closed_date||null,linkedJobId:r.linked_job_id||null,
+  return {id:r.id,type:r.type||'estimate',status:r.status||'draft',num:r.num||'',clientName:r.client_name||'',clientContact:r.client_contact||'',clientAddr:r.client_addr||'',date:r.date||'',dueDate:r.due_date||'',scope:r.scope||'',lineItems:safeParseArr(r.line_items),tax:r.tax||0,discount:r.discount||0,notes:r.notes||'',manualTotal:r.manual_total||'',created:r.created||Date.now(),signature:r.signature||'',signatureName:r.signature_name||'',signatureDate:r.signature_date||'',leadSource:r.lead_source||'',activity:safeParseArr(r.activity),checklist:safeParseArr(r.checklist),extras:safeParseArr(r.extras),pmId:r.pm_id||'',arrival:r.arrival||'',sourceEstId:r.source_est_id||null,sourceEstNum:r.source_est_num||'',matCost:r.mat_cost!=null?r.mat_cost:'',laborCost:r.labor_cost!=null?r.labor_cost:'',otherCost:r.other_cost!=null?r.other_cost:'',outcome:r.outcome||null,closedDate:r.closed_date||null,linkedJobId:r.linked_job_id||null,qbInvoiceId:r.qb_invoice_id||null,qbPushedAt:r.qb_pushed_at||null,
   // Material order fields (stored as JSON)
   moJobName:mo.moJobName||'',moPhone:mo.moPhone||'',moEmail:mo.moEmail||'',
   moLayers:mo.moLayers||'',moStories:mo.moStories||'',moCedar:mo.moCedar||'',moRedeck:mo.moRedeck||'',
@@ -5589,6 +6102,26 @@ function openDocEditor(id,newType){
   setProfitVal('docOtherCost',doc.otherCost);
   document.getElementById('docEditorTitle').textContent=getDocTypeConfig(doc.type).label.toUpperCase()+' '+doc.num;
   document.getElementById('docSendBtn').textContent=doc.type==='invoice'?'Mark Paid →':'Convert to Invoice →';
+  // Show "Check QuickBooks" button only when editing an invoice. We don't
+  // gate on "is QB connected" here — the click handler shows a clearer
+  // error if not connected, and we'd need an async call to check status.
+  const qbBtn=document.getElementById('docQbSyncBtn');
+  if(qbBtn) qbBtn.style.display=doc.type==='invoice'?'':'none';
+  // Show "Push to QB" button only for invoices. Label changes based on
+  // whether this invoice has already been pushed.
+  const qbPushBtn=document.getElementById('docQbPushBtn');
+  if(qbPushBtn){
+    qbPushBtn.style.display=doc.type==='invoice'?'':'none';
+    if(doc.qbInvoiceId){
+      qbPushBtn.textContent='📤 In QB';
+      qbPushBtn.title='Already pushed to QuickBooks (QB ID: '+doc.qbInvoiceId+')';
+      qbPushBtn.style.color='var(--amber)';
+    } else {
+      qbPushBtn.textContent='📤 Push to QB';
+      qbPushBtn.title='Create this invoice in QuickBooks';
+      qbPushBtn.style.color='';
+    }
+  }
   // rebuild line items
   liCounter=0;
   document.getElementById('liRows').innerHTML='';
@@ -5636,6 +6169,11 @@ function updateDocType(){
   if(!editDocId) d.num=nextDocNum(t);
   document.getElementById('docEditorTitle').textContent=getDocTypeConfig(t).label.toUpperCase()+' '+d.num;
   document.getElementById('docSendBtn').textContent=t==='invoice'?'Mark Paid →':'Convert to Invoice →';
+  // Show/hide the Check QuickBooks button based on doc type
+  const qbBtn=document.getElementById('docQbSyncBtn');
+  if(qbBtn) qbBtn.style.display=t==='invoice'?'':'none';
+  const qbPushBtn=document.getElementById('docQbPushBtn');
+  if(qbPushBtn) qbPushBtn.style.display=t==='invoice'?'':'none';
   // Show/hide the parent-estimate picker. Only changeorder/contract/lienwaiver
   // make sense as "linked to an estimate" — invoices already convert FROM
   // estimates and material/work orders have their own flow.
@@ -8425,37 +8963,77 @@ function applyTemplate(idx){
   loadTemplates();
   const t=estTemplates[idx];
   if(!t)return;
-  // Confirm if there are existing line items
+  // ── Focus-lockout fix ────────────────────────────────────────────
+  // Blur whatever input the user might have focused. If we leave focus
+  // on an element that we're about to mutate or replace, browsers can
+  // get stuck in a state where subsequent clicks on inputs don't
+  // register. Same root cause as the material-order row-mutation bug.
+  if(document.activeElement && typeof document.activeElement.blur==='function'){
+    try{document.activeElement.blur();}catch(_){}
+  }
+  // ── Stacking: APPEND mode ────────────────────────────────────────
+  // If there are existing line items, this template stacks on top of
+  // them. Scope gets appended with a blank-line separator. Notes get
+  // appended the same way. This lets you build a multi-trade estimate
+  // by applying Roofing + Gutters + Siding in sequence.
   const existingItems=document.querySelectorAll('#liRows .li-row-data').length;
-  if(existingItems>0){
-    if(!confirm(`Apply template "${t.name}"?\nThis will replace your current line items, scope, and notes.`)) return;
-  }
-  // Apply scope
-  if(t.scope) document.getElementById('docScope').value=t.scope;
-  // tax/discount removed — not shown on estimates
-  // Apply notes
-  if(t.notes) document.getElementById('docNotes').value=t.notes;
-  // Rebuild line items
-  liCounter=0;
-  document.getElementById('liRows').innerHTML='';
-  if(t.lineItems&&t.lineItems.length){
-    t.lineItems.forEach(li=>addLI(li.cat||'other',li));
-  } else {
-    addLI('labor');
-  }
-  updateDocTotals();
-  // Collect and refresh preview (keep existing client info)
-  const currentDoc=docs.find(d=>d.id===editDocId)||{id:editDocId||uid()};
-  updateDocPreview(collectDoc(currentDoc));
-  closeTmplOverlay();
-  // Move focus to the first description input so the user can immediately type
+  const isStacking = existingItems > 0;
+  // Defer mutations to the next tick so the blur() above has time to
+  // settle and focus state is fully released before we touch the DOM.
   setTimeout(()=>{
-    const firstDesc=document.querySelector('#liRows .li-row-data .li-desc');
-    if(firstDesc) firstDesc.focus();
-  },50);
-  // Flash save confirm
-  const conf=document.getElementById('docSaveConfirm');
-  if(conf){conf.textContent='✓ Template applied';conf.style.opacity='1';setTimeout(()=>{conf.style.opacity='0';setTimeout(()=>{conf.textContent='✓ Saved';},500);},2000);}
+    // ── Scope ──
+    if(t.scope){
+      const scopeEl=document.getElementById('docScope');
+      const curScope=(scopeEl.value||'').trim();
+      scopeEl.value = (isStacking && curScope)
+        ? (curScope + '\n\n' + t.scope)
+        : t.scope;
+    }
+    // ── Notes ──
+    if(t.notes){
+      const notesEl=document.getElementById('docNotes');
+      const curNotes=(notesEl.value||'').trim();
+      notesEl.value = (isStacking && curNotes)
+        ? (curNotes + '\n\n' + t.notes)
+        : t.notes;
+    }
+    // ── Line items ──
+    // First template applied to a blank estimate: add a single empty
+    // labor row by default (matches addLI('labor') behavior). When
+    // stacking, we just append — no clearing.
+    if(!isStacking){
+      liCounter=0;
+      document.getElementById('liRows').innerHTML='';
+    }
+    if(t.lineItems&&t.lineItems.length){
+      t.lineItems.forEach(li=>addLI(li.cat||'other',li));
+    } else if(!isStacking){
+      addLI('labor');
+    }
+    updateDocTotals();
+    const currentDoc=docs.find(d=>d.id===editDocId)||{id:editDocId||uid()};
+    updateDocPreview(collectDoc(currentDoc));
+    closeTmplOverlay();
+    // Flash confirmation — different message for stacking vs initial apply
+    const conf=document.getElementById('docSaveConfirm');
+    if(conf){
+      conf.textContent = isStacking ? ('✓ Stacked: '+t.name) : '✓ Template applied';
+      conf.style.opacity='1';
+      setTimeout(()=>{
+        conf.style.opacity='0';
+        setTimeout(()=>{conf.textContent='✓ Saved';},500);
+      },2000);
+    }
+    // Don't auto-focus when stacking — the user is mid-flow and a
+    // focus jump after stacking the second template is jarring. On
+    // first apply (blank estimate), still focus the first description.
+    if(!isStacking){
+      setTimeout(()=>{
+        const firstDesc=document.querySelector('#liRows .li-row-data .li-desc');
+        if(firstDesc) firstDesc.focus();
+      },50);
+    }
+  },0);
 }
 
 function deleteTmpl(idx){
@@ -8787,6 +9365,43 @@ init();
 </div>
 
 <!-- ═══ TEAM MANAGER OVERLAY (owner only) ═══ -->
+<!-- ── CLOCK IN/OUT MODAL ──────────────────────────────────────────── -->
+<div class="tmpl-overlay" id="clockOverlay" onclick="if(event.target===this)closeClockScreen()">
+  <div class="tmpl-panel" onclick="event.stopPropagation()" style="max-width:480px;width:90vw;">
+    <div class="tmpl-hdr">
+      <span class="tmpl-hdr-title">⏱ TIME CLOCK</span>
+      <button class="btn btn-ghost btn-sm" onclick="closeClockScreen()">✕</button>
+    </div>
+    <div class="tmpl-body">
+      <!-- Status block: changes between "clocked out" (picker visible) and "clocked in" (timer visible) -->
+      <div id="clockStatusBlock" style="text-align:center;padding:20px 12px;background:var(--steel-mid);border-radius:10px;margin-bottom:16px;">
+        <div id="clockStatusLabel" style="font-size:12px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-bottom:6px;">Loading…</div>
+        <div id="clockStatusValue" style="font-size:22px;color:var(--white);font-weight:600;">—</div>
+        <div id="clockStatusJob" style="font-size:12px;color:var(--amber);margin-top:6px;display:none;"></div>
+        <div id="clockStatusElapsed" style="font-size:32px;color:var(--amber);font-variant-numeric:tabular-nums;margin-top:10px;display:none;font-weight:600;letter-spacing:.04em;">00:00:00</div>
+      </div>
+
+      <!-- Job picker: only visible when clocked out -->
+      <div id="clockJobPickerWrap" style="margin-bottom:16px;display:none;">
+        <label class="doc-flbl" style="display:block;margin-bottom:6px;">Job <span style="color:var(--muted);font-weight:400;letter-spacing:0;text-transform:none;font-size:10px;">(optional — for tracking labor by job)</span></label>
+        <select class="finput" id="clockJobPicker" style="width:100%;">
+          <option value="">(No job — general work)</option>
+        </select>
+      </div>
+
+      <!-- Primary action button -->
+      <button id="clockMainBtn" class="btn btn-amber" style="width:100%;padding:14px;font-size:15px;font-weight:600;" onclick="onClockMainBtn()">Loading…</button>
+
+      <!-- Today's entries list -->
+      <hr class="tmpl-divider" style="margin:20px 0 14px;"/>
+      <div style="font-size:11px;color:var(--muted);letter-spacing:.08em;text-transform:uppercase;margin-bottom:8px;">Today's Entries</div>
+      <div id="clockTodayList" style="display:flex;flex-direction:column;gap:6px;max-height:240px;overflow-y:auto;">
+        <div style="font-size:12px;color:var(--muted);text-align:center;padding:16px;">No entries today.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div class="tmpl-overlay" id="teamMgrOverlay" onclick="if(event.target===this)closeTeamManager()">
   <div class="tmpl-panel" onclick="event.stopPropagation()" style="max-width:600px;width:90vw;">
     <div class="tmpl-hdr">
