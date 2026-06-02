@@ -5852,12 +5852,20 @@ function loadDocs(){
   // With signatures, scope text, line items, and material order data, the docs
   // payload routinely exceeds Chrome's per-origin localStorage quota (~5MB) in
   // the PWA, which silently breaks all reads of the estimates list. Supabase
-  // is the source of truth — we just fetch on every load. Adds ~200ms to first
-  // paint but eliminates the quota class of bug entirely. The Electron desktop
-  // app is unaffected either way since it has a much larger quota.
-  docs=[];
-  // Sweep up any old oversized cache entries from previous versions so they
+  // is the source of truth — we fetch via loadDocsRemote() on app boot and
+  // hold in memory thereafter. Adds ~200ms to first paint but eliminates the
+  // quota class of bug entirely. The Electron desktop app is unaffected
+  // either way since it has a much larger quota.
+  //
+  // IMPORTANT: this function is called by many render paths as a "make sure
+  // data is loaded" guard. It must therefore NEVER clobber the in-memory
+  // docs array. Make `docs` an empty array only if it hasn't been initialized
+  // yet (truly first call). Subsequent calls are a no-op so that re-renders
+  // don't wipe the data loadDocsRemote() just put there.
+  if(!Array.isArray(docs)) docs=[];
+  // Sweep any old oversized cache entries from previous versions so they
   // free up the localStorage quota for everything else (jobs/leads/tasks).
+  // Safe to call on every invocation — removeItem on a missing key is a no-op.
   try{localStorage.removeItem('docs_cache');}catch{}
   try{localStorage.removeItem('docs_local');}catch{}
 }
@@ -5953,7 +5961,11 @@ function filterDocs(f){
 }
 
 function renderDocList(){
-  loadDocs();
+  // NOTE: do NOT call loadDocs() here. loadDocs() now clears the docs array
+  // (it used to read from a localStorage cache, but that cache was removed
+  // because it consistently exceeded the PWA's localStorage quota). Calling
+  // it on every render would wipe the in-memory docs we just fetched from
+  // Supabase. The init flow in loadAppData() handles the initial server load.
   const list=document.getElementById('docList');
   let filtered=docFilter==='all'?docs:docs.filter(d=>d.type===docFilter);
   // Apply text search across customer name + address + doc number.
