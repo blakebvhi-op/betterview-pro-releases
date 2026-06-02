@@ -3951,10 +3951,19 @@ async function loadAppData(){
       b.classList.toggle('active', b.dataset.jtype===leadJobTypeFilter);
     });
   }catch(e){console.error('schedule tabs init:',e);}
-  // Load docs and templates from cache first (instant), then refresh from server
+  // Docs/templates are NOT loaded from localStorage cache anymore (quota issue
+  // in the PWA — see loadDocs() comment). loadDocs() now just clears the array
+  // and sweeps any stale cache. loadDocsRemote() does the real load from Supabase.
   loadDocs();loadTemplates();loadTasks();loadTeam();
   Promise.all([loadDocsRemote(),loadTemplatesRemote(),loadTasksRemote()]).then(([dOk,tOk,tasksOk])=>{
-    if(dOk&&mainView==='est'&&typeof renderDocList==='function')renderDocList();
+    // Always re-render the estimates list when docs come back from the server,
+    // even if the user isn't on the Estimates view yet. switchMain('est') won't
+    // re-fetch — it just shows the existing DOM — so if we skip the render here
+    // and the user clicks Estimates a moment later, the list stays blank until
+    // they refresh. Rendering unconditionally is cheap and avoids that bug.
+    if(dOk&&typeof renderDocList==='function'){
+      try{renderDocList();}catch(e){console.error('renderDocList failed:',e);}
+    }
     if(tasksOk&&mainView==='tasks'&&typeof renderTaskList==='function')renderTaskList();
     if(tasksOk) updateTaskBadge();
     // Start background polling for newly signed estimates
@@ -5839,24 +5848,28 @@ function saveSignature(){
 }
 
 function loadDocs(){
-  // Read from cache (instantly available); server sync happens in loadAppData
-  const cached=lsGet('docs_cache',null);
-  if(cached){docs=cached.map(dbToDoc);}
-  else{docs=lsGet('docs_local',[]);} // legacy fallback for first-run after upgrade
+  // Docs are NOT cached to localStorage anymore.
+  // With signatures, scope text, line items, and material order data, the docs
+  // payload routinely exceeds Chrome's per-origin localStorage quota (~5MB) in
+  // the PWA, which silently breaks all reads of the estimates list. Supabase
+  // is the source of truth — we just fetch on every load. Adds ~200ms to first
+  // paint but eliminates the quota class of bug entirely. The Electron desktop
+  // app is unaffected either way since it has a much larger quota.
+  docs=[];
+  // Sweep up any old oversized cache entries from previous versions so they
+  // free up the localStorage quota for everything else (jobs/leads/tasks).
+  try{localStorage.removeItem('docs_cache');}catch{}
+  try{localStorage.removeItem('docs_local');}catch{}
 }
 function saveDocs(){
-  // Persist full set to cache; individual changes sync to server via saveDocSync
-  lsSet('docs_cache',docs.map(docToDb));
-  // Keep legacy key in sync too in case older code paths read it
-  lsSet('docs_local',docs);
+  // No-op. Docs persist to Supabase via saveDocSync (per-doc), not to
+  // localStorage. See loadDocs() above for rationale.
 }
 async function loadDocsRemote(){
   try{
     const rows=await sb.get('docs');
     const oldSigned=new Set(docs.filter(d=>d.signature).map(d=>d.id));
     docs=rows.map(dbToDoc);
-    lsSet('docs_cache',rows);
-    lsSet('docs_local',docs);
     // Detect newly-signed docs
     const newlySigned=docs.filter(d=>d.signature&&!oldSigned.has(d.id));
     if(newlySigned.length){
