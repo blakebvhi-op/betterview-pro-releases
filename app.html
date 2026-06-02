@@ -6760,9 +6760,12 @@ function generateCustomerLink(){
   const d=docs.find(x=>x.id===editDocId);
   if(!d){alert('Save the estimate first.');return;}
   if(d.type!=='estimate'){alert('Customer signing links are for estimates only.');return;}
-  // The viewer page is hosted in the betterview-pro-releases GitHub Pages site.
-  // Format: https://blakebvhi-op.github.io/betterview-pro-releases/sign.html?id=<docId>
-  const link='https://blakebvhi-op.github.io/betterview-pro-releases/sign.html?id='+encodeURIComponent(d.id);
+  // The viewer page is hosted at sign.betterview.homes (custom domain for
+  // GitHub Pages). Customers see a branded URL instead of the raw github.io
+  // host. The old blakebvhi-op.github.io URL still resolves and redirects
+  // here, so any previously-sent links continue to work.
+  // Format: https://sign.betterview.homes/sign.html?id=<docId>
+  const link='https://sign.betterview.homes/sign.html?id='+encodeURIComponent(d.id);
   // Try to copy to clipboard (works in Electron + modern browsers)
   const showResult=copied=>{
     const overlay=document.createElement('div');
