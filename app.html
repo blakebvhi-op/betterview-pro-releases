@@ -1487,6 +1487,12 @@ body:not(.role-owner):not(.role-manager) .role-financial-only{display:none!impor
       </select>
       <button type="button" class="btn btn-ghost btn-sm" id="leadBulkBtn" onclick="toggleLeadBulkMode()" title="Select multiple to delete" style="flex-shrink:0">✏️ Edit</button>
     </div>
+    <!-- Assigned-to filter pills — owner/manager see all 3, employees only see 'mine' (rest is forced by RLS) -->
+    <div class="sched-sub-filter" id="leadAssignedFilter">
+      <button class="sched-sub-pill active" data-assign="all" onclick="setLeadAssigned('all')">All</button>
+      <button class="sched-sub-pill" data-assign="mine" onclick="setLeadAssigned('mine')">👤 My Leads</button>
+      <button class="sched-sub-pill" data-assign="unassigned" onclick="setLeadAssigned('unassigned')">⚠ Unassigned</button>
+    </div>
     <!-- Job-type filter pills (matches schedule sub-filter styling) -->
     <div class="sched-sub-filter" id="leadJobTypeFilter">
       <button class="sched-sub-pill active" data-jtype="all" onclick="setLeadJobType('all')">All Job Types</button>
@@ -1823,7 +1829,12 @@ body:not(.role-owner):not(.role-manager) .role-financial-only{display:none!impor
           <option value="Other">Other</option>
         </select>
       </div>
-      <div></div>
+      <div><label class="flbl">Assigned To</label>
+        <select class="finput" id="lAssignedTo" disabled>
+          <option value="">— Unassigned —</option>
+        </select>
+        <div class="flbl-help" id="lAssignedHelp" style="font-size:10px;color:var(--muted);margin-top:3px"></div>
+      </div>
     </div>
     <div class="fg"><label class="flbl">Address / Site</label><input type="text" class="finput" id="lAddr" placeholder="123 Main St, City, State" autocomplete="off"/></div>
     <div class="fg"><label class="flbl">Notes</label><textarea class="finput" id="lNotes" rows="2" placeholder="Scope of work..."></textarea></div>
@@ -3447,6 +3458,7 @@ let selectedDay=(new Date().getDay()||7)-1;
 let activeStageFilter='all';
 let leadSearchQuery='';
 let leadJobTypeFilter=lsGet('lead_job_type_filter','all'); // 'all' | one of JOB_TYPES
+let leadAssignedFilter=lsGet('lead_assigned_filter','all'); // 'all' | 'mine' | 'unassigned'
 let leadSortMode=lsGet('lead_sort_mode','default'); // 'default' | 'revenue_desc' | 'lastjob_desc' | 'name_asc'
 function setLeadSort(mode){
   leadSortMode=mode||'default';
@@ -3494,6 +3506,14 @@ function setLeadJobType(t){
   lsSet('lead_job_type_filter',t);
   document.querySelectorAll('#leadJobTypeFilter .sched-sub-pill').forEach(b=>{
     b.classList.toggle('active', b.dataset.jtype===t);
+  });
+  if(typeof renderCRM==='function') renderCRM();
+}
+function setLeadAssigned(t){
+  leadAssignedFilter=t;
+  lsSet('lead_assigned_filter',t);
+  document.querySelectorAll('#leadAssignedFilter .sched-sub-pill').forEach(b=>{
+    b.classList.toggle('active', b.dataset.assign===t);
   });
   if(typeof renderCRM==='function') renderCRM();
 }
@@ -3833,7 +3853,7 @@ const setSS=(s,l)=>{
   document.getElementById('syncLbl').textContent=l;
 };
 const dbToJob=r=>({id:r.id,title:r.title,note:r.note||'',color:r.color||'amber',day:r.day||'backlog',endDay:r.end_day||'',leadId:r.lead_id||null,photos:safeParseArr(r.photos),checklist:safeParseArr(r.checklist),apptType:normalizeApptType(r.appt_type),startTime:r.start_time||'',endTime:r.end_time||'',assigneeId:r.assignee_id||null,assigneeIds:_normAssigneeIds(r),activity:safeParseArr(r.activity),linkedDocId:r.linked_doc_id||null,linkedMoId:r.linked_mo_id||null});
-const dbToLead=r=>({id:r.id,name:r.name,contact:r.contact||'',phone:r.phone||'',email:r.email||'',types:r.type?r.type.split(',').filter(Boolean):[],value:r.value||'',stage:r.stage||'new',address:r.address||'',notes:r.notes||'',color:r.color||'blue',estId:r.est_id||null,matList:safeParseArr(r.mat_list),source:r.source||'',activity:safeParseArr(r.activity),createdAt:r.created_at||null});
+const dbToLead=r=>({id:r.id,name:r.name,contact:r.contact||'',phone:r.phone||'',email:r.email||'',types:r.type?r.type.split(',').filter(Boolean):[],value:r.value||'',stage:r.stage||'new',address:r.address||'',notes:r.notes||'',color:r.color||'blue',estId:r.est_id||null,matList:safeParseArr(r.mat_list),source:r.source||'',activity:safeParseArr(r.activity),createdAt:r.created_at||null,assignedTo:r.assigned_to||null});
 const jobToDb=j=>({id:j.id,title:j.title,note:j.note,color:j.color,day:j.day,end_day:j.endDay||'',lead_id:j.leadId||null,photos:JSON.stringify(j.photos||[]),checklist:JSON.stringify(j.checklist||[]),appt_type:normalizeApptType(j.apptType),start_time:j.startTime||'',end_time:j.endTime||'',assignee_id:_firstAssigneeId(j),assignee_ids:getJobAssigneeIds(j),user_id:currentUser?.id||null,updated_at:new Date().toISOString(),activity:JSON.stringify(j.activity||[]),linked_doc_id:j.linkedDocId||null,linked_mo_id:j.linkedMoId||null});
 
 // ── ASSIGNEE HELPERS ────────────────────────────────────────
@@ -3857,7 +3877,7 @@ function getJobAssigneeIds(j){
   if(j.assigneeId) return [j.assigneeId];
   return [];
 }
-const leadToDb=l=>({id:l.id,name:l.name,contact:l.contact,phone:l.phone,email:l.email,type:(l.types||[]).join(','),value:l.value,stage:l.stage,address:l.address,notes:l.notes,color:l.color,est_id:l.estId||null,mat_list:JSON.stringify(l.matList||[]),source:l.source||'',activity:JSON.stringify(l.activity||[]),user_id:currentUser?.id||null,updated_at:new Date().toISOString()});
+const leadToDb=l=>({id:l.id,name:l.name,contact:l.contact,phone:l.phone,email:l.email,type:(l.types||[]).join(','),value:l.value,stage:l.stage,address:l.address,notes:l.notes,color:l.color,est_id:l.estId||null,mat_list:JSON.stringify(l.matList||[]),source:l.source||'',activity:JSON.stringify(l.activity||[]),assigned_to:l.assignedTo||null,user_id:currentUser?.id||null,updated_at:new Date().toISOString()});
 // Helper: parse material order data from a JSON string or object
 const _parseMoData=v=>{try{return typeof v==='string'?JSON.parse(v||'{}'):(v||{});}catch{return {};}};
 const dbToDoc=r=>{
@@ -4367,8 +4387,18 @@ function renderCRM(){
     b.onclick=()=>{activeStageFilter=s.id;renderCRM();};
     tabs.appendChild(b);
   });
-  // Stage filter (the existing tab) → job-type filter (new) → search query
+  // Stage filter (the existing tab) → assigned filter → job-type filter (new) → search query
+  // Sync the assigned filter pills to the current state (in case it was set via lsGet at boot)
+  document.querySelectorAll('#leadAssignedFilter .sched-sub-pill').forEach(b=>{
+    b.classList.toggle('active', b.dataset.assign===leadAssignedFilter);
+  });
   let fil0=activeStageFilter==='all'?leads:leads.filter(l=>l.stage===activeStageFilter);
+  // Apply assigned-to filter
+  if(leadAssignedFilter==='mine'){
+    fil0=fil0.filter(l=>l.assignedTo===currentUser?.id);
+  }else if(leadAssignedFilter==='unassigned'){
+    fil0=fil0.filter(l=>!l.assignedTo);
+  }
   if(leadJobTypeFilter&&leadJobTypeFilter!=='all'){
     fil0=fil0.filter(l=>Array.isArray(l.types)&&l.types.includes(leadJobTypeFilter));
   }
@@ -4441,6 +4471,20 @@ function leadCard(l){
         <div class="lcname">${esc(l.name)}</div>
         ${l.contact||l.phone?`<div class="lccon">${l.contact?'👤 '+esc(l.contact):''}${l.phone?' · '+esc(l.phone):''}</div>`:''}
         ${l.source?`<div class="lcsrc">📥 ${esc(l.source)}</div>`:''}
+        ${(() => {
+          // Assigned-to badge: shows who owns this lead. Unassigned leads get a
+          // distinct amber "unassigned" indicator that's only visible to owners
+          // (RLS already filters non-owners from seeing NULL-assigned leads).
+          if(l.assignedTo){
+            const m=teamRoster.find(x=>x.id===l.assignedTo);
+            const nm=m?.name||'(team)';
+            const isMe=l.assignedTo===currentUser?.id;
+            const c=isMe?'#22c55e':'#64748b';
+            return `<div class="lcsrc" style="color:${c}">👤 ${esc(nm)}${isMe?' (you)':''}</div>`;
+          }else{
+            return `<div class="lcsrc" style="color:#f59e0b">⚠ Unassigned</div>`;
+          }
+        })()}
         <div class="lcrow">${l.value?`<div class="lcval">$${Number(l.value).toLocaleString()}</div>`:'<div></div>'}
         <div class="type-tags-row">${typeBadges}<div class="lbadge" style="background:${st.color}22;color:${st.color};border:1px solid ${st.color}44">${st.label}</div>${invoiceBadge}${revenueBadge}</div></div>
         ${l.address?`<div class="lcaddr">📍 ${esc(l.address)}</div>`:''}
@@ -5010,10 +5054,87 @@ function buildTypePicker(current){
     wrap.appendChild(btn);
   });
 }
+// ─── ASSIGNED TO (LEAD ASSIGNMENT) ──────────────────────────────────
+// Populates the "Assigned To" dropdown in the lead modal with all teammates
+// from the company roster. Gates edit-ability by the current user's role:
+//   - Owner:    can assign to anyone, including unassigned
+//   - Manager:  can assign to anyone, including unassigned (parity with owner)
+//   - Employee: can reassign their own leads to other teammates only;
+//               cannot un-assign (would hide the lead from themselves)
+//   - Non-assignee employee: dropdown disabled entirely
+// The visibility rules at the database level enforce who can SEE which leads
+// in the first place — this just controls UI edit-ability inside the modal.
+function populateAssignedToDropdown(editId){
+  const sel=document.getElementById('lAssignedTo');
+  const help=document.getElementById('lAssignedHelp');
+  if(!sel) return;
+  const role=currentRole||'employee';
+  const uid=currentUser?.id;
+  // Gather the team — fall back to just the current user if roster is empty
+  let team=Array.isArray(teamRoster)&&teamRoster.length
+    ? teamRoster.slice()
+    : (currentUser?{id:uid,name:currentUser.email||'You',role:role}:[]);
+  // Build options
+  sel.innerHTML='';
+  const optNone=document.createElement('option');
+  optNone.value='';optNone.textContent='— Unassigned —';
+  sel.appendChild(optNone);
+  team.forEach(m=>{
+    if(!m||!m.id) return;
+    const opt=document.createElement('option');
+    opt.value=m.id;
+    const nm=m.name||m.email||'(unnamed)';
+    const r=m.role?` · ${m.role}`:'';
+    opt.textContent=`${nm}${r}`;
+    sel.appendChild(opt);
+  });
+  // Default for new leads = unassigned (NULL); owners can change immediately
+  if(!editId) sel.value='';
+  // Decide if the dropdown is editable for THIS user on THIS lead
+  let canEdit=false;
+  let helpText='';
+  if(role==='owner'||role==='manager'){
+    canEdit=true;
+    helpText='Owners & managers can assign to anyone.';
+  }else if(editId){
+    const l=leads.find(x=>x.id===editId);
+    if(l&&l.assignedTo===uid){
+      canEdit=true;
+      helpText='You can reassign this lead, but you cannot un-assign it.';
+    }else{
+      canEdit=false;
+      helpText='Only owners/managers or the assignee can change this.';
+    }
+  }else{
+    // New leads default to unassigned; only owners/managers can change that
+    canEdit=false;
+    helpText='New leads default to unassigned — owner will route it.';
+  }
+  sel.disabled=!canEdit;
+  if(help) help.textContent=helpText;
+  // Employee-self-edit case: prevent setting to empty string (no un-assign).
+  // Wire a guard that flips back to their uid if they pick "Unassigned."
+  if(canEdit&&role!=='owner'&&role!=='manager'){
+    sel.onchange=()=>{
+      if(sel.value===''){
+        sel.value=uid;
+        if(help) help.textContent='Employees cannot un-assign — pick another teammate to reassign.';
+      }
+    };
+  }else{
+    sel.onchange=null;
+  }
+}
+
 function openLeadMov(editId){
   editLeadId=editId||null;
   document.getElementById('lMTitle').textContent=editId?'✎ EDIT LEAD':'📋 NEW LEAD';
   document.getElementById('lDel').style.display=editId?'flex':'none';
+  // Rebuild the Assigned To dropdown from the current team roster every time
+  // the modal opens. Owners + managers can always reassign. Employees can
+  // reassign only their own leads (and only away to someone else — they can't
+  // un-assign by setting to NULL since that hides the lead from them).
+  populateAssignedToDropdown(editId);
   if(editId){
     const l=leads.find(x=>x.id===editId);
     document.getElementById('lName').value=l.name||'';document.getElementById('lContact').value=l.contact||'';
@@ -5022,6 +5143,9 @@ function openLeadMov(editId){
     document.getElementById('lStage').value=l.stage||'new';document.getElementById('lAddr').value=l.address||'';
     document.getElementById('lNotes').value=l.notes||'';leadColor=l.color||'blue';
     const ls=document.getElementById('lSource');if(ls)ls.value=l.source||'';
+    // Set the Assigned To dropdown to the lead's current value
+    const lat=document.getElementById('lAssignedTo');
+    if(lat) lat.value=l.assignedTo||'';
     buildTypePicker(l.types||[]);
     // Populate the Customer File panel with all linked records
     buildCustomerFile(editId);
@@ -5170,7 +5294,13 @@ document.getElementById('lSave').addEventListener('click',async()=>{
   const name=document.getElementById('lName').value.trim();
   if(!name){document.getElementById('lName').style.borderColor='#ef4444';return;}
   document.getElementById('lName').style.borderColor='';
-  const ns=document.getElementById('lStage').value;let lead;
+  const ns=document.getElementById('lStage').value;
+  // Read the Assigned To dropdown — empty string means unassigned (NULL in DB).
+  // Note: if a non-owner non-manager tries to un-assign their own lead, the
+  // dropdown's onchange already flipped the value back to their uid, so by
+  // the time we read it here the value is correct.
+  const assignedTo=(document.getElementById('lAssignedTo')?.value||'')||null;
+  let lead;
   const promote=(l)=>promoteLeadToJob(l);
   if(editLeadId){
     lead=leads.find(x=>x.id===editLeadId);const os=lead.stage;
@@ -5179,6 +5309,15 @@ document.getElementById('lSave').addEventListener('click',async()=>{
     lead.value=document.getElementById('lVal').value;lead.stage=ns;lead.address=document.getElementById('lAddr').value.trim();
     lead.notes=document.getElementById('lNotes').value.trim();lead.color=leadColor;
     lead.source=document.getElementById('lSource')?.value||'';
+    // Apply assignment change + log to activity if it actually changed
+    if((lead.assignedTo||null)!==assignedTo){
+      const oldName=teamRoster.find(m=>m.id===lead.assignedTo)?.name||(lead.assignedTo?'(unknown)':'Unassigned');
+      const newName=teamRoster.find(m=>m.id===assignedTo)?.name||(assignedTo?'(unknown)':'Unassigned');
+      lead.activity=lead.activity||[];
+      lead.activity.push({ts:new Date().toISOString(),msg:`Assigned: ${oldName} → ${newName}`});
+      if(lead.activity.length>50) lead.activity=lead.activity.slice(-50);
+      lead.assignedTo=assignedTo;
+    }
     // preserve linked estimate and material list — don't overwrite them in the edit modal
     // lead.estId and lead.matList stay as-is
     if(ns!==os){
@@ -5193,7 +5332,8 @@ document.getElementById('lSave').addEventListener('click',async()=>{
       email:document.getElementById('lEmail').value.trim(),types:selectedTypes.slice(),value:document.getElementById('lVal').value,
       stage:ns,address:document.getElementById('lAddr').value.trim(),notes:document.getElementById('lNotes').value.trim(),
       color:leadColor,estId:null,matList:[],source:document.getElementById('lSource')?.value||'',
-      activity:[{ts:new Date().toISOString(),msg:'Lead created'}]};
+      assignedTo:assignedTo,
+      activity:[{ts:new Date().toISOString(),msg:'Lead created'+(assignedTo?` · assigned to ${teamRoster.find(m=>m.id===assignedTo)?.name||'team member'}`:'')}]};
     leads.push(lead);
     // Brand new lead created in non-default stage? run automation too
     if(ns!=='new') runStageAutomations(lead,'new',ns);
