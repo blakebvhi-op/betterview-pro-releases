@@ -10,8 +10,8 @@
 <meta name="theme-color" content="#1a1e2e">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="apple-touch-icon" href="icon-192.png">
-<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <meta name="referrer" content="no-referrer">
 <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src https://fryaksqvfknxdptrlppy.supabase.co https://ipapi.co https://api.open-meteo.com https://api.abcsupply.com; img-src 'self' data: blob:; media-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self';">
 <title>Better View Pro</title>
@@ -1776,6 +1776,15 @@ body:not(.role-owner):not(.role-manager) .role-financial-only{display:none!impor
           <div class="linked-wo-sub" id="jLinkedMoSub">Tap to open</div>
         </div>
         <div class="linked-wo-arrow">→</div>
+      </div>
+    </div>
+    <!-- Create WO / MO buttons — visible only when editing an existing job  -->
+    <!-- and only when the doc type doesn't already exist for this job.       -->
+    <!-- Owners + managers only (crew can view links via the crew page).       -->
+    <div class="fg" id="jCreateDocsRow" style="display:none">
+      <div style="display:flex;gap:8px;flex-wrap:wrap;">
+        <button class="btn btn-ghost btn-sm" id="jCreateWoBtn" onclick="createWoFromJob()" style="display:none">+ Work Order</button>
+        <button class="btn btn-ghost btn-sm" id="jCreateMoBtn" onclick="createMoFromJob()" style="display:none">+ Material Order</button>
       </div>
     </div>
     <div class="macts">
@@ -4385,6 +4394,117 @@ const dbToTmpl=r=>({id:r.id,name:r.name,scope:r.scope||'',lineItems:safeParseArr
 const tmplToDb=t=>({id:t.id,name:t.name,scope:t.scope||'',line_items:JSON.stringify(t.lineItems||[]),tax:parseFloat(t.tax)||0,discount:parseFloat(t.discount)||0,notes:t.notes||'',created:t.created||Date.now(),user_id:currentUser?.id||null,updated_at:new Date().toISOString()});
 function safeParseArr(v){try{const p=typeof v==='string'?JSON.parse(v):v;return Array.isArray(p)?p:[];}catch{return[];}}
 function saveJob(j){setSS('syncing','Saving…');queueSave('jobs',j);}
+
+// ── Create WO / MO from a Job ───────────────────────────────────────
+// The existing openWorkOrder/openMaterialOrder flow expects to be invoked
+// from an open estimate (editDocId points at the estimate). To create a
+// doc starting from a job instead, we resolve the job's source estimate,
+// temporarily set editDocId, and call the existing open function.
+//
+// We also pre-set the doc's linkedJobId BEFORE the open function fires
+// its auto-spawn logic — that prevents the auto-spawn from creating a
+// duplicate backlog job (since the existing job is already there).
+function _findEstForJob(job){
+  if(!job) return null;
+  // 1. Direct link via job.linkedDocId (only if it's actually an estimate)
+  if(job.linkedDocId){
+    const d=docs.find(x=>x.id===job.linkedDocId);
+    if(d && d.type==='estimate') return d;
+  }
+  // 2. Via the lead the job is tied to
+  if(job.leadId){
+    const lead=leads.find(l=>l.id===job.leadId);
+    if(lead && lead.estId){
+      const d=docs.find(x=>x.id===lead.estId);
+      if(d && d.type==='estimate') return d;
+    }
+  }
+  return null;
+}
+
+function createWoFromJob(){
+  if(!editJobId){alert('Save the job first.');return;}
+  const job=jobs.find(x=>x.id===editJobId);
+  if(!job){alert('Job not found.');return;}
+  const est=_findEstForJob(job);
+  if(!est){
+    alert('Cannot create a work order — this job has no linked estimate.\n\nLink an estimate to the job first (via the customer/lead), or create the work order from the estimate side.');
+    return;
+  }
+  // If a WO already exists for this estimate, just open it AND make sure
+  // the cross-link to this job is in place.
+  const existing=docs.find(d=>d.type==='workorder'&&d.sourceEstId===est.id);
+  if(existing){
+    if(!existing.linkedJobId){
+      existing.linkedJobId=job.id;
+      saveDocSync(existing);
+    }
+    if(job.linkedDocId!==existing.id){
+      job.linkedDocId=existing.id;
+      saveJob(job);
+    }
+    closeMov('jMov');
+    setTimeout(()=>openWorkOrder(existing.id),100);
+    return;
+  }
+  // No existing WO — pre-stage the link so openWorkOrder's auto-spawn
+  // sees this as "already linked" and skips creating a duplicate job.
+  // We accomplish this by writing the WO's future linkedJobId BEFORE
+  // openWorkOrder runs. Since the WO doesn't exist yet, we have to set
+  // it AFTER openWorkOrder creates it but BEFORE save. Easiest path:
+  // listen for the next saveDoc event using a one-shot flag.
+  closeMov('jMov');
+  _pendingJobToLink=job.id;
+  // Use the normal create flow — sets editDocId via the estimate path
+  const savedEditDocId=editDocId;
+  editDocId=est.id;
+  setTimeout(()=>{
+    openWorkOrder(null); // null = create from current editDocId estimate
+    // Restore editDocId after open kicks off (open function reads it sync)
+    editDocId=savedEditDocId;
+  },50);
+}
+
+function createMoFromJob(){
+  if(!editJobId){alert('Save the job first.');return;}
+  const job=jobs.find(x=>x.id===editJobId);
+  if(!job){alert('Job not found.');return;}
+  const est=_findEstForJob(job);
+  if(!est){
+    alert('Cannot create a material order — this job has no linked estimate.\n\nLink an estimate to the job first, or create the material order from the estimate side.');
+    return;
+  }
+  // Existing MO for this estimate?
+  const existing=docs.find(d=>d.type==='matorder'&&d.sourceEstId===est.id);
+  if(existing){
+    if(!existing.linkedJobId){
+      existing.linkedJobId=job.id;
+      saveDocSync(existing);
+    }
+    if(job.linkedMoId!==existing.id){
+      job.linkedMoId=existing.id;
+      saveJob(job);
+    }
+    closeMov('jMov');
+    setTimeout(()=>openMaterialOrder(existing.id),100);
+    return;
+  }
+  closeMov('jMov');
+  _pendingJobToLink=job.id;
+  _pendingJobLinkType='mo';
+  const savedEditDocId=editDocId;
+  editDocId=est.id;
+  setTimeout(()=>{
+    openMaterialOrder(null);
+    editDocId=savedEditDocId;
+  },50);
+}
+
+// One-shot flag: when set, the next WO/MO created should link to this job
+// instead of spawning a new backlog job. Consumed by tryAddBacklogJobForWO
+// and the MO save path. Cleared after one use.
+let _pendingJobToLink=null;
+let _pendingJobLinkType=null; // 'wo' or 'mo'
 
 // ── Crew Link copier ─────────────────────────────────────────────────
 // Generates a shareable URL for the current job's crew page. Crew opens
@@ -7718,6 +7838,21 @@ function tryAddBacklogJobForWO(wo){
   if(!wo||wo.type!=='workorder') return;
   // Already has a linked job? skip (handles double-clicks / resaves)
   if(wo.linkedJobId&&jobs.find(j=>j.id===wo.linkedJobId)) return;
+  // One-shot: if a "+ Work Order from Job" flow set _pendingJobToLink,
+  // link to THAT job instead of creating a brand new backlog one.
+  if(_pendingJobToLink && _pendingJobLinkType!=='mo'){
+    const targetJob=jobs.find(j=>j.id===_pendingJobToLink);
+    _pendingJobToLink=null;_pendingJobLinkType=null;
+    if(targetJob){
+      wo.linkedJobId=targetJob.id;
+      targetJob.linkedDocId=wo.id;
+      saveDocSync(wo);
+      saveJob(targetJob);
+      setSS('synced','Work Order linked to job ✓');
+      setTimeout(()=>document.getElementById('syncLbl').textContent='',2500);
+      return;
+    }
+  }
   // Build a sensible title: address first, then customer name as fallback
   const title=(wo.clientAddr||'').trim()
             ||(wo.clientName||'').trim()
@@ -7770,9 +7905,13 @@ function tryAddBacklogJobForWO(wo){
 }
 
 // Render the "View Work Order →" / "View Material Order →" cards on the job modal
+// AND toggle the "+ Work Order" / "+ Material Order" creation buttons so they
+// only appear when nothing is linked yet (avoids creating duplicates).
 function renderJobLinkedWO(j){
   // WO card
   const woRow=document.getElementById('jLinkedWoRow');
+  const woBtn=document.getElementById('jCreateWoBtn');
+  let woLinked=false;
   if(woRow){
     if(j&&j.linkedDocId){
       const wo=docs.find(d=>d.id===j.linkedDocId&&d.type==='workorder');
@@ -7785,6 +7924,7 @@ function renderJobLinkedWO(j){
           ? `${done}/${total} checklist items · Tap to open`
           : 'Tap to open';
         woRow.style.display='';
+        woLinked=true;
       } else {
         woRow.style.display='none';
       }
@@ -7794,6 +7934,8 @@ function renderJobLinkedWO(j){
   }
   // MO card
   const moRow=document.getElementById('jLinkedMoRow');
+  const moBtn=document.getElementById('jCreateMoBtn');
+  let moLinked=false;
   if(moRow){
     if(j&&j.linkedMoId){
       const mo=docs.find(d=>d.id===j.linkedMoId&&d.type==='matorder');
@@ -7808,12 +7950,22 @@ function renderJobLinkedWO(j){
           ? `${matCount} material${matCount===1?'':'s'} · Tap to open`
           : 'Tap to open';
         moRow.style.display='';
+        moLinked=true;
       } else {
         moRow.style.display='none';
       }
     } else {
       moRow.style.display='none';
     }
+  }
+  // Create-buttons row: visible only when editing an existing job AND
+  // user is owner/manager AND at least one doc type is still unlinked.
+  const createRow=document.getElementById('jCreateDocsRow');
+  if(createRow){
+    const canCreate=isOwnerOrManager()&&!!editJobId;
+    if(woBtn) woBtn.style.display=(canCreate&&!woLinked)?'':'none';
+    if(moBtn) moBtn.style.display=(canCreate&&!moLinked)?'':'none';
+    createRow.style.display=(canCreate&&(!woLinked||!moLinked))?'':'none';
   }
 }
 
@@ -8339,6 +8491,20 @@ function saveMaterialOrder(quiet){
   if(!docs.find(x=>x.id===mo.id)) docs.push(mo);
   saveDocs();
   saveDocSync(mo);
+  // One-shot: if "+ Material Order from Job" flow set _pendingJobToLink,
+  // link this MO to THAT job (and skip the auto-find-by-WO path below).
+  if(_pendingJobToLink && _pendingJobLinkType==='mo' && !mo.linkedJobId){
+    const targetJob=jobs.find(j=>j.id===_pendingJobToLink);
+    _pendingJobToLink=null;_pendingJobLinkType=null;
+    if(targetJob){
+      mo.linkedJobId=targetJob.id;
+      targetJob.linkedMoId=mo.id;
+      saveDocSync(mo);
+      saveJob(targetJob);
+      setSS('synced','Material Order linked to job ✓');
+      setTimeout(()=>document.getElementById('syncLbl').textContent='',2500);
+    }
+  }
   // If there's already a backlog/scheduled job for this source estimate,
   // link the MO to that job so it shows alongside the WO.
   if(mo.sourceEstId&&!mo.linkedJobId){

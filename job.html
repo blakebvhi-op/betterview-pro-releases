@@ -310,12 +310,18 @@ function renderContent(data){
   // Job columns: linked_doc_id (primary, usually the estimate), linked_mo_id (material order).
   // Change orders / contracts / lien waivers link back via docs.source_est_id pointing
   // at the estimate's id. Work orders are typed and linked via linked_job_id.
+  // CRITICAL: doc type strings in this codebase are 'matorder' and 'workorder'
+  // (single words, not 'material_order'). Don't assume — these came from DOC_TYPES.
   const primaryDocId = job.linked_doc_id || null;
   const materialDocId = job.linked_mo_id || null;
-  const estimate = docs.find(d=>d.id===primaryDocId) || docs.find(d=>d.type==='estimate');
+  const estimate = docs.find(d=>d.id===primaryDocId && d.type==='estimate')
+                || docs.find(d=>d.type==='estimate');
   const changeOrders = docs.filter(d=>d.type==='changeorder');
-  const materialOrder = docs.find(d=>d.id===materialDocId) || docs.find(d=>d.type==='materialorder');
-  const workOrder = docs.find(d=>d.type==='workorder');
+  const materialOrder = docs.find(d=>d.id===materialDocId)
+                     || docs.find(d=>d.type==='matorder');
+  // Work order: prefer one explicitly linked to this job, else any workorder doc in the bundle
+  const workOrder = docs.find(d=>d.type==='workorder' && d.linked_job_id===job.id)
+                 || docs.find(d=>d.type==='workorder');
 
   let html='';
 
@@ -367,12 +373,12 @@ function renderContent(data){
 
   // ── Scope of work (with localStorage checkboxes) ──
   // Source order: estimate first, then change orders by created date.
+  // Work order is rendered separately below (it's a crew-specific doc).
   const scopeSources=[];
   if(estimate){scopeSources.push({label:'Estimate',doc:estimate});}
   changeOrders.sort((a,b)=>(a.created||0)-(b.created||0)).forEach((co,i)=>{
     scopeSources.push({label:'Change Order #'+(i+1),doc:co});
   });
-  if(workOrder){scopeSources.push({label:'Work Order',doc:workOrder});}
 
   if(scopeSources.length){
     html+='<div class="card"><h2>Scope of Work</h2>';
@@ -398,9 +404,33 @@ function renderContent(data){
     html+='</div>';
   }
 
+  // ── Work Order (crew-specific, separate from scope) ──
+  if(workOrder){
+    html+='<div class="card"><h2>Work Order'+(workOrder.num?' · '+esc(workOrder.num):'')+'</h2>';
+    if(workOrder.scope) html+='<div style="font-size:13px;color:#bdc7d3;line-height:1.6;padding:4px 0 10px;">'+esc(workOrder.scope)+'</div>';
+    const woItems=safeArr(workOrder.line_items);
+    if(woItems.length===0 && !workOrder.scope){
+      html+='<div style="color:var(--muted);font-size:13px;">No work order lines.</div>';
+    }else{
+      woItems.forEach((li,liIdx)=>{
+        const key='wo:'+job.id+':'+viewerId+':'+workOrder.id+':'+liIdx;
+        const desc=li.desc||li.description||'(no description)';
+        const checked=localStorage.getItem(key)==='1';
+        html+='<div class="scope-item'+(checked?' checked':'')+'" data-key="'+esc(key)+'" onclick="toggleScope(this)">';
+        html+='<div class="scope-check"></div>';
+        html+='<div class="scope-text">'+esc(desc);
+        if(li.qty && Number(li.qty)>0){
+          html+=' <span style="color:var(--muted);font-size:11px;">(qty '+esc(li.qty)+')</span>';
+        }
+        html+='</div></div>';
+      });
+    }
+    html+='</div>';
+  }
+
   // ── Material list ──
   if(materialOrder){
-    html+='<div class="card"><h2>Material List</h2>';
+    html+='<div class="card"><h2>Material List'+(materialOrder.num?' · '+esc(materialOrder.num):'')+'</h2>';
     if(materialOrder.scope) html+='<div style="font-size:13px;color:#bdc7d3;line-height:1.6;padding:4px 0 10px;">'+esc(materialOrder.scope)+'</div>';
     const items=safeArr(materialOrder.line_items);
     if(items.length===0){
@@ -431,12 +461,6 @@ function renderContent(data){
 
   // ── Linked docs (read-only view links) ──
   // Skipped for now — could be added if needed; the customer-signing flow already shows them.
-
-  // ── Owner contact CTA ──
-  html+='<div class="owner-cta">';
-  html+='<a href="tel:4142343700">📞 Call Owner</a>';
-  html+='<a href="sms:4142343700">💬 Text Owner</a>';
-  html+='</div>';
 
   root.innerHTML=html;
   window.scrollTo(0,0);
