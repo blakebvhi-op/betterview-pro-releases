@@ -24,7 +24,8 @@
   a{color:var(--amber);text-decoration:none}
 
   /* ── Page frame ──────────────────────────────────────── */
-  .page{max-width:760px;margin:0 auto;padding:16px 14px 80px}
+  .page{max-width:760px;margin:0 auto;padding:0 0 80px}
+  .page-inner{padding:0 14px}
 
   /* ── PIN gate ────────────────────────────────────────── */
   .pin-gate{
@@ -49,11 +50,11 @@
   }
   .pin-btn:disabled{opacity:.4;cursor:wait}
 
-  /* ── Top header ─────────────────────────────────────── */
+  /* ── Top header (always visible above tabs) ─────────── */
   .top{
     border-left:3px solid var(--amber);padding:12px 14px;
     background:linear-gradient(180deg, rgba(245,158,11,.04), transparent);
-    margin-bottom:14px;border-bottom:1px solid var(--line)
+    border-bottom:1px solid var(--line);margin-bottom:0
   }
   .top .stamp{
     font-size:10px;letter-spacing:.18em;color:var(--amber);text-transform:uppercase;
@@ -62,7 +63,34 @@
   .top h1{font-size:18px;font-weight:700;letter-spacing:-.01em;line-height:1.25}
   .top .meta{color:var(--muted);font-size:12px;margin-top:4px}
 
-  /* ── Job details card ────────────────────────────────── */
+  /* ── Tab bar (sticky) ─────────────────────────────────── */
+  .tabs{
+    position:sticky;top:0;z-index:10;
+    display:flex;background:#141821;border-bottom:1px solid var(--line2);
+    overflow-x:auto;-webkit-overflow-scrolling:touch;
+  }
+  .tab{
+    flex:1;min-width:80px;padding:14px 8px;text-align:center;
+    background:transparent;border:0;color:var(--muted);
+    font-family:inherit;font-size:12px;font-weight:600;letter-spacing:.06em;
+    text-transform:uppercase;cursor:pointer;
+    border-bottom:2px solid transparent;transition:all .15s;
+    white-space:nowrap
+  }
+  .tab:hover{color:var(--ink)}
+  .tab.active{color:var(--amber);border-bottom-color:var(--amber);background:rgba(245,158,11,.05)}
+  .tab-count{
+    display:inline-block;margin-left:4px;font-size:10px;
+    padding:1px 6px;border-radius:8px;background:var(--line2);color:var(--ink);
+    font-weight:700
+  }
+  .tab.active .tab-count{background:var(--amber);color:#0a0c10}
+
+  /* ── Tab panel ─────────────────────────────────────── */
+  .tab-panel{display:none;padding-top:14px}
+  .tab-panel.active{display:block}
+
+  /* ── Cards ─────────────────────────────────────────── */
   .card{
     border:1px solid var(--line2);background:rgba(15,17,21,.6);
     padding:14px;margin-bottom:14px;border-radius:8px
@@ -87,7 +115,7 @@
     border:1px solid var(--line2);margin-right:4px;margin-bottom:4px
   }
 
-  /* ── Scope / checklist ───────────────────────────────── */
+  /* ── Scope / checklist (used by Overview, WO tab) ─── */
   .scope-item{
     display:flex;gap:10px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.04);
     cursor:pointer;user-select:none;align-items:flex-start
@@ -106,10 +134,6 @@
     margin:14px 0 6px;font-size:11px;letter-spacing:.08em;
     text-transform:uppercase;color:var(--muted);font-weight:600
   }
-  .scope-total{
-    font-weight:700;color:var(--amber);padding:8px 0;
-    border-top:1px solid var(--line2);margin-top:8px
-  }
 
   /* ── Material list ───────────────────────────────────── */
   .mat-item{
@@ -126,36 +150,21 @@
   .mat-item.checked{opacity:.55}
   .mat-text{flex:1}
 
-  /* ── Time clock section (Session 2 placeholder) ──────── */
+  /* ── Time clock section (placeholder for now) ───────── */
   .time-clock-section{
-    border:1px dashed var(--line2);padding:14px;text-align:center;
-    color:var(--muted);font-size:12px;border-radius:8px;
+    border:1px dashed var(--line2);padding:20px;text-align:center;
+    color:var(--muted);font-size:13px;border-radius:8px;
     background:rgba(245,158,11,.03)
   }
-  .time-clock-section strong{color:var(--ink);display:block;margin-bottom:4px}
+  .time-clock-section strong{color:var(--ink);display:block;margin-bottom:8px;font-size:15px}
 
-  /* ── Linked docs ─────────────────────────────────────── */
-  .doc-link{
-    display:flex;justify-content:space-between;align-items:center;
-    padding:10px 12px;border:1px solid var(--line2);border-radius:6px;
-    margin-bottom:6px;background:rgba(15,17,21,.5);
-    text-decoration:none;color:var(--ink);font-size:13px;cursor:pointer
+  /* ── Empty state ─────────────────────────────────────── */
+  .empty{
+    text-align:center;color:var(--muted);font-size:13px;
+    padding:40px 14px;font-style:italic
   }
-  .doc-link .type{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.06em}
-  .doc-link:hover{border-color:var(--amber)}
 
-  /* ── Owner contact CTA ───────────────────────────────── */
-  .owner-cta{
-    display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:18px
-  }
-  .owner-cta a{
-    display:flex;align-items:center;justify-content:center;gap:8px;
-    padding:14px;border:1px solid var(--line2);border-radius:8px;
-    background:#141821;color:var(--ink);font-weight:600;font-size:14px
-  }
-  .owner-cta a:hover{border-color:var(--amber);color:var(--amber)}
-
-  /* ── Print ───────────────────────────────────────────── */
+  /* ── Print bar (only visible after PIN) ──────────────── */
   .print-bar{
     position:fixed;bottom:14px;right:14px;display:flex;gap:8px;z-index:5
   }
@@ -166,9 +175,17 @@
   }
   .print-bar button:hover{border-color:var(--amber);color:var(--amber)}
 
+  /* ── Print: show ALL tabs (crew gets a complete paper copy) ── */
   @media print{
-    .pin-gate,.print-bar,.owner-cta{display:none!important}
+    .pin-gate,.print-bar,.tabs{display:none!important}
     body{background:#fff;color:#000}
+    .tab-panel{display:block!important;page-break-inside:avoid;padding-top:14px}
+    .tab-panel::before{
+      content:attr(data-print-label);
+      display:block;font-weight:700;font-size:14px;text-transform:uppercase;
+      letter-spacing:.1em;margin-bottom:8px;padding-bottom:4px;
+      border-bottom:2px solid #000
+    }
     .card,.top{background:#fff!important;border-color:#bbb!important}
     .scope-text,.mat-text,.row .val{color:#000}
     .row .lbl,.card h2,.top .stamp{color:#444}
@@ -177,11 +194,10 @@
     .scope-item.checked .scope-check,.mat-item.checked .mat-check{background:#000}
     .pill{background:#eee;color:#000;border-color:#888}
     .crew-chip{background:#fff;color:#000;border-color:#888}
-    .doc-link{background:#fff;border-color:#bbb}
   }
 
   .loading{padding:40px;text-align:center;color:var(--muted)}
-  .error-box{padding:20px;border:1px solid var(--rose);background:rgba(239,68,68,.08);border-radius:6px;color:var(--rose);font-size:13px}
+  .error-box{padding:20px;border:1px solid var(--rose);background:rgba(239,68,68,.08);border-radius:6px;color:var(--rose);font-size:13px;margin:14px}
 </style>
 </head>
 <body>
@@ -199,9 +215,29 @@
 </div>
 
 <!-- ─── Job content (hidden until PIN entered) ──────────── -->
-<div class="page" id="pageContent" style="display:none"></div>
+<div class="page" id="pageContent" style="display:none">
 
-<!-- ─── Print + back bar (only visible when content showing) -->
+  <!-- Header is rendered before tabs so it's always visible -->
+  <div id="topHeader"></div>
+
+  <!-- Sticky tab bar -->
+  <div class="tabs">
+    <button class="tab active" data-tab="overview" onclick="switchTab('overview')">📋 Overview</button>
+    <button class="tab" data-tab="wo" onclick="switchTab('wo')" id="tabWo">🔧 Work Order</button>
+    <button class="tab" data-tab="mo" onclick="switchTab('mo')" id="tabMo">📦 Materials</button>
+    <button class="tab" data-tab="time" onclick="switchTab('time')">⏱ Time</button>
+  </div>
+
+  <!-- Tab panels (only one visible at a time on screen; all visible on print) -->
+  <div class="page-inner">
+    <div class="tab-panel active" data-tab="overview" data-print-label="Overview" id="panelOverview"></div>
+    <div class="tab-panel" data-tab="wo" data-print-label="Work Order" id="panelWo"></div>
+    <div class="tab-panel" data-tab="mo" data-print-label="Material Order" id="panelMo"></div>
+    <div class="tab-panel" data-tab="time" data-print-label="Time Tracking" id="panelTime"></div>
+  </div>
+</div>
+
+<!-- ─── Print bar (only visible when content showing) ── -->
 <div class="print-bar" id="printBar" style="display:none">
   <button onclick="window.print()">🖨 Print</button>
 </div>
@@ -209,9 +245,6 @@
 <script>
 const SB_URL='https://fryaksqvfknxdptrlppy.supabase.co';
 const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZyeWFrc3F2ZmtueGRwdHJscHB5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4OTczOTcsImV4cCI6MjA5MDQ3MzM5N30.azNBXDI3ySkvMRED9VjNYoSc6ct3NA32No5vybsahnk';
-// NOTE: SB_KEY is injected at deploy time. The anon key is intentionally public
-// (RLS + SECURITY DEFINER functions are what protect data). We never put the
-// service_role key here.
 
 const params=new URLSearchParams(location.search);
 const JOB_ID=params.get('id');
@@ -219,7 +252,6 @@ const JOB_ID=params.get('id');
 // ── PIN gate ─────────────────────────────────────────────
 const pinInput=document.getElementById('pinInput');
 pinInput.addEventListener('input',()=>{
-  // Restrict to digits only
   pinInput.value=pinInput.value.replace(/[^0-9]/g,'').slice(0,4);
 });
 pinInput.addEventListener('keypress',e=>{
@@ -259,23 +291,21 @@ async function submitPin(){
       btn.disabled=false;btn.textContent='Open Job';
       return;
     }
-    // Save the PIN + viewer info so localStorage state can key per-user
     sessionStorage.setItem('bvJobPin',pin);
     sessionStorage.setItem('bvJobViewer',JSON.stringify(data.viewer));
-    renderContent(data);
+    renderAll(data);
   }catch(e){
     errEl.textContent='Network error. Try again. ('+e.message+')';
     btn.disabled=false;btn.textContent='Open Job';
   }
 }
 
-// ── Render after PIN accepted ────────────────────────────
+// ── Helpers ──────────────────────────────────────────────
 function esc(s){
   return String(s==null?'':s).replace(/[&<>"']/g,c=>({
     '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
   }[c]));
 }
-
 function fmtDay(s){
   if(!s) return '—';
   try{
@@ -283,50 +313,71 @@ function fmtDay(s){
     return d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
   }catch{return s;}
 }
-
 function safeArr(v){
   if(!v) return [];
   if(Array.isArray(v)) return v;
-  // line_items is sometimes stored as a JSON-encoded string inside the jsonb
-  // column (existing data shape).
+  // line_items is sometimes stored as a JSON-encoded string inside a jsonb
+  // column (existing data shape, see docs.line_items in templates).
   if(typeof v==='string'){
     try{const p=JSON.parse(v);return Array.isArray(p)?p:[];}catch{return [];}
   }
   return [];
 }
 
-function renderContent(data){
+// ── Tabs ─────────────────────────────────────────────────
+function switchTab(name){
+  document.querySelectorAll('.tab').forEach(t=>t.classList.toggle('active',t.dataset.tab===name));
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.toggle('active',p.dataset.tab===name));
+  // Scroll the body up to the tab bar position on switch (so user doesn't stay
+  // mid-page when they tap a tab from way down)
+  window.scrollTo({top:document.querySelector('.tabs').offsetTop-1,behavior:'smooth'});
+}
+
+// ── Master render: pulls everything apart, fills each tab ─
+function renderAll(data){
   document.getElementById('pageGate').style.display='none';
   document.getElementById('printBar').style.display='flex';
-  const root=document.getElementById('pageContent');
-  root.style.display='block';
+  document.getElementById('pageContent').style.display='block';
 
   const job=data.job||{};
   const docs=data.docs||[];
   const crew=data.assigned||[];
   const viewerId=data.viewer?.user_id||'anon';
 
-  // Find the linked estimate, change orders, work order, material order.
-  // Job columns: linked_doc_id (primary, usually the estimate), linked_mo_id (material order).
-  // Change orders / contracts / lien waivers link back via docs.source_est_id pointing
-  // at the estimate's id. Work orders are typed and linked via linked_job_id.
-  // CRITICAL: doc type strings in this codebase are 'matorder' and 'workorder'
-  // (single words, not 'material_order'). Don't assume — these came from DOC_TYPES.
+  // Find linked docs. Real column names confirmed from schema:
+  // - job.linked_doc_id  → primary doc (usually the estimate)
+  // - job.linked_mo_id   → material order
+  // - docs.source_est_id → child docs link back to parent estimate via this
+  // - DOC_TYPES enum: estimate, invoice, workorder, matorder, contract, changeorder, lienwaiver
   const primaryDocId = job.linked_doc_id || null;
   const materialDocId = job.linked_mo_id || null;
   const estimate = docs.find(d=>d.id===primaryDocId && d.type==='estimate')
                 || docs.find(d=>d.type==='estimate');
-  const changeOrders = docs.filter(d=>d.type==='changeorder');
+  const changeOrders = docs.filter(d=>d.type==='changeorder')
+    .sort((a,b)=>(a.created||0)-(b.created||0));
   const materialOrder = docs.find(d=>d.id===materialDocId)
                      || docs.find(d=>d.type==='matorder');
-  // Work order: prefer one explicitly linked to this job, else any workorder doc in the bundle
   const workOrder = docs.find(d=>d.type==='workorder' && d.linked_job_id===job.id)
                  || docs.find(d=>d.type==='workorder');
 
-  let html='';
+  // ── Render the top header (always visible) ──
+  renderTopHeader(job);
 
-  // ── Top header ──
-  html+='<div class="top">';
+  // ── Render each tab's content ──
+  renderOverviewTab({job,estimate,changeOrders,crew,viewerId});
+  renderWorkOrderTab({job,workOrder,viewerId});
+  renderMaterialTab({job,materialOrder,viewerId});
+  renderTimeTab({job,viewerId});
+
+  // ── Show counts on tab labels ──
+  updateTabCounts({workOrder,materialOrder});
+
+  window.scrollTo(0,0);
+}
+
+function renderTopHeader(job){
+  const el=document.getElementById('topHeader');
+  let html='<div class="top">';
   html+='<div class="stamp">JOB '+esc(job.id||'')+'</div>';
   html+='<h1>'+esc(job.title||'(untitled job)')+'</h1>';
   if(job.address){
@@ -334,8 +385,32 @@ function renderContent(data){
     html+='<div class="meta">📍 <a href="'+esc(mapUrl)+'" target="_blank">'+esc(job.address)+'</a></div>';
   }
   html+='</div>';
+  el.innerHTML=html;
+}
 
-  // ── Details card ──
+function updateTabCounts({workOrder,materialOrder}){
+  const woTab=document.getElementById('tabWo');
+  const moTab=document.getElementById('tabMo');
+  if(woTab){
+    const items=workOrder?safeArr(workOrder.line_items):[];
+    if(items.length) woTab.innerHTML='🔧 Work Order <span class="tab-count">'+items.length+'</span>';
+  }
+  if(moTab && materialOrder){
+    // MO data is in moMaterials, not line_items. Count rows with any non-empty slot.
+    const matData = materialOrder.mat_order_data || {};
+    const moMaterials = matData.moMaterials || materialOrder.moMaterials || {};
+    const count = Object.values(moMaterials).filter(v=>
+      v && typeof v==='object' && Object.values(v).some(x=>String(x||'').trim()!=='')
+    ).length;
+    if(count>0) moTab.innerHTML='📦 Materials <span class="tab-count">'+count+'</span>';
+  }
+}
+
+// ── Tab: Overview ────────────────────────────────────────
+function renderOverviewTab({job,estimate,changeOrders,crew,viewerId}){
+  let html='';
+
+  // Details card
   html+='<div class="card"><h2>Details</h2>';
   if(job.day) html+='<div class="row"><span class="lbl">Scheduled</span><span class="val">'+esc(fmtDay(job.day))+'</span></div>';
   if(job.type){
@@ -345,20 +420,18 @@ function renderContent(data){
   if(job.note) html+='<div class="row"><span class="lbl">Notes</span><span class="val">'+esc(job.note)+'</span></div>';
   html+='</div>';
 
-  // ── Crew assigned ──
+  // Crew
   if(crew.length){
     html+='<div class="card"><h2>Assigned Crew</h2>';
     html+='<div>'+crew.map(c=>'<span class="crew-chip">'+esc(c.display_name||c.role||'?')+'</span>').join('')+'</div>';
     html+='</div>';
   }
 
-  // ── Customer (only if we have it on the job) ──
-  // job table doesn't store customer directly — pull from the estimate doc
+  // Customer (from estimate)
   if(estimate && (estimate.client_name || estimate.client_contact)){
     html+='<div class="card"><h2>Customer</h2>';
     if(estimate.client_name) html+='<div class="row"><span class="lbl">Name</span><span class="val">'+esc(estimate.client_name)+'</span></div>';
     if(estimate.client_contact){
-      // crude phone detection — if the contact looks like digits, make it tap-to-call
       const c=estimate.client_contact;
       const phoneOnly=c.replace(/[^0-9]/g,'');
       if(phoneOnly.length>=10){
@@ -371,52 +444,22 @@ function renderContent(data){
     html+='</div>';
   }
 
-  // ── Scope of work (with localStorage checkboxes) ──
-  // Source order: estimate first, then change orders by created date.
-  // Work order is rendered separately below (it's a crew-specific doc).
+  // Scope of Work (from estimate + change orders)
   const scopeSources=[];
-  if(estimate){scopeSources.push({label:'Estimate',doc:estimate});}
-  changeOrders.sort((a,b)=>(a.created||0)-(b.created||0)).forEach((co,i)=>{
-    scopeSources.push({label:'Change Order #'+(i+1),doc:co});
-  });
+  if(estimate) scopeSources.push({label:'Estimate',doc:estimate});
+  changeOrders.forEach((co,i)=>scopeSources.push({label:'Change Order #'+(i+1),doc:co}));
 
   if(scopeSources.length){
     html+='<div class="card"><h2>Scope of Work</h2>';
-    scopeSources.forEach((src,sIdx)=>{
+    scopeSources.forEach(src=>{
       if(scopeSources.length>1) html+='<div class="scope-divider">'+esc(src.label)+'</div>';
-      // Doc.scope (text paragraph) shown first if present
       if(src.doc.scope) html+='<div style="font-size:13px;color:#bdc7d3;line-height:1.6;padding:4px 0 10px;">'+esc(src.doc.scope)+'</div>';
-      // line_items as checklist
       const items=safeArr(src.doc.line_items);
       items.forEach((li,liIdx)=>{
         const key='scope:'+job.id+':'+viewerId+':'+src.doc.id+':'+liIdx;
         const desc=li.desc||li.description||'(no description)';
         const checked=localStorage.getItem(key)==='1';
-        html+='<div class="scope-item'+(checked?' checked':'')+'" data-key="'+esc(key)+'" onclick="toggleScope(this)">';
-        html+='<div class="scope-check"></div>';
-        html+='<div class="scope-text">'+esc(desc);
-        if(li.qty && Number(li.qty)>0){
-          html+=' <span style="color:var(--muted);font-size:11px;">(qty '+esc(li.qty)+(li.price?' · $'+esc(li.price):'')+')</span>';
-        }
-        html+='</div></div>';
-      });
-    });
-    html+='</div>';
-  }
-
-  // ── Work Order (crew-specific, separate from scope) ──
-  if(workOrder){
-    html+='<div class="card"><h2>Work Order'+(workOrder.num?' · '+esc(workOrder.num):'')+'</h2>';
-    if(workOrder.scope) html+='<div style="font-size:13px;color:#bdc7d3;line-height:1.6;padding:4px 0 10px;">'+esc(workOrder.scope)+'</div>';
-    const woItems=safeArr(workOrder.line_items);
-    if(woItems.length===0 && !workOrder.scope){
-      html+='<div style="color:var(--muted);font-size:13px;">No work order lines.</div>';
-    }else{
-      woItems.forEach((li,liIdx)=>{
-        const key='wo:'+job.id+':'+viewerId+':'+workOrder.id+':'+liIdx;
-        const desc=li.desc||li.description||'(no description)';
-        const checked=localStorage.getItem(key)==='1';
-        html+='<div class="scope-item'+(checked?' checked':'')+'" data-key="'+esc(key)+'" onclick="toggleScope(this)">';
+        html+='<div class="scope-item'+(checked?' checked':'')+'" data-key="'+esc(key)+'" onclick="toggleCheck(this)">';
         html+='<div class="scope-check"></div>';
         html+='<div class="scope-text">'+esc(desc);
         if(li.qty && Number(li.qty)>0){
@@ -424,59 +467,147 @@ function renderContent(data){
         }
         html+='</div></div>';
       });
-    }
+    });
     html+='</div>';
+  }else{
+    html+='<div class="empty">No scope of work attached to this job yet.</div>';
   }
 
-  // ── Material list ──
-  if(materialOrder){
-    html+='<div class="card"><h2>Material List'+(materialOrder.num?' · '+esc(materialOrder.num):'')+'</h2>';
-    if(materialOrder.scope) html+='<div style="font-size:13px;color:#bdc7d3;line-height:1.6;padding:4px 0 10px;">'+esc(materialOrder.scope)+'</div>';
-    const items=safeArr(materialOrder.line_items);
-    if(items.length===0){
-      html+='<div style="color:var(--muted);font-size:13px;">No material lines.</div>';
-    }else{
-      items.forEach((li,liIdx)=>{
-        const key='mat:'+job.id+':'+viewerId+':'+materialOrder.id+':'+liIdx;
-        const desc=li.desc||li.description||'(no description)';
-        const checked=localStorage.getItem(key)==='1';
-        html+='<div class="mat-item'+(checked?' checked':'')+'" data-key="'+esc(key)+'" onclick="toggleMat(this)">';
-        html+='<div class="mat-check"></div>';
-        html+='<div class="mat-text">'+esc(desc);
-        if(li.qty && Number(li.qty)>0){
-          html+=' <span style="color:var(--muted);font-size:11px;">— qty '+esc(li.qty)+'</span>';
-        }
-        html+='</div></div>';
-      });
-    }
+  document.getElementById('panelOverview').innerHTML=html;
+}
+
+// ── Tab: Work Order ──────────────────────────────────────
+function renderWorkOrderTab({job,workOrder,viewerId}){
+  if(!workOrder){
+    document.getElementById('panelWo').innerHTML='<div class="empty">No work order attached to this job.<br>Ask the owner to add one.</div>';
+    return;
+  }
+  let html='';
+  html+='<div class="card"><h2>Work Order'+(workOrder.num?' · '+esc(workOrder.num):'')+'</h2>';
+  if(workOrder.scope) html+='<div style="font-size:13px;color:#bdc7d3;line-height:1.6;padding:4px 0 10px;">'+esc(workOrder.scope)+'</div>';
+  const items=safeArr(workOrder.line_items);
+  if(items.length===0 && !workOrder.scope){
+    html+='<div style="color:var(--muted);font-size:13px;">No work order lines.</div>';
+  }else{
+    items.forEach((li,liIdx)=>{
+      const key='wo:'+job.id+':'+viewerId+':'+workOrder.id+':'+liIdx;
+      const desc=li.desc||li.description||'(no description)';
+      const checked=localStorage.getItem(key)==='1';
+      html+='<div class="scope-item'+(checked?' checked':'')+'" data-key="'+esc(key)+'" onclick="toggleCheck(this)">';
+      html+='<div class="scope-check"></div>';
+      html+='<div class="scope-text">'+esc(desc);
+      if(li.qty && Number(li.qty)>0){
+        html+=' <span style="color:var(--muted);font-size:11px;">(qty '+esc(li.qty)+')</span>';
+      }
+      html+='</div></div>';
+    });
+  }
+  if(workOrder.notes){
+    html+='<div style="margin-top:14px;padding-top:10px;border-top:1px dashed var(--line2);font-size:12px;color:var(--muted);">';
+    html+='<strong style="color:var(--ink);display:block;margin-bottom:4px;">Notes</strong>';
+    html+=esc(workOrder.notes);
     html+='</div>';
   }
+  html+='</div>';
+  document.getElementById('panelWo').innerHTML=html;
+}
 
-  // ── Time clock (Session 2 placeholder) ──
+// ── Tab: Material Order ──────────────────────────────────
+// Real data shape for material orders: it's NOT in line_items like other docs.
+// MO data lives in mat_order_data.moMaterials, a map:
+//   moMaterials: {
+//     "shingles":  { s0: "5 BDL", s1: "Timberline HDZ", s2: "Weathered Wood" },
+//     "ridge":     { s0: "2",     s1: "Color matched",  s2: "" },
+//     ...
+//   }
+// Each top-level key is a row type from MO_TYPE_ROWS (defined in the main app).
+// We don't ship that full config to the crew page — we just print "key: s0 · s1 · s2"
+// because the row keys are already meaningful enough on a jobsite ("shingles", "ridge",
+// "iceshield"). Cleaner labels can be added later if needed.
+function renderMaterialTab({job,materialOrder,viewerId}){
+  if(!materialOrder){
+    document.getElementById('panelMo').innerHTML='<div class="empty">No material order attached to this job.<br>Ask the owner to add one.</div>';
+    return;
+  }
+  let html='';
+  html+='<div class="card"><h2>Material List'+(materialOrder.num?' · '+esc(materialOrder.num):'')+'</h2>';
+  if(materialOrder.scope) html+='<div style="font-size:13px;color:#bdc7d3;line-height:1.6;padding:4px 0 10px;">'+esc(materialOrder.scope)+'</div>';
+
+  // Collect material rows. Try mat_order_data.moMaterials first (real shape),
+  // fall back to a flat moMaterials at the top level, and finally line_items
+  // for any future docs that use the standard shape.
+  const matData = materialOrder.mat_order_data || {};
+  const moMaterials = matData.moMaterials || materialOrder.moMaterials || {};
+
+  // Build a list of {key, slots[]} entries, only including rows that have at least one non-empty value
+  const matRows = Object.entries(moMaterials)
+    .map(([key,v])=>{
+      if(!v || typeof v!=='object') return null;
+      const slots = Object.entries(v)
+        .filter(([k,val])=>String(val||'').trim()!=='')
+        .sort(([a],[b])=>a.localeCompare(b)) // s0, s1, s2, s3...
+        .map(([,val])=>String(val).trim());
+      if(slots.length===0) return null;
+      return {key,slots};
+    })
+    .filter(Boolean);
+
+  // Also fall back to line_items if moMaterials was empty
+  const lineItems = matRows.length===0 ? safeArr(materialOrder.line_items) : [];
+
+  if(matRows.length===0 && lineItems.length===0){
+    html+='<div style="color:var(--muted);font-size:13px;">No material lines.</div>';
+  }else if(matRows.length>0){
+    // Render the real MO shape: row key + its filled slots, joined with " · "
+    matRows.forEach((row,idx)=>{
+      const key='mat:'+job.id+':'+viewerId+':'+materialOrder.id+':'+row.key;
+      const checked=localStorage.getItem(key)==='1';
+      const friendlyKey=row.key
+        .replace(/_/g,' ')
+        .replace(/\b\w/g,c=>c.toUpperCase());
+      html+='<div class="mat-item'+(checked?' checked':'')+'" data-key="'+esc(key)+'" onclick="toggleCheck(this)">';
+      html+='<div class="mat-check"></div>';
+      html+='<div class="mat-text"><strong>'+esc(friendlyKey)+':</strong> '+esc(row.slots.join(' · '))+'</div>';
+      html+='</div>';
+    });
+  }else{
+    // Standard line_items fallback (rare for MOs but handles future shape changes)
+    lineItems.forEach((li,liIdx)=>{
+      const key='mat:'+job.id+':'+viewerId+':'+materialOrder.id+':'+liIdx;
+      const desc=li.desc||li.description||'(no description)';
+      const checked=localStorage.getItem(key)==='1';
+      html+='<div class="mat-item'+(checked?' checked':'')+'" data-key="'+esc(key)+'" onclick="toggleCheck(this)">';
+      html+='<div class="mat-check"></div>';
+      html+='<div class="mat-text">'+esc(desc);
+      if(li.qty && Number(li.qty)>0){
+        html+=' <span style="color:var(--muted);font-size:11px;">— qty '+esc(li.qty)+'</span>';
+      }
+      html+='</div></div>';
+    });
+  }
+  if(materialOrder.notes){
+    html+='<div style="margin-top:14px;padding-top:10px;border-top:1px dashed var(--line2);font-size:12px;color:var(--muted);">';
+    html+='<strong style="color:var(--ink);display:block;margin-bottom:4px;">Notes</strong>';
+    html+=esc(materialOrder.notes);
+    html+='</div>';
+  }
+  html+='</div>';
+  document.getElementById('panelMo').innerHTML=html;
+}
+
+// ── Tab: Time (placeholder until next round) ─────────────
+function renderTimeTab({job,viewerId}){
+  let html='';
   html+='<div class="card"><h2>Time Tracking</h2>';
   html+='<div class="time-clock-section">';
   html+='<strong>Coming Soon</strong>';
-  html+='Time clock-in/out from this page is in the next update. For now, use the main app to clock in.';
+  html+='Clock in/out from this page is in development.<br>For now, use the main app on your phone to clock in.';
   html+='</div></div>';
-
-  // ── Linked docs (read-only view links) ──
-  // Skipped for now — could be added if needed; the customer-signing flow already shows them.
-
-  root.innerHTML=html;
-  window.scrollTo(0,0);
+  document.getElementById('panelTime').innerHTML=html;
 }
 
-function toggleScope(el){
-  const key=el.dataset.key;
-  if(el.classList.contains('checked')){
-    el.classList.remove('checked');
-    localStorage.removeItem(key);
-  }else{
-    el.classList.add('checked');
-    localStorage.setItem(key,'1');
-  }
-}
-function toggleMat(el){
+// ── Generic check toggle (used by both scope-items and mat-items) ──
+function toggleCheck(el){
   const key=el.dataset.key;
   if(el.classList.contains('checked')){
     el.classList.remove('checked');
@@ -487,8 +618,7 @@ function toggleMat(el){
   }
 }
 
-// If we already have a PIN in this session (e.g. they navigated back),
-// auto-authenticate without making them re-type.
+// ── Auto-auth if session already has a PIN ──
 (function tryAutoAuth(){
   const savedPin=sessionStorage.getItem('bvJobPin');
   if(savedPin && /^[0-9]{4}$/.test(savedPin)){
