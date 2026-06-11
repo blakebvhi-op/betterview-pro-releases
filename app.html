@@ -2866,7 +2866,7 @@ function trRenderList(entries){
   const sorted=entries.slice().sort((a,b)=>new Date(b.clock_in)-new Date(a.clock_in));
   let html='<div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:12px;">';
   html+='<thead><tr style="border-bottom:1px solid var(--steel-mid);">';
-  ['Employee','Day','Clock In','Clock Out','Duration','Job'].forEach(h=>{
+  ['Employee','Day','Clock In','Clock Out','Duration','Job','Location'].forEach(h=>{
     html+=`<th style="text-align:left;padding:8px 6px;color:var(--muted);font-weight:600;letter-spacing:.04em;font-size:11px;text-transform:uppercase;">${h}</th>`;
   });
   html+='</tr></thead><tbody>';
@@ -2874,6 +2874,21 @@ function trRenderList(entries){
     const inD=new Date(e.clock_in);
     const dur=e._durMs!=null?trFmtDur(e._durMs):'<span style="color:var(--amber)">(open)</span>';
     const outStr=e.clock_out?trCentralHM(new Date(e.clock_out)):'<span style="color:var(--amber)">—</span>';
+    // Build the Location cell — shows IN and OUT map links if coords were captured.
+    // Entries from before the geotag feature have null coords; show a dash.
+    const inLat=e.clock_in_lat, inLng=e.clock_in_lng;
+    const outLat=e.clock_out_lat, outLng=e.clock_out_lng;
+    let locHtml='';
+    if(inLat!=null && inLng!=null){
+      const inUrl='https://www.google.com/maps?q='+inLat+','+inLng;
+      locHtml+='<a href="'+esc(inUrl)+'" target="_blank" rel="noopener" style="color:var(--amber);text-decoration:none;" title="Clock-in location: '+esc(inLat)+', '+esc(inLng)+'">📍 In</a>';
+    }
+    if(outLat!=null && outLng!=null){
+      if(locHtml) locHtml+=' <span style="color:var(--muted);">·</span> ';
+      const outUrl='https://www.google.com/maps?q='+outLat+','+outLng;
+      locHtml+='<a href="'+esc(outUrl)+'" target="_blank" rel="noopener" style="color:var(--amber);text-decoration:none;" title="Clock-out location: '+esc(outLat)+', '+esc(outLng)+'">📍 Out</a>';
+    }
+    if(!locHtml) locHtml='<span style="color:var(--muted);">—</span>';
     html+=`<tr style="border-bottom:1px solid rgba(255,255,255,.05);">
       <td style="padding:8px 6px;font-weight:600;">${esc(trUserName(e.user_id))}</td>
       <td style="padding:8px 6px;">${esc(trCentralMD(inD))}</td>
@@ -2881,10 +2896,11 @@ function trRenderList(entries){
       <td style="padding:8px 6px;font-variant-numeric:tabular-nums;">${outStr}</td>
       <td style="padding:8px 6px;font-variant-numeric:tabular-nums;font-weight:600;">${dur}</td>
       <td style="padding:8px 6px;color:var(--muted);">${esc(trJobName(e.job_id))}</td>
+      <td style="padding:8px 6px;font-size:11px;">${locHtml}</td>
     </tr>`;
   });
   html+='</tbody></table></div>';
-  html+='<div style="margin-top:12px;font-size:10px;color:var(--muted);letter-spacing:.04em;">Times shown in Central (America/Chicago)</div>';
+  html+='<div style="margin-top:12px;font-size:10px;color:var(--muted);letter-spacing:.04em;">Times shown in Central (America/Chicago) · 📍 = GPS captured at clock-in/out</div>';
   return html;
 }
 
