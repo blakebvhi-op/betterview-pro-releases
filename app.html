@@ -2493,17 +2493,55 @@ async function onClockMainBtn(){
   return clockDoClockIn();
 }
 
+// ── GPS helper (shared by clock-in and clock-out paths) ──────────────
+// Promise wrapper around navigator.geolocation. Same policy as the crew
+// page: required on every clock action, 10s timeout, accept a recent
+// cached fix (under 30s) to avoid forcing a fresh GPS lock when the
+// user just opened the page.
+function clockGetLocation(){
+  return new Promise((resolve,reject)=>{
+    if(!navigator.geolocation){
+      reject(new Error('This device does not support location services.'));
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      pos=>resolve({lat:pos.coords.latitude,lng:pos.coords.longitude}),
+      err=>{
+        if(err.code===1) reject(new Error('Location permission denied.\n\nTap the lock icon in your address bar → Permissions → Location → Allow. Then try again.'));
+        else if(err.code===2) reject(new Error('Could not determine location. Move outside or near a window for better GPS signal.'));
+        else if(err.code===3) reject(new Error('Location request timed out. Check that GPS is on and try again.'));
+        else reject(new Error('Location error: '+(err.message||'unknown')));
+      },
+      {enableHighAccuracy:true,timeout:10000,maximumAge:30000}
+    );
+  });
+}
+
 async function clockDoClockIn(){
   if(!currentUser?.id||!currentCompanyId){alert('Not signed in.');return;}
   const jobId=document.getElementById('clockJobPicker')?.value||null;
   const btn=document.getElementById('clockMainBtn');
-  btn.disabled=true;btn.textContent='Clocking in…';
+  btn.disabled=true;btn.textContent='Getting location…';
+
+  // GPS is required to clock in. If denied, block the clock-in entirely.
+  let coords;
+  try{
+    coords=await clockGetLocation();
+  }catch(e){
+    alert('Cannot clock in — '+e.message);
+    btn.disabled=false;btn.textContent='Clock In';
+    return;
+  }
+
+  btn.textContent='Clocking in…';
   const row={
     company_id:currentCompanyId,
     user_id:currentUser.id,
     job_id:jobId||null,
     clock_in:new Date().toISOString(),
     clock_out:null,
+    clock_in_lat:coords.lat,
+    clock_in_lng:coords.lng,
   };
   try{
     const r=await fetch(SB_URL+'/rest/v1/time_entries',{
@@ -2546,9 +2584,24 @@ async function clockDoClockOut(){
   // are optional per the spec anyway; if we want them back, we'll add
   // an in-modal text field rather than a popup dialog.
   const btn=document.getElementById('clockMainBtn');
-  btn.disabled=true;btn.textContent='Clocking out…';
+  btn.disabled=true;btn.textContent='Getting location…';
+
+  // GPS required on clock-out too. Without it we get asymmetric data
+  // (clock-in location captured, clock-out null), defeating the audit story.
+  let coords;
+  try{
+    coords=await clockGetLocation();
+  }catch(e){
+    alert('Cannot clock out — '+e.message);
+    btn.disabled=false;btn.textContent='Clock Out';
+    return;
+  }
+
+  btn.textContent='Clocking out…';
   const patch={
     clock_out:new Date().toISOString(),
+    clock_out_lat:coords.lat,
+    clock_out_lng:coords.lng,
   };
   try{
     const r=await fetch(SB_URL+'/rest/v1/time_entries?id=eq.'+encodeURIComponent(clockActiveEntry.id),{
