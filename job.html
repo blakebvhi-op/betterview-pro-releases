@@ -736,15 +736,73 @@ function updateTimeTabBadge(){
   }
 }
 
+// ── GPS helper ────────────────────────────────────────────────────
+// Promise-based wrapper around navigator.geolocation. Resolves with
+// {lat, lng} or rejects with a human-readable reason. Times out after
+// 10 seconds (urban areas usually resolve in <2s, rural can be 5-8s).
+// We use enableHighAccuracy=true because we're tracking jobsite location,
+// not browsing — 30s of GPS warm-up is acceptable here.
+function getCrewLocation(){
+  return new Promise((resolve, reject)=>{
+    if(!navigator.geolocation){
+      reject(new Error('This device does not support location services.'));
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      pos => resolve({
+        lat: pos.coords.latitude,
+        lng: pos.coords.longitude,
+        accuracy: pos.coords.accuracy
+      }),
+      err => {
+        // Map browser error codes to human messages
+        if(err.code === 1){
+          reject(new Error('Location permission denied. Tap the lock icon in your address bar → Permissions → Location → Allow, then try again.'));
+        } else if(err.code === 2){
+          reject(new Error('Could not determine location. Try moving outside or near a window for better GPS signal.'));
+        } else if(err.code === 3){
+          reject(new Error('Location request timed out. Check that GPS is on and try again.'));
+        } else {
+          reject(new Error('Location error: '+(err.message||'unknown')));
+        }
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 30000  // accept a recent cached fix (under 30s old)
+      }
+    );
+  });
+}
+
 async function doClockIn(){
   if(!timeState.pin || !timeState.jobId) return;
   const btn = document.querySelector('#panelTime .pin-btn');
-  if(btn){ btn.disabled=true; btn.textContent='Clocking in…'; }
+  if(btn){ btn.disabled=true; btn.textContent='Getting location…'; }
+
+  // Step 1: get GPS BEFORE attempting clock-in. Per spec, GPS is required.
+  // If permission is denied, we block clock-in entirely and tell the crew
+  // member how to fix it.
+  let coords;
+  try{
+    coords = await getCrewLocation();
+  }catch(e){
+    alert('Cannot clock in — '+e.message);
+    if(btn){ btn.disabled=false; btn.textContent='⏱ Clock In'; }
+    return;
+  }
+
+  if(btn){ btn.textContent='Clocking in…'; }
   try{
     const r=await fetch(SB_URL+'/rest/v1/rpc/crew_clock_in',{
       method:'POST',
       headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY,'Content-Type':'application/json'},
-      body:JSON.stringify({p_pin:timeState.pin, p_job_id:timeState.jobId})
+      body:JSON.stringify({
+        p_pin:timeState.pin,
+        p_job_id:timeState.jobId,
+        p_lat:coords.lat,
+        p_lng:coords.lng
+      })
     });
     if(!r.ok){
       const t=await r.text();
@@ -769,12 +827,31 @@ async function doClockIn(){
 async function doClockOut(){
   if(!timeState.pin || !timeState.openHere) return;
   const btn = document.querySelector('#panelTime .pin-btn');
-  if(btn){ btn.disabled=true; btn.textContent='Clocking out…'; }
+  if(btn){ btn.disabled=true; btn.textContent='Getting location…'; }
+
+  // Same GPS-required policy on clock-out. Without this we'd have asymmetric
+  // data: a clock-in location but no clock-out location, which makes the
+  // "where was the crew" audit story incomplete.
+  let coords;
+  try{
+    coords = await getCrewLocation();
+  }catch(e){
+    alert('Cannot clock out — '+e.message);
+    if(btn){ btn.disabled=false; btn.textContent='⏹ Clock Out'; }
+    return;
+  }
+
+  if(btn){ btn.textContent='Clocking out…'; }
   try{
     const r=await fetch(SB_URL+'/rest/v1/rpc/crew_clock_out',{
       method:'POST',
       headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY,'Content-Type':'application/json'},
-      body:JSON.stringify({p_pin:timeState.pin, p_entry_id:timeState.openHere.id})
+      body:JSON.stringify({
+        p_pin:timeState.pin,
+        p_entry_id:timeState.openHere.id,
+        p_lat:coords.lat,
+        p_lng:coords.lng
+      })
     });
     if(!r.ok){
       const t=await r.text();
