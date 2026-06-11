@@ -391,13 +391,19 @@ function renderTopHeader(job){
 function updateTabCounts({workOrder,materialOrder}){
   const woTab=document.getElementById('tabWo');
   const moTab=document.getElementById('tabMo');
-  if(woTab){
-    const items=workOrder?safeArr(workOrder.line_items):[];
+  if(woTab && workOrder){
+    // WO items live in `checklist`, not `line_items` (line_items is always empty)
+    const items=safeArr(workOrder.checklist);
     if(items.length) woTab.innerHTML='🔧 Work Order <span class="tab-count">'+items.length+'</span>';
   }
   if(moTab && materialOrder){
-    // MO data is in moMaterials, not line_items. Count rows with any non-empty slot.
-    const matData = materialOrder.mat_order_data || {};
+    // mat_order_data is a JSON-encoded string in the jsonb column — parse first
+    let matData = {};
+    if(typeof materialOrder.mat_order_data === 'string'){
+      try{ matData = JSON.parse(materialOrder.mat_order_data) || {}; }catch{ matData = {}; }
+    }else if(materialOrder.mat_order_data && typeof materialOrder.mat_order_data === 'object'){
+      matData = materialOrder.mat_order_data;
+    }
     const moMaterials = matData.moMaterials || materialOrder.moMaterials || {};
     const count = Object.values(moMaterials).filter(v=>
       v && typeof v==='object' && Object.values(v).some(x=>String(x||'').trim()!=='')
@@ -477,6 +483,11 @@ function renderOverviewTab({job,estimate,changeOrders,crew,viewerId}){
 }
 
 // ── Tab: Work Order ──────────────────────────────────────
+// REAL data shape: work order checklist items live in the `checklist` column,
+// NOT in `line_items` (which is always empty []). Field shape per item:
+//   { desc: "...", qty: 1, cat: "labor", done: false }
+// `checklist` may come back from the RPC as a JSON-encoded string OR a real
+// jsonb array — safeArr handles both.
 function renderWorkOrderTab({job,workOrder,viewerId}){
   if(!workOrder){
     document.getElementById('panelWo').innerHTML='<div class="empty">No work order attached to this job.<br>Ask the owner to add one.</div>';
@@ -485,7 +496,8 @@ function renderWorkOrderTab({job,workOrder,viewerId}){
   let html='';
   html+='<div class="card"><h2>Work Order'+(workOrder.num?' · '+esc(workOrder.num):'')+'</h2>';
   if(workOrder.scope) html+='<div style="font-size:13px;color:#bdc7d3;line-height:1.6;padding:4px 0 10px;">'+esc(workOrder.scope)+'</div>';
-  const items=safeArr(workOrder.line_items);
+  // checklist is where the line items live for WOs (verified via RPC inspection)
+  const items=safeArr(workOrder.checklist);
   if(items.length===0 && !workOrder.scope){
     html+='<div style="color:var(--muted);font-size:13px;">No work order lines.</div>';
   }else{
@@ -513,17 +525,11 @@ function renderWorkOrderTab({job,workOrder,viewerId}){
 }
 
 // ── Tab: Material Order ──────────────────────────────────
-// Real data shape for material orders: it's NOT in line_items like other docs.
-// MO data lives in mat_order_data.moMaterials, a map:
-//   moMaterials: {
-//     "shingles":  { s0: "5 BDL", s1: "Timberline HDZ", s2: "Weathered Wood" },
-//     "ridge":     { s0: "2",     s1: "Color matched",  s2: "" },
-//     ...
-//   }
-// Each top-level key is a row type from MO_TYPE_ROWS (defined in the main app).
-// We don't ship that full config to the crew page — we just print "key: s0 · s1 · s2"
-// because the row keys are already meaningful enough on a jobsite ("shingles", "ridge",
-// "iceshield"). Cleaner labels can be added later if needed.
+// REAL data shape verified via RPC inspection:
+//   - mat_order_data is stored as a JSON-ENCODED STRING in the jsonb column
+//     (NOT a parsed object — this is the same quirk that bit us on templates)
+//   - Once parsed, it contains: { moMaterials: {key: {s0, s1, s2}}, ... }
+//   - moMaterials is the actual data we display
 function renderMaterialTab({job,materialOrder,viewerId}){
   if(!materialOrder){
     document.getElementById('panelMo').innerHTML='<div class="empty">No material order attached to this job.<br>Ask the owner to add one.</div>';
@@ -533,33 +539,34 @@ function renderMaterialTab({job,materialOrder,viewerId}){
   html+='<div class="card"><h2>Material List'+(materialOrder.num?' · '+esc(materialOrder.num):'')+'</h2>';
   if(materialOrder.scope) html+='<div style="font-size:13px;color:#bdc7d3;line-height:1.6;padding:4px 0 10px;">'+esc(materialOrder.scope)+'</div>';
 
-  // Collect material rows. Try mat_order_data.moMaterials first (real shape),
-  // fall back to a flat moMaterials at the top level, and finally line_items
-  // for any future docs that use the standard shape.
-  const matData = materialOrder.mat_order_data || {};
+  // Parse mat_order_data — it's stored as a JSON-encoded string in the
+  // jsonb column. Falls back to top-level moMaterials in case future docs
+  // adopt a flatter shape.
+  let matData = {};
+  if(typeof materialOrder.mat_order_data === 'string'){
+    try{ matData = JSON.parse(materialOrder.mat_order_data) || {}; }catch{ matData = {}; }
+  }else if(materialOrder.mat_order_data && typeof materialOrder.mat_order_data === 'object'){
+    matData = materialOrder.mat_order_data;
+  }
   const moMaterials = matData.moMaterials || materialOrder.moMaterials || {};
 
-  // Build a list of {key, slots[]} entries, only including rows that have at least one non-empty value
+  // Build the list: only rows with at least one non-empty slot
   const matRows = Object.entries(moMaterials)
     .map(([key,v])=>{
       if(!v || typeof v!=='object') return null;
       const slots = Object.entries(v)
         .filter(([k,val])=>String(val||'').trim()!=='')
-        .sort(([a],[b])=>a.localeCompare(b)) // s0, s1, s2, s3...
+        .sort(([a],[b])=>a.localeCompare(b)) // s0, s1, s2...
         .map(([,val])=>String(val).trim());
       if(slots.length===0) return null;
       return {key,slots};
     })
     .filter(Boolean);
 
-  // Also fall back to line_items if moMaterials was empty
-  const lineItems = matRows.length===0 ? safeArr(materialOrder.line_items) : [];
-
-  if(matRows.length===0 && lineItems.length===0){
+  if(matRows.length===0){
     html+='<div style="color:var(--muted);font-size:13px;">No material lines.</div>';
-  }else if(matRows.length>0){
-    // Render the real MO shape: row key + its filled slots, joined with " · "
-    matRows.forEach((row,idx)=>{
+  }else{
+    matRows.forEach(row=>{
       const key='mat:'+job.id+':'+viewerId+':'+materialOrder.id+':'+row.key;
       const checked=localStorage.getItem(key)==='1';
       const friendlyKey=row.key
@@ -569,20 +576,6 @@ function renderMaterialTab({job,materialOrder,viewerId}){
       html+='<div class="mat-check"></div>';
       html+='<div class="mat-text"><strong>'+esc(friendlyKey)+':</strong> '+esc(row.slots.join(' · '))+'</div>';
       html+='</div>';
-    });
-  }else{
-    // Standard line_items fallback (rare for MOs but handles future shape changes)
-    lineItems.forEach((li,liIdx)=>{
-      const key='mat:'+job.id+':'+viewerId+':'+materialOrder.id+':'+liIdx;
-      const desc=li.desc||li.description||'(no description)';
-      const checked=localStorage.getItem(key)==='1';
-      html+='<div class="mat-item'+(checked?' checked':'')+'" data-key="'+esc(key)+'" onclick="toggleCheck(this)">';
-      html+='<div class="mat-check"></div>';
-      html+='<div class="mat-text">'+esc(desc);
-      if(li.qty && Number(li.qty)>0){
-        html+=' <span style="color:var(--muted);font-size:11px;">— qty '+esc(li.qty)+'</span>';
-      }
-      html+='</div></div>';
     });
   }
   if(materialOrder.notes){
