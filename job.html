@@ -1,0 +1,472 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no,viewport-fit=cover" />
+<meta name="theme-color" content="#0f1115" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<title>Better View · Jobsite</title>
+<style>
+  :root{
+    --bg:#0f1115;
+    --ink:#e7ecf2;
+    --muted:#7d8896;
+    --line:#1f2530;
+    --line2:#2a313e;
+    --amber:#f59e0b;
+    --green:#22c55e;
+    --rose:#ef4444;
+    --blue:#3b82f6;
+  }
+  *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+  html,body{background:var(--bg);color:var(--ink);font-family:'Inter','-apple-system','Segoe UI',sans-serif;font-size:15px;line-height:1.5;-webkit-font-smoothing:antialiased}
+  a{color:var(--amber);text-decoration:none}
+
+  /* ── Page frame ──────────────────────────────────────── */
+  .page{max-width:760px;margin:0 auto;padding:16px 14px 80px}
+
+  /* ── PIN gate ────────────────────────────────────────── */
+  .pin-gate{
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    min-height:80vh;padding:24px 16px;text-align:center;
+  }
+  .pin-logo{font-size:32px;margin-bottom:14px}
+  .pin-title{font-weight:700;font-size:20px;letter-spacing:-.01em;margin-bottom:6px}
+  .pin-sub{color:var(--muted);font-size:13px;margin-bottom:28px;max-width:300px}
+  .pin-input{
+    width:200px;font-size:28px;letter-spacing:.5em;text-align:center;
+    background:#141821;color:var(--ink);border:2px solid var(--line2);
+    padding:14px 0;font-family:monospace;border-radius:8px;outline:none;
+    transition:border-color .15s
+  }
+  .pin-input:focus{border-color:var(--amber)}
+  .pin-error{color:var(--rose);font-size:13px;margin-top:14px;min-height:18px}
+  .pin-btn{
+    margin-top:18px;background:var(--amber);color:#0a0c10;border:0;
+    padding:12px 32px;font-size:15px;font-weight:700;letter-spacing:.04em;
+    border-radius:8px;cursor:pointer;font-family:inherit
+  }
+  .pin-btn:disabled{opacity:.4;cursor:wait}
+
+  /* ── Top header ─────────────────────────────────────── */
+  .top{
+    border-left:3px solid var(--amber);padding:12px 14px;
+    background:linear-gradient(180deg, rgba(245,158,11,.04), transparent);
+    margin-bottom:14px;border-bottom:1px solid var(--line)
+  }
+  .top .stamp{
+    font-size:10px;letter-spacing:.18em;color:var(--amber);text-transform:uppercase;
+    font-weight:700;margin-bottom:4px
+  }
+  .top h1{font-size:18px;font-weight:700;letter-spacing:-.01em;line-height:1.25}
+  .top .meta{color:var(--muted);font-size:12px;margin-top:4px}
+
+  /* ── Job details card ────────────────────────────────── */
+  .card{
+    border:1px solid var(--line2);background:rgba(15,17,21,.6);
+    padding:14px;margin-bottom:14px;border-radius:8px
+  }
+  .card h2{
+    font-size:11px;letter-spacing:.18em;text-transform:uppercase;
+    color:var(--amber);font-weight:700;margin-bottom:10px;
+    padding-bottom:6px;border-bottom:1px dashed var(--line2)
+  }
+  .row{display:flex;justify-content:space-between;gap:8px;padding:6px 0;font-size:13px;align-items:baseline}
+  .row .lbl{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.06em;flex-shrink:0}
+  .row .val{text-align:right;font-weight:500;word-break:break-word}
+  .row .val a{display:inline-block}
+  .pill{
+    display:inline-block;background:rgba(245,158,11,.1);color:var(--amber);
+    padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600;
+    border:1px solid rgba(245,158,11,.3);margin-right:4px;margin-bottom:4px
+  }
+  .crew-chip{
+    display:inline-block;background:#141821;color:var(--ink);
+    padding:3px 10px;border-radius:12px;font-size:12px;font-weight:500;
+    border:1px solid var(--line2);margin-right:4px;margin-bottom:4px
+  }
+
+  /* ── Scope / checklist ───────────────────────────────── */
+  .scope-item{
+    display:flex;gap:10px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.04);
+    cursor:pointer;user-select:none;align-items:flex-start
+  }
+  .scope-item:last-child{border-bottom:none}
+  .scope-check{
+    flex-shrink:0;width:22px;height:22px;border:2px solid var(--line2);
+    border-radius:4px;display:flex;align-items:center;justify-content:center;
+    margin-top:1px;transition:all .15s;background:#141821
+  }
+  .scope-item.checked .scope-check{background:var(--green);border-color:var(--green)}
+  .scope-item.checked .scope-check::after{content:'✓';color:#0a0c10;font-weight:900;font-size:14px}
+  .scope-text{font-size:13px;flex:1;line-height:1.45}
+  .scope-item.checked .scope-text{text-decoration:line-through;color:var(--muted)}
+  .scope-divider{
+    margin:14px 0 6px;font-size:11px;letter-spacing:.08em;
+    text-transform:uppercase;color:var(--muted);font-weight:600
+  }
+  .scope-total{
+    font-weight:700;color:var(--amber);padding:8px 0;
+    border-top:1px solid var(--line2);margin-top:8px
+  }
+
+  /* ── Material list ───────────────────────────────────── */
+  .mat-item{
+    display:flex;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.04);
+    cursor:pointer;user-select:none;font-size:13px;align-items:center
+  }
+  .mat-check{
+    flex-shrink:0;width:22px;height:22px;border:2px solid var(--line2);
+    border-radius:4px;display:flex;align-items:center;justify-content:center;
+    background:#141821;transition:all .15s
+  }
+  .mat-item.checked .mat-check{background:var(--blue);border-color:var(--blue)}
+  .mat-item.checked .mat-check::after{content:'✓';color:#0a0c10;font-weight:900;font-size:14px}
+  .mat-item.checked{opacity:.55}
+  .mat-text{flex:1}
+
+  /* ── Time clock section (Session 2 placeholder) ──────── */
+  .time-clock-section{
+    border:1px dashed var(--line2);padding:14px;text-align:center;
+    color:var(--muted);font-size:12px;border-radius:8px;
+    background:rgba(245,158,11,.03)
+  }
+  .time-clock-section strong{color:var(--ink);display:block;margin-bottom:4px}
+
+  /* ── Linked docs ─────────────────────────────────────── */
+  .doc-link{
+    display:flex;justify-content:space-between;align-items:center;
+    padding:10px 12px;border:1px solid var(--line2);border-radius:6px;
+    margin-bottom:6px;background:rgba(15,17,21,.5);
+    text-decoration:none;color:var(--ink);font-size:13px;cursor:pointer
+  }
+  .doc-link .type{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.06em}
+  .doc-link:hover{border-color:var(--amber)}
+
+  /* ── Owner contact CTA ───────────────────────────────── */
+  .owner-cta{
+    display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:18px
+  }
+  .owner-cta a{
+    display:flex;align-items:center;justify-content:center;gap:8px;
+    padding:14px;border:1px solid var(--line2);border-radius:8px;
+    background:#141821;color:var(--ink);font-weight:600;font-size:14px
+  }
+  .owner-cta a:hover{border-color:var(--amber);color:var(--amber)}
+
+  /* ── Print ───────────────────────────────────────────── */
+  .print-bar{
+    position:fixed;bottom:14px;right:14px;display:flex;gap:8px;z-index:5
+  }
+  .print-bar button{
+    background:#141821;color:var(--ink);border:1px solid var(--line2);
+    padding:10px 14px;font-family:inherit;font-size:12px;cursor:pointer;
+    border-radius:6px;letter-spacing:.04em
+  }
+  .print-bar button:hover{border-color:var(--amber);color:var(--amber)}
+
+  @media print{
+    .pin-gate,.print-bar,.owner-cta{display:none!important}
+    body{background:#fff;color:#000}
+    .card,.top{background:#fff!important;border-color:#bbb!important}
+    .scope-text,.mat-text,.row .val{color:#000}
+    .row .lbl,.card h2,.top .stamp{color:#444}
+    a{color:#000}
+    .scope-check,.mat-check{border-color:#000}
+    .scope-item.checked .scope-check,.mat-item.checked .mat-check{background:#000}
+    .pill{background:#eee;color:#000;border-color:#888}
+    .crew-chip{background:#fff;color:#000;border-color:#888}
+    .doc-link{background:#fff;border-color:#bbb}
+  }
+
+  .loading{padding:40px;text-align:center;color:var(--muted)}
+  .error-box{padding:20px;border:1px solid var(--rose);background:rgba(239,68,68,.08);border-radius:6px;color:var(--rose);font-size:13px}
+</style>
+</head>
+<body>
+
+<!-- ─── PIN gate ─────────────────────────────────────────── -->
+<div class="page" id="pageGate">
+  <div class="pin-gate">
+    <div class="pin-logo">🛠️</div>
+    <div class="pin-title">Better View · Jobsite</div>
+    <div class="pin-sub">Enter your 4-digit crew PIN to open this job.</div>
+    <input class="pin-input" id="pinInput" inputmode="numeric" pattern="[0-9]*" maxlength="4" autocomplete="off" autofocus />
+    <button class="pin-btn" id="pinBtn" onclick="submitPin()">Open Job</button>
+    <div class="pin-error" id="pinError"></div>
+  </div>
+</div>
+
+<!-- ─── Job content (hidden until PIN entered) ──────────── -->
+<div class="page" id="pageContent" style="display:none"></div>
+
+<!-- ─── Print + back bar (only visible when content showing) -->
+<div class="print-bar" id="printBar" style="display:none">
+  <button onclick="window.print()">🖨 Print</button>
+</div>
+
+<script>
+const SB_URL='https://fryaksqvfknxdptrlppy.supabase.co';
+const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZyeWFrc3F2ZmtueGRwdHJscHB5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4OTczOTcsImV4cCI6MjA5MDQ3MzM5N30.azNBXDI3ySkvMRED9VjNYoSc6ct3NA32No5vybsahnk';
+// NOTE: SB_KEY is injected at deploy time. The anon key is intentionally public
+// (RLS + SECURITY DEFINER functions are what protect data). We never put the
+// service_role key here.
+
+const params=new URLSearchParams(location.search);
+const JOB_ID=params.get('id');
+
+// ── PIN gate ─────────────────────────────────────────────
+const pinInput=document.getElementById('pinInput');
+pinInput.addEventListener('input',()=>{
+  // Restrict to digits only
+  pinInput.value=pinInput.value.replace(/[^0-9]/g,'').slice(0,4);
+});
+pinInput.addEventListener('keypress',e=>{
+  if(e.key==='Enter') submitPin();
+});
+
+async function submitPin(){
+  const pin=(pinInput.value||'').trim();
+  const errEl=document.getElementById('pinError');
+  const btn=document.getElementById('pinBtn');
+  errEl.textContent='';
+  if(!/^[0-9]{4}$/.test(pin)){
+    errEl.textContent='PIN must be exactly 4 digits.';
+    return;
+  }
+  if(!JOB_ID){
+    errEl.textContent='No job specified in this link. Ask the owner to resend.';
+    return;
+  }
+  btn.disabled=true;btn.textContent='Opening…';
+  try{
+    const r=await fetch(SB_URL+'/rest/v1/rpc/get_job_for_crew',{
+      method:'POST',
+      headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY,'Content-Type':'application/json'},
+      body:JSON.stringify({p_job_id:JOB_ID,p_pin:pin})
+    });
+    if(!r.ok){
+      const t=await r.text();
+      throw new Error(r.status+' '+t.slice(0,120));
+    }
+    const data=await r.json();
+    if(!data || data.ok===false){
+      const code=data?.error||'unknown';
+      if(code==='invalid_pin') errEl.textContent='Invalid PIN. Check with the owner.';
+      else if(code==='job_not_found') errEl.textContent='Job not found. Link may be wrong.';
+      else errEl.textContent='Error: '+code;
+      btn.disabled=false;btn.textContent='Open Job';
+      return;
+    }
+    // Save the PIN + viewer info so localStorage state can key per-user
+    sessionStorage.setItem('bvJobPin',pin);
+    sessionStorage.setItem('bvJobViewer',JSON.stringify(data.viewer));
+    renderContent(data);
+  }catch(e){
+    errEl.textContent='Network error. Try again. ('+e.message+')';
+    btn.disabled=false;btn.textContent='Open Job';
+  }
+}
+
+// ── Render after PIN accepted ────────────────────────────
+function esc(s){
+  return String(s==null?'':s).replace(/[&<>"']/g,c=>({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+  }[c]));
+}
+
+function fmtDay(s){
+  if(!s) return '—';
+  try{
+    const d=new Date(s+'T00:00:00');
+    return d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
+  }catch{return s;}
+}
+
+function safeArr(v){
+  if(!v) return [];
+  if(Array.isArray(v)) return v;
+  // line_items is sometimes stored as a JSON-encoded string inside the jsonb
+  // column (existing data shape).
+  if(typeof v==='string'){
+    try{const p=JSON.parse(v);return Array.isArray(p)?p:[];}catch{return [];}
+  }
+  return [];
+}
+
+function renderContent(data){
+  document.getElementById('pageGate').style.display='none';
+  document.getElementById('printBar').style.display='flex';
+  const root=document.getElementById('pageContent');
+  root.style.display='block';
+
+  const job=data.job||{};
+  const docs=data.docs||[];
+  const crew=data.assigned||[];
+  const viewerId=data.viewer?.user_id||'anon';
+
+  // Find the linked estimate (job.est_id) + any change orders + work order + material order
+  const estimate=docs.find(d=>d.id===job.est_id) || docs.find(d=>d.type==='estimate');
+  const changeOrders=docs.filter(d=>d.type==='changeorder');
+  const materialOrder=docs.find(d=>d.type==='materialorder');
+  const workOrder=docs.find(d=>d.type==='workorder');
+
+  let html='';
+
+  // ── Top header ──
+  html+='<div class="top">';
+  html+='<div class="stamp">JOB '+esc(job.id||'')+'</div>';
+  html+='<h1>'+esc(job.title||'(untitled job)')+'</h1>';
+  if(job.address){
+    const mapUrl='https://maps.google.com/?q='+encodeURIComponent(job.address);
+    html+='<div class="meta">📍 <a href="'+esc(mapUrl)+'" target="_blank">'+esc(job.address)+'</a></div>';
+  }
+  html+='</div>';
+
+  // ── Details card ──
+  html+='<div class="card"><h2>Details</h2>';
+  if(job.day) html+='<div class="row"><span class="lbl">Scheduled</span><span class="val">'+esc(fmtDay(job.day))+'</span></div>';
+  if(job.type){
+    const types=String(job.type).split(',').filter(Boolean);
+    html+='<div class="row"><span class="lbl">Job Type</span><span class="val">'+types.map(t=>'<span class="pill">'+esc(t)+'</span>').join('')+'</span></div>';
+  }
+  if(job.note) html+='<div class="row"><span class="lbl">Notes</span><span class="val">'+esc(job.note)+'</span></div>';
+  html+='</div>';
+
+  // ── Crew assigned ──
+  if(crew.length){
+    html+='<div class="card"><h2>Assigned Crew</h2>';
+    html+='<div>'+crew.map(c=>'<span class="crew-chip">'+esc(c.display_name||c.role||'?')+'</span>').join('')+'</div>';
+    html+='</div>';
+  }
+
+  // ── Customer (only if we have it on the job) ──
+  // job table doesn't store customer directly — pull from the estimate doc
+  if(estimate && (estimate.client_name || estimate.client_contact)){
+    html+='<div class="card"><h2>Customer</h2>';
+    if(estimate.client_name) html+='<div class="row"><span class="lbl">Name</span><span class="val">'+esc(estimate.client_name)+'</span></div>';
+    if(estimate.client_contact){
+      // crude phone detection — if the contact looks like digits, make it tap-to-call
+      const c=estimate.client_contact;
+      const phoneOnly=c.replace(/[^0-9]/g,'');
+      if(phoneOnly.length>=10){
+        html+='<div class="row"><span class="lbl">Contact</span><span class="val"><a href="tel:'+esc(phoneOnly)+'">'+esc(c)+'</a></span></div>';
+      }else{
+        html+='<div class="row"><span class="lbl">Contact</span><span class="val">'+esc(c)+'</span></div>';
+      }
+    }
+    if(estimate.client_addr) html+='<div class="row"><span class="lbl">Address</span><span class="val">'+esc(estimate.client_addr)+'</span></div>';
+    html+='</div>';
+  }
+
+  // ── Scope of work (with localStorage checkboxes) ──
+  // Source order: estimate first, then change orders by created date.
+  const scopeSources=[];
+  if(estimate){scopeSources.push({label:'Estimate',doc:estimate});}
+  changeOrders.sort((a,b)=>(a.created||0)-(b.created||0)).forEach((co,i)=>{
+    scopeSources.push({label:'Change Order #'+(i+1),doc:co});
+  });
+  if(workOrder){scopeSources.push({label:'Work Order',doc:workOrder});}
+
+  if(scopeSources.length){
+    html+='<div class="card"><h2>Scope of Work</h2>';
+    scopeSources.forEach((src,sIdx)=>{
+      if(scopeSources.length>1) html+='<div class="scope-divider">'+esc(src.label)+'</div>';
+      // Doc.scope (text paragraph) shown first if present
+      if(src.doc.scope) html+='<div style="font-size:13px;color:#bdc7d3;line-height:1.6;padding:4px 0 10px;">'+esc(src.doc.scope)+'</div>';
+      // line_items as checklist
+      const items=safeArr(src.doc.line_items);
+      items.forEach((li,liIdx)=>{
+        const key='scope:'+job.id+':'+viewerId+':'+src.doc.id+':'+liIdx;
+        const desc=li.desc||li.description||'(no description)';
+        const checked=localStorage.getItem(key)==='1';
+        html+='<div class="scope-item'+(checked?' checked':'')+'" data-key="'+esc(key)+'" onclick="toggleScope(this)">';
+        html+='<div class="scope-check"></div>';
+        html+='<div class="scope-text">'+esc(desc);
+        if(li.qty && Number(li.qty)>0){
+          html+=' <span style="color:var(--muted);font-size:11px;">(qty '+esc(li.qty)+(li.price?' · $'+esc(li.price):'')+')</span>';
+        }
+        html+='</div></div>';
+      });
+    });
+    html+='</div>';
+  }
+
+  // ── Material list ──
+  if(materialOrder){
+    html+='<div class="card"><h2>Material List</h2>';
+    if(materialOrder.scope) html+='<div style="font-size:13px;color:#bdc7d3;line-height:1.6;padding:4px 0 10px;">'+esc(materialOrder.scope)+'</div>';
+    const items=safeArr(materialOrder.line_items);
+    if(items.length===0){
+      html+='<div style="color:var(--muted);font-size:13px;">No material lines.</div>';
+    }else{
+      items.forEach((li,liIdx)=>{
+        const key='mat:'+job.id+':'+viewerId+':'+materialOrder.id+':'+liIdx;
+        const desc=li.desc||li.description||'(no description)';
+        const checked=localStorage.getItem(key)==='1';
+        html+='<div class="mat-item'+(checked?' checked':'')+'" data-key="'+esc(key)+'" onclick="toggleMat(this)">';
+        html+='<div class="mat-check"></div>';
+        html+='<div class="mat-text">'+esc(desc);
+        if(li.qty && Number(li.qty)>0){
+          html+=' <span style="color:var(--muted);font-size:11px;">— qty '+esc(li.qty)+'</span>';
+        }
+        html+='</div></div>';
+      });
+    }
+    html+='</div>';
+  }
+
+  // ── Time clock (Session 2 placeholder) ──
+  html+='<div class="card"><h2>Time Tracking</h2>';
+  html+='<div class="time-clock-section">';
+  html+='<strong>Coming Soon</strong>';
+  html+='Time clock-in/out from this page is in the next update. For now, use the main app to clock in.';
+  html+='</div></div>';
+
+  // ── Linked docs (read-only view links) ──
+  // Skipped for now — could be added if needed; the customer-signing flow already shows them.
+
+  // ── Owner contact CTA ──
+  html+='<div class="owner-cta">';
+  html+='<a href="tel:4142343700">📞 Call Owner</a>';
+  html+='<a href="sms:4142343700">💬 Text Owner</a>';
+  html+='</div>';
+
+  root.innerHTML=html;
+  window.scrollTo(0,0);
+}
+
+function toggleScope(el){
+  const key=el.dataset.key;
+  if(el.classList.contains('checked')){
+    el.classList.remove('checked');
+    localStorage.removeItem(key);
+  }else{
+    el.classList.add('checked');
+    localStorage.setItem(key,'1');
+  }
+}
+function toggleMat(el){
+  const key=el.dataset.key;
+  if(el.classList.contains('checked')){
+    el.classList.remove('checked');
+    localStorage.removeItem(key);
+  }else{
+    el.classList.add('checked');
+    localStorage.setItem(key,'1');
+  }
+}
+
+// If we already have a PIN in this session (e.g. they navigated back),
+// auto-authenticate without making them re-type.
+(function tryAutoAuth(){
+  const savedPin=sessionStorage.getItem('bvJobPin');
+  if(savedPin && /^[0-9]{4}$/.test(savedPin)){
+    pinInput.value=savedPin;
+    submitPin();
+  }
+})();
+</script>
+</body>
+</html>

@@ -1231,6 +1231,7 @@ body:not(.role-owner):not(.role-manager) .role-financial-only{display:none!impor
       <div class="user-menu-email" id="userMenuEmail"></div>
       <div class="user-menu-item role-owner-only" id="manageTeamMenuItem" onclick="openTeamManager()"><span>👥</span><span>Manage Team</span></div>
       <div class="user-menu-item" id="clockMenuItem" onclick="openClockScreen()"><span id="clockMenuIcon">⏱</span><span id="clockMenuLabel">Clock In/Out</span></div>
+      <div class="user-menu-item role-owner-only" id="timeReportsMenuItem" onclick="openTimeReports()"><span>📋</span><span>Time Reports</span></div>
       <div class="user-menu-item role-owner-only" id="qbConnectMenuItem" onclick="openQbConnect()"><span id="qbConnectIcon">🟢</span><span id="qbConnectLabel">Connect QuickBooks</span></div>
       <div class="user-menu-item role-financial-only" id="reportsMenuItem" onclick="openReports()"><span>📊</span><span>Reports</span></div>
       <div class="user-menu-item" id="resyncMenuItem" onclick="manualResync()"><span>🔄</span><span>Resync</span></div>
@@ -1779,6 +1780,7 @@ body:not(.role-owner):not(.role-manager) .role-financial-only{display:none!impor
     </div>
     <div class="macts">
       <button class="btn btn-ghost" onclick="closeMov('jMov')">Cancel</button>
+      <button class="btn btn-ghost" id="jCrewLink" onclick="copyCrewLink()" style="display:none">📋 Crew Link</button>
       <button class="btn btn-amber" id="jSave">Add Job</button>
     </div>
   </div>
@@ -2564,6 +2566,319 @@ async function clockDoClockOut(){
   }
 }
 
+// ── TIME REPORTS (Phase 2a — read-only) ─────────────────────────────
+// Owner-only viewer for time_entries. Three view modes:
+//   - week: per-employee weekly timesheet (Sun-Sat days as columns)
+//   - job:  hours rolled up per job + per employee
+//   - list: every entry as a row
+// Reads /rest/v1/time_entries directly. No caching. Always fresh.
+//
+// All time math runs in America/Chicago (Central Time) to match the
+// company's actual location. JS Date works in the user's local zone,
+// so we use a small wrapper that converts to a Sun-Sat week starting
+// at 00:00 Central regardless of the user's device locale.
+
+let trWeekStart=null;          // Date — Sunday 00:00 of the week being viewed
+let trCachedEntries=[];        // entries loaded for the current view
+let trCachedRange={start:null,end:null}; // ms range that's actually loaded
+
+// Convert a Date to "what is the Sunday 00:00 Central of the week containing this date?"
+function trGetSundayCentral(d){
+  // Get the day-of-week according to Central Time.
+  const partsFmt=new Intl.DateTimeFormat('en-US',{
+    timeZone:'America/Chicago', weekday:'short',
+    year:'numeric',month:'numeric',day:'numeric',
+    hour:'2-digit',minute:'2-digit',hour12:false
+  });
+  const parts={};
+  partsFmt.formatToParts(d).forEach(p=>{if(p.type!=='literal')parts[p.type]=p.value;});
+  const dayMap={Sun:0,Mon:1,Tue:2,Wed:3,Thu:4,Fri:5,Sat:6};
+  const dow=dayMap[parts.weekday]||0;
+  // Compose midnight of "today in Central" as an ISO string with -05:00 (CDT) or -06:00 (CST).
+  // To avoid manually tracking DST: build a Date at the wall-clock Sun 00:00 Central using
+  // a recursive approach — start with today's UTC date, shift back to wall-Sunday, then
+  // bind to "00:00:00" Central via a date-only ISO + the runtime's tz offset for that day.
+  // Simpler and robust: produce a YYYY-MM-DD string for Sunday Central, then parse as Central.
+  const todayY=parseInt(parts.year);
+  const todayM=parseInt(parts.month);
+  const todayD=parseInt(parts.day);
+  // Reconstruct the local-central calendar date as a UTC ms anchor, then shift by `dow` days
+  // We use Date.UTC to avoid local-tz interference; we are NOT trying to get an exact UTC
+  // timestamp, just a date arithmetic vehicle. Final formatting is via toLocaleDateString in Central.
+  const anchorUTC=Date.UTC(todayY,todayM-1,todayD);
+  const sundayUTC=anchorUTC-(dow*86400000);
+  // We'll represent week boundaries as ISO date strings (YYYY-MM-DD) in Central and compare
+  // entries by their Central-zone date string too. That makes DST a non-issue: we never do
+  // local-tz timestamp math on the entries themselves.
+  const sundayDate=new Date(sundayUTC);
+  return sundayDate;
+}
+
+// Format YYYY-MM-DD in Central Time given a Date (anywhere in the world)
+function trCentralYMD(d){
+  const fmt=new Intl.DateTimeFormat('en-CA',{timeZone:'America/Chicago',year:'numeric',month:'2-digit',day:'2-digit'});
+  return fmt.format(d); // returns YYYY-MM-DD
+}
+
+// Format "Mon, May 27" style
+function trCentralMD(d){
+  return new Intl.DateTimeFormat('en-US',{timeZone:'America/Chicago',weekday:'short',month:'short',day:'numeric'}).format(d);
+}
+
+// Format a time as h:mm AM/PM Central
+function trCentralHM(d){
+  return new Intl.DateTimeFormat('en-US',{timeZone:'America/Chicago',hour:'numeric',minute:'2-digit',hour12:true}).format(d);
+}
+
+// Convert ms duration to "Hh MMm" string
+function trFmtDur(ms){
+  if(!ms||ms<0)return '—';
+  const totalMin=Math.round(ms/60000);
+  const h=Math.floor(totalMin/60);
+  const m=totalMin%60;
+  if(h===0)return m+'m';
+  if(m===0)return h+'h';
+  return h+'h '+(m<10?'0':'')+m+'m';
+}
+
+// Convert ms to decimal hours (for totals / future CSV export)
+function trDecHours(ms){
+  if(!ms||ms<0)return 0;
+  return Math.round(ms/36000)/100; // 2 decimals
+}
+
+async function openTimeReports(){
+  if(!isOwner()){alert('Only owners can view time reports.');return;}
+  // Default the week to "today's week"
+  trWeekStart=trGetSundayCentral(new Date());
+  openMov('timeReportsOverlay');
+  // Populate employee filter from team roster
+  trPopulateEmployeeFilter();
+  // Load and render
+  await trLoadAndRender();
+}
+
+function closeTimeReports(){closeMov('timeReportsOverlay');}
+
+function trPopulateEmployeeFilter(){
+  const sel=document.getElementById('trEmployeeFilter');
+  if(!sel) return;
+  const cur=sel.value||'all';
+  sel.innerHTML='<option value="all">All Employees</option>';
+  if(Array.isArray(teamRoster)){
+    teamRoster.forEach(m=>{
+      if(!m||!m.id) return;
+      const opt=document.createElement('option');
+      opt.value=m.id;
+      opt.textContent=(m.name||m.email||'(unnamed)')+(m.role?` · ${m.role}`:'');
+      sel.appendChild(opt);
+    });
+  }
+  sel.value=cur;
+}
+
+function trShiftWeek(delta){
+  if(delta===0){
+    trWeekStart=trGetSundayCentral(new Date());
+  }else{
+    trWeekStart=new Date(trWeekStart.getTime()+(delta*7*86400000));
+  }
+  trLoadAndRender();
+}
+
+async function trLoadAndRender(){
+  const body=document.getElementById('trBody');
+  if(!body)return;
+  body.innerHTML='<div style="text-align:center;color:var(--muted);padding:40px;">Loading…</div>';
+  // Update week label
+  const wkEnd=new Date(trWeekStart.getTime()+(6*86400000));
+  const wkLbl=document.getElementById('trWeekLabel');
+  if(wkLbl) wkLbl.textContent=trCentralMD(trWeekStart)+' — '+trCentralMD(wkEnd);
+  // Fetch entries with clock_in in this week (Central). Server expects ISO UTC,
+  // so we need the UTC ms equivalents of "Sun 00:00 Central" and "Sun 00:00 next week Central".
+  // Easiest correct approach: bracket loosely (1 day padding each side) then filter client-side
+  // by Central date string. Loose query covers DST edges without per-DST math.
+  const lo=new Date(trWeekStart.getTime()-86400000).toISOString();
+  const hi=new Date(trWeekStart.getTime()+(8*86400000)).toISOString();
+  try{
+    const r=await fetch(SB_URL+'/rest/v1/time_entries?clock_in=gte.'+encodeURIComponent(lo)
+      +'&clock_in=lt.'+encodeURIComponent(hi)
+      +'&select=*&order=clock_in.asc',
+      {headers:{apikey:SB_KEY,Authorization:'Bearer '+authAccessToken}});
+    if(!r.ok){
+      const msg=await r.text();
+      body.innerHTML='<div style="color:var(--rose);padding:20px;">Failed to load: '+esc(msg.slice(0,200))+'</div>';
+      return;
+    }
+    trCachedEntries=await r.json();
+    trCachedRange={start:trWeekStart.getTime(),end:wkEnd.getTime()};
+    renderTimeReports();
+  }catch(e){
+    body.innerHTML='<div style="color:var(--rose);padding:20px;">Error: '+esc(e.message||String(e))+'</div>';
+  }
+}
+
+function renderTimeReports(){
+  const body=document.getElementById('trBody');
+  if(!body)return;
+  const mode=document.getElementById('trViewMode')?.value||'week';
+  const empFilter=document.getElementById('trEmployeeFilter')?.value||'all';
+  // Build Sun-Sat day keys (YYYY-MM-DD in Central) for the current week
+  const dayKeys=[];
+  for(let i=0;i<7;i++){
+    const d=new Date(trWeekStart.getTime()+(i*86400000));
+    dayKeys.push(trCentralYMD(d));
+  }
+  const weekSet=new Set(dayKeys);
+  // Filter entries to only those whose CENTRAL day falls in the Sun-Sat week
+  let entries=(trCachedEntries||[]).filter(e=>{
+    if(!e.clock_in)return false;
+    const dStr=trCentralYMD(new Date(e.clock_in));
+    if(!weekSet.has(dStr))return false;
+    if(empFilter!=='all' && e.user_id!==empFilter)return false;
+    return true;
+  });
+  // Compute duration ms for each entry (or null if still open)
+  entries.forEach(e=>{
+    if(e.clock_out){
+      e._durMs=new Date(e.clock_out).getTime()-new Date(e.clock_in).getTime();
+    }else{
+      e._durMs=null; // open entry
+    }
+  });
+  if(mode==='week') return body.innerHTML=trRenderWeekly(entries,dayKeys);
+  if(mode==='job')  return body.innerHTML=trRenderByJob(entries);
+  if(mode==='list') return body.innerHTML=trRenderList(entries);
+}
+
+function trUserName(uid){
+  const m=(teamRoster||[]).find(x=>x.id===uid);
+  return m?(m.name||m.email||uid.slice(0,8)):uid?.slice(0,8)||'(unknown)';
+}
+
+function trJobName(jid){
+  if(!jid) return '(no job)';
+  const j=(jobs||[]).find(x=>x.id===jid);
+  return j?(j.title||j.address||jid):jid;
+}
+
+function trRenderWeekly(entries,dayKeys){
+  // Group entries by user_id, then by day
+  const byUser={};
+  entries.forEach(e=>{
+    const u=e.user_id||'(unknown)';
+    if(!byUser[u]) byUser[u]={total:0,days:{},openCount:0};
+    const dStr=trCentralYMD(new Date(e.clock_in));
+    if(!byUser[u].days[dStr]) byUser[u].days[dStr]={ms:0,count:0,open:0};
+    if(e._durMs!=null){
+      byUser[u].days[dStr].ms += e._durMs;
+      byUser[u].total += e._durMs;
+    }else{
+      byUser[u].days[dStr].open += 1;
+      byUser[u].openCount += 1;
+    }
+    byUser[u].days[dStr].count += 1;
+  });
+  const userIds=Object.keys(byUser).sort((a,b)=>trUserName(a).localeCompare(trUserName(b)));
+  if(userIds.length===0){
+    return '<div style="text-align:center;color:var(--muted);padding:40px;">No time entries this week.</div>';
+  }
+  let html='<div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:12px;">';
+  html+='<thead><tr style="border-bottom:1px solid var(--steel-mid);">';
+  html+='<th style="text-align:left;padding:8px 6px;color:var(--muted);font-weight:600;letter-spacing:.04em;font-size:11px;text-transform:uppercase;">Employee</th>';
+  dayKeys.forEach((k,i)=>{
+    const dDate=new Date(trWeekStart.getTime()+(i*86400000));
+    const lbl=new Intl.DateTimeFormat('en-US',{timeZone:'America/Chicago',weekday:'short'}).format(dDate);
+    const num=new Intl.DateTimeFormat('en-US',{timeZone:'America/Chicago',day:'numeric'}).format(dDate);
+    html+=`<th style="text-align:right;padding:8px 6px;color:var(--muted);font-weight:600;letter-spacing:.04em;font-size:11px;text-transform:uppercase;">${lbl}<br><span style="color:var(--white);font-size:13px;">${num}</span></th>`;
+  });
+  html+='<th style="text-align:right;padding:8px 6px;color:var(--amber);font-weight:600;letter-spacing:.04em;font-size:11px;text-transform:uppercase;">Total</th>';
+  html+='</tr></thead><tbody>';
+  userIds.forEach(uid=>{
+    const u=byUser[uid];
+    html+='<tr style="border-bottom:1px solid rgba(255,255,255,.05);">';
+    html+=`<td style="padding:8px 6px;font-weight:600;">${esc(trUserName(uid))}</td>`;
+    dayKeys.forEach(k=>{
+      const d=u.days[k];
+      if(!d){html+='<td style="text-align:right;padding:8px 6px;color:var(--muted);">—</td>';return;}
+      const dur=d.ms>0?trFmtDur(d.ms):(d.open>0?'<span style="color:var(--amber)">(open)</span>':'—');
+      html+=`<td style="text-align:right;padding:8px 6px;font-variant-numeric:tabular-nums;">${dur}</td>`;
+    });
+    let totalLbl=trFmtDur(u.total);
+    if(u.openCount>0) totalLbl+=' <span style="color:var(--amber);font-size:10px;">+'+u.openCount+' open</span>';
+    html+=`<td style="text-align:right;padding:8px 6px;color:var(--amber);font-weight:700;font-variant-numeric:tabular-nums;">${totalLbl}</td>`;
+    html+='</tr>';
+  });
+  html+='</tbody></table></div>';
+  html+='<div style="margin-top:12px;font-size:10px;color:var(--muted);letter-spacing:.04em;">Sun–Sat work week · Times in Central (America/Chicago) · "(open)" entries are still clocked in</div>';
+  return html;
+}
+
+function trRenderByJob(entries){
+  // Group: byJob → byUser → ms total
+  const byJob={};
+  entries.forEach(e=>{
+    if(e._durMs==null)return; // skip open entries from job totals
+    const jid=e.job_id||'_nojob';
+    if(!byJob[jid])byJob[jid]={total:0,users:{}};
+    byJob[jid].total += e._durMs;
+    if(!byJob[jid].users[e.user_id])byJob[jid].users[e.user_id]=0;
+    byJob[jid].users[e.user_id] += e._durMs;
+  });
+  const jobIds=Object.keys(byJob).sort((a,b)=>byJob[b].total-byJob[a].total);
+  if(jobIds.length===0){
+    return '<div style="text-align:center;color:var(--muted);padding:40px;">No completed entries this week.</div>';
+  }
+  let html='<div style="display:flex;flex-direction:column;gap:10px;">';
+  jobIds.forEach(jid=>{
+    const j=byJob[jid];
+    const name=jid==='_nojob'?'(no job — general work)':trJobName(jid);
+    const userBreakdown=Object.entries(j.users)
+      .sort((a,b)=>b[1]-a[1])
+      .map(([uid,ms])=>`<span style="color:var(--white);">${esc(trUserName(uid))}</span> <span style="color:var(--muted);">${trFmtDur(ms)}</span>`)
+      .join(' &nbsp;·&nbsp; ');
+    html+=`<div style="border:1px solid var(--steel-mid);border-radius:6px;padding:10px 12px;">
+      <div style="display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap;">
+        <div style="font-weight:600;font-size:13px;">${esc(name)}</div>
+        <div style="color:var(--amber);font-weight:700;font-variant-numeric:tabular-nums;font-size:14px;">${trFmtDur(j.total)}</div>
+      </div>
+      <div style="margin-top:6px;font-size:11px;">${userBreakdown}</div>
+    </div>`;
+  });
+  html+='</div>';
+  return html;
+}
+
+function trRenderList(entries){
+  if(entries.length===0){
+    return '<div style="text-align:center;color:var(--muted);padding:40px;">No entries this week.</div>';
+  }
+  // Sort newest first
+  const sorted=entries.slice().sort((a,b)=>new Date(b.clock_in)-new Date(a.clock_in));
+  let html='<div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:12px;">';
+  html+='<thead><tr style="border-bottom:1px solid var(--steel-mid);">';
+  ['Employee','Day','Clock In','Clock Out','Duration','Job'].forEach(h=>{
+    html+=`<th style="text-align:left;padding:8px 6px;color:var(--muted);font-weight:600;letter-spacing:.04em;font-size:11px;text-transform:uppercase;">${h}</th>`;
+  });
+  html+='</tr></thead><tbody>';
+  sorted.forEach(e=>{
+    const inD=new Date(e.clock_in);
+    const dur=e._durMs!=null?trFmtDur(e._durMs):'<span style="color:var(--amber)">(open)</span>';
+    const outStr=e.clock_out?trCentralHM(new Date(e.clock_out)):'<span style="color:var(--amber)">—</span>';
+    html+=`<tr style="border-bottom:1px solid rgba(255,255,255,.05);">
+      <td style="padding:8px 6px;font-weight:600;">${esc(trUserName(e.user_id))}</td>
+      <td style="padding:8px 6px;">${esc(trCentralMD(inD))}</td>
+      <td style="padding:8px 6px;font-variant-numeric:tabular-nums;">${esc(trCentralHM(inD))}</td>
+      <td style="padding:8px 6px;font-variant-numeric:tabular-nums;">${outStr}</td>
+      <td style="padding:8px 6px;font-variant-numeric:tabular-nums;font-weight:600;">${dur}</td>
+      <td style="padding:8px 6px;color:var(--muted);">${esc(trJobName(e.job_id))}</td>
+    </tr>`;
+  });
+  html+='</tbody></table></div>';
+  html+='<div style="margin-top:12px;font-size:10px;color:var(--muted);letter-spacing:.04em;">Times shown in Central (America/Chicago)</div>';
+  return html;
+}
+
 // ── TEAM MANAGER ─────────────────────────────────────────────
 // Owner-only UI for inviting / promoting / removing team members.
 async function openTeamManager(){
@@ -2791,6 +3106,7 @@ async function renderTeamManager(){
   list.innerHTML='<div class="team-mgr-empty">Loading…</div>';
   // Pull every profile in our company with all editable fields
   let profiles=[];
+  let pinsByUser={}; // user_id -> {pin, created_at}
   try{
     const r=await fetch(SB_URL+'/rest/v1/profiles?company_id=eq.'+encodeURIComponent(currentCompanyId)
       +'&select=user_id,role,display_name,phone,email,color,initials,created_at&order=created_at.asc',{
@@ -2803,6 +3119,18 @@ async function renderTeamManager(){
     list.innerHTML='<div class="team-mgr-empty">Error loading team. Refresh to try again.</div>';
     return;
   }
+  // Pull active PINs (one per user expected). Fail-soft — if this errors,
+  // the team panel still renders, just without PIN display.
+  try{
+    const r=await fetch(SB_URL+'/rest/v1/crew_pins?company_id=eq.'+encodeURIComponent(currentCompanyId)
+      +'&revoked_at=is.null&select=id,pin,user_id,created_at&order=created_at.desc',{
+      headers:{'apikey':SB_KEY,'Authorization':'Bearer '+authAccessToken}
+    });
+    if(r.ok){
+      const pins=await r.json();
+      pins.forEach(p=>{ if(!pinsByUser[p.user_id]) pinsByUser[p.user_id]=p; });
+    }
+  }catch(e){console.warn('PIN load failed (non-fatal):',e);}
   // Refresh the in-memory roster too so any open pickers pick up changes
   teamRoster=profiles.map(_profileToTeamMember);
   saveTeam();
@@ -2827,6 +3155,24 @@ async function renderTeamManager(){
     const canDelete=!isMe&&!isLastOwner;
     const emailDisplay=p.email||(isMe?currentUser.email:'');
     const colorDots=TEAM_COLORS.map(c=>`<div class="tm-color-dot${c===color?' active':''}" style="background:${c}" onclick="changeTeamColor('${p.user_id}','${c}')"></div>`).join('');
+    // Active crew PIN row — owners see + manage; non-owners don't see this
+    const pinRow=(()=>{
+      const cp=pinsByUser[p.user_id];
+      if(cp){
+        return `<div class="tm-row-line" style="margin-top:6px;align-items:center;gap:8px;">
+          <span style="font-size:11px;color:var(--muted);letter-spacing:.04em;text-transform:uppercase;">Crew PIN</span>
+          <span style="font-family:monospace;font-size:14px;letter-spacing:.2em;color:var(--amber);font-weight:600;">${esc(cp.pin)}</span>
+          <button class="btn btn-ghost btn-xs" onclick="rotateCrewPin('${p.user_id}','${cp.id}')" title="Generate a new PIN (revokes the old one)">🔄 Rotate</button>
+          <button class="btn btn-ghost btn-xs" onclick="revokeCrewPin('${cp.id}','${esc(name)}')" title="Revoke this PIN (no replacement)">✕ Revoke</button>
+        </div>`;
+      }else{
+        return `<div class="tm-row-line" style="margin-top:6px;align-items:center;gap:8px;">
+          <span style="font-size:11px;color:var(--muted);letter-spacing:.04em;text-transform:uppercase;">Crew PIN</span>
+          <span style="font-size:11px;color:var(--muted);font-style:italic;">none</span>
+          <button class="btn btn-amber btn-xs" onclick="generateCrewPin('${p.user_id}','${esc(name)}')">+ Set PIN</button>
+        </div>`;
+      }
+    })();
     return `<div class="team-mgr-row ${roleClass}">
       <div class="tm-avatar" style="background:${color}">${esc(initials)}</div>
       <div class="team-mgr-info">
@@ -2836,6 +3182,7 @@ async function renderTeamManager(){
           <input class="tm-small-input" data-uid="${p.user_id}" data-field="email" value="${esc(emailDisplay)}" placeholder="✉ Email" onblur="saveTeamField('${p.user_id}','email',this.value)" ${isMe?'readonly':''}/>
         </div>
         <div class="tm-color-row">${colorDots}</div>
+        ${pinRow}
       </div>
       <div class="tm-controls">
         <select class="team-mgr-role-select" data-uid="${p.user_id}" onchange="changeTeamRole('${p.user_id}',this.value)" ${isMe&&isLastOwner?'disabled':''}>
@@ -2935,6 +3282,135 @@ async function removeTeamMemberFromCompany(userId,name){
     console.error(e);
     setSS('error','Remove failed');
     alert('Failed to remove member. '+e.message);
+  }
+}
+
+// ── CREW PIN management (Session 1) ─────────────────────────────────
+// Owners can set, rotate, and revoke a 4-digit PIN per team member.
+// PINs identify a crew member when they open the shareable jobsite link.
+// The table is soft-delete: revoking sets revoked_at, history preserved.
+
+function _randomFourDigitPin(){
+  // Cryptographically random when available. Falls back to Math.random
+  // only if crypto isn't available (very unlikely on modern browsers).
+  if(window.crypto && window.crypto.getRandomValues){
+    const a=new Uint32Array(1);
+    window.crypto.getRandomValues(a);
+    return String(a[0]%10000).padStart(4,'0');
+  }
+  return String(Math.floor(Math.random()*10000)).padStart(4,'0');
+}
+
+async function _findUniquePin(){
+  // Try up to 10 random PINs until we find one not currently active.
+  // Should almost always succeed on the first try; the loop is defensive
+  // in case someone has many PINs already.
+  for(let i=0;i<10;i++){
+    const p=_randomFourDigitPin();
+    try{
+      const r=await fetch(SB_URL+'/rest/v1/crew_pins?company_id=eq.'+encodeURIComponent(currentCompanyId)
+        +'&pin=eq.'+p+'&revoked_at=is.null&select=id&limit=1',{
+        headers:{apikey:SB_KEY,Authorization:'Bearer '+authAccessToken}
+      });
+      if(r.ok){
+        const rows=await r.json();
+        if(rows.length===0) return p; // free to use
+      }
+    }catch{}
+  }
+  // Fallback: just return any random pin; uniqueness constraint will catch a dup
+  return _randomFourDigitPin();
+}
+
+async function generateCrewPin(userId,name){
+  if(!isOwner()){alert('Only owners can set PINs.');return;}
+  const pin=await _findUniquePin();
+  if(!confirm(`Set PIN ${pin} for ${name}?\n\nThis PIN lets ${name} open shareable jobsite links. You can rotate or revoke later.`)) return;
+  setSS('syncing','Setting PIN…');
+  try{
+    const r=await fetch(SB_URL+'/rest/v1/crew_pins',{
+      method:'POST',
+      headers:{
+        apikey:SB_KEY,
+        Authorization:'Bearer '+authAccessToken,
+        'Content-Type':'application/json',
+        Prefer:'return=representation'
+      },
+      body:JSON.stringify({
+        pin,
+        user_id:userId,
+        company_id:currentCompanyId,
+        created_by:currentUser?.id||null
+      })
+    });
+    if(!r.ok){
+      const errText=await r.text();
+      throw new Error('INSERT failed: '+r.status+' '+errText);
+    }
+    setSS('synced','PIN set ✓');setTimeout(()=>document.getElementById('syncLbl').textContent='',2000);
+    renderTeamManager();
+  }catch(e){
+    console.error(e);
+    setSS('error','PIN set failed');
+    alert('Failed to set PIN.\n\n'+e.message);
+  }
+}
+
+async function rotateCrewPin(userId,oldPinId){
+  if(!isOwner()){alert('Only owners can rotate PINs.');return;}
+  if(!confirm('Rotate this PIN?\n\nThe old PIN will be revoked (kept in history) and a new random PIN will be generated. The crew member will need the new PIN to open jobsite links going forward.')) return;
+  const newPin=await _findUniquePin();
+  setSS('syncing','Rotating…');
+  try{
+    // 1. Revoke the old PIN (soft-delete)
+    const r1=await fetch(SB_URL+'/rest/v1/crew_pins?id=eq.'+encodeURIComponent(oldPinId),{
+      method:'PATCH',
+      headers:{apikey:SB_KEY,Authorization:'Bearer '+authAccessToken,'Content-Type':'application/json'},
+      body:JSON.stringify({revoked_at:new Date().toISOString()})
+    });
+    if(!r1.ok) throw new Error('Revoke step failed: '+r1.status);
+    // 2. Insert new PIN
+    const r2=await fetch(SB_URL+'/rest/v1/crew_pins',{
+      method:'POST',
+      headers:{apikey:SB_KEY,Authorization:'Bearer '+authAccessToken,'Content-Type':'application/json'},
+      body:JSON.stringify({
+        pin:newPin,
+        user_id:userId,
+        company_id:currentCompanyId,
+        created_by:currentUser?.id||null
+      })
+    });
+    if(!r2.ok){
+      const errText=await r2.text();
+      throw new Error('INSERT step failed: '+r2.status+' '+errText);
+    }
+    setSS('synced','Rotated ✓');setTimeout(()=>document.getElementById('syncLbl').textContent='',2000);
+    alert('New PIN: '+newPin+'\n\nWrite it down — it will only show in the team panel from now on.');
+    renderTeamManager();
+  }catch(e){
+    console.error(e);
+    setSS('error','Rotate failed');
+    alert('Failed to rotate PIN.\n\n'+e.message);
+  }
+}
+
+async function revokeCrewPin(pinId,name){
+  if(!isOwner()){alert('Only owners can revoke PINs.');return;}
+  if(!confirm(`Revoke PIN for ${name}?\n\nThe PIN will stop working immediately. The crew member can't open jobsite links until you set a new PIN for them.\n\nThis is permanent for THIS pin (kept in history). You can always set a new one.`)) return;
+  setSS('syncing','Revoking…');
+  try{
+    const r=await fetch(SB_URL+'/rest/v1/crew_pins?id=eq.'+encodeURIComponent(pinId),{
+      method:'PATCH',
+      headers:{apikey:SB_KEY,Authorization:'Bearer '+authAccessToken,'Content-Type':'application/json'},
+      body:JSON.stringify({revoked_at:new Date().toISOString()})
+    });
+    if(!r.ok) throw new Error('Revoke failed: '+r.status);
+    setSS('synced','Revoked ✓');setTimeout(()=>document.getElementById('syncLbl').textContent='',2000);
+    renderTeamManager();
+  }catch(e){
+    console.error(e);
+    setSS('error','Revoke failed');
+    alert('Failed to revoke PIN.\n\n'+e.message);
   }
 }
 
@@ -3909,6 +4385,35 @@ const dbToTmpl=r=>({id:r.id,name:r.name,scope:r.scope||'',lineItems:safeParseArr
 const tmplToDb=t=>({id:t.id,name:t.name,scope:t.scope||'',line_items:JSON.stringify(t.lineItems||[]),tax:parseFloat(t.tax)||0,discount:parseFloat(t.discount)||0,notes:t.notes||'',created:t.created||Date.now(),user_id:currentUser?.id||null,updated_at:new Date().toISOString()});
 function safeParseArr(v){try{const p=typeof v==='string'?JSON.parse(v):v;return Array.isArray(p)?p:[];}catch{return[];}}
 function saveJob(j){setSS('syncing','Saving…');queueSave('jobs',j);}
+
+// ── Crew Link copier ─────────────────────────────────────────────────
+// Generates a shareable URL for the current job's crew page. Crew opens
+// the link, enters their PIN, and sees the job's scope/materials.
+async function copyCrewLink(){
+  if(!editJobId){alert('Save the job first to get a crew link.');return;}
+  const link='https://sign.betterview.homes/job.html?id='+encodeURIComponent(editJobId);
+  let copied=false;
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    try{await navigator.clipboard.writeText(link);copied=true;}catch{}
+  }
+  // Show a small confirmation popup with the link visible and copyable
+  const html='<div class="modal show" id="crewLinkPopup" style="z-index:9999">'
+    +'<div class="modal-content" style="max-width:480px;padding:20px;">'
+    +'<div style="font-weight:700;font-size:14px;letter-spacing:.06em;color:var(--amber);margin-bottom:12px;">📋 CREW JOBSITE LINK</div>'
+    +'<div style="font-size:12px;color:var(--muted);margin-bottom:10px;line-height:1.5;">'
+    +(copied?'Link copied to clipboard. Paste it into a text or the job description.':'Copy this link and send to your crew:')
+    +'</div>'
+    +'<input class="finput" readonly value="'+esc(link)+'" onclick="this.select()" style="font-size:11px;font-family:monospace;width:100%;margin-bottom:10px;"/>'
+    +'<div style="font-size:11px;color:var(--muted);margin-bottom:14px;line-height:1.5;">'
+    +'Crew members need their 4-digit PIN to open the page. Set PINs in the Team Manager.'
+    +'</div>'
+    +'<div style="display:flex;gap:8px;justify-content:flex-end;">'
+    +'<button class="btn btn-ghost" onclick="document.getElementById(\'crewLinkPopup\').remove()">Close</button>'
+    +'</div>'
+    +'</div></div>';
+  const existing=document.getElementById('crewLinkPopup');if(existing)existing.remove();
+  document.body.insertAdjacentHTML('beforeend',html);
+}
 function saveLead(l){setSS('syncing','Saving…');queueSave('leads',l);}
 function saveDocSync(d){setSS('syncing','Saving…');queueSave('docs',d);}
 function saveTmplSync(t){setSS('syncing','Saving…');queueSave('templates',t);}
@@ -4965,6 +5470,9 @@ function openJobMov(day,editId){
   editJobId=editId||null;modalDay=day||'backlog';
   document.getElementById('jMTitle').textContent=editId?'EDIT JOB':'NEW JOB';
   document.getElementById('jSave').textContent=editId?'Save Changes':'Add Job';
+  // Crew Link button visible only when editing an existing job (need a job id)
+  const cl=document.getElementById('jCrewLink');
+  if(cl) cl.style.display=editId?'':'none';
   // Reset customer search
   jLinkedLeadId=null;
   document.getElementById('jCustSearch').value='';
@@ -9569,6 +10077,44 @@ init();
     </div>
   </div>
 </div>
+
+<!-- ─── TIME REPORTS (Phase 2a — read-only) ──────────────────────────── -->
+<!-- Owner-only timesheet/job-time viewer. Reads time_entries directly via   -->
+<!-- /rest/v1/time_entries; no caching, no localStorage; always fresh.       -->
+<div class="tmpl-overlay" id="timeReportsOverlay" onclick="if(event.target===this)closeTimeReports()">
+  <div class="tmpl-panel" onclick="event.stopPropagation()" style="max-width:920px;width:95vw;max-height:90vh;overflow:hidden;display:flex;flex-direction:column;">
+    <div class="tmpl-hdr">
+      <span class="tmpl-hdr-title">📋 TIME REPORTS</span>
+      <button class="btn btn-ghost btn-sm" onclick="closeTimeReports()">✕</button>
+    </div>
+    <div class="tmpl-body" style="overflow-y:auto;">
+      <!-- Filter bar: week nav + employee picker + view toggle -->
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:14px;">
+        <button class="btn btn-ghost btn-sm" onclick="trShiftWeek(-1)">◀ Prev</button>
+        <div id="trWeekLabel" style="flex:1;min-width:180px;text-align:center;font-weight:600;font-size:13px;letter-spacing:.04em;">—</div>
+        <button class="btn btn-ghost btn-sm" onclick="trShiftWeek(1)">Next ▶</button>
+        <button class="btn btn-ghost btn-sm" onclick="trShiftWeek(0)">This Week</button>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:14px;">
+        <label class="doc-flbl" style="margin:0;align-self:center;">Employee:</label>
+        <select class="finput" id="trEmployeeFilter" style="flex:1;min-width:180px;" onchange="renderTimeReports()">
+          <option value="all">All Employees</option>
+        </select>
+        <label class="doc-flbl" style="margin:0;align-self:center;margin-left:12px;">View:</label>
+        <select class="finput" id="trViewMode" style="width:auto;" onchange="renderTimeReports()">
+          <option value="week">Weekly Timesheet</option>
+          <option value="job">Hours by Job</option>
+          <option value="list">Entry List</option>
+        </select>
+      </div>
+      <!-- Loading / results -->
+      <div id="trBody" style="min-height:200px;">
+        <div style="text-align:center;color:var(--muted);padding:40px;">Loading…</div>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- END Time Reports overlay -->
 
 <div class="tmpl-overlay" id="teamMgrOverlay" onclick="if(event.target===this)closeTeamManager()">
   <div class="tmpl-panel" onclick="event.stopPropagation()" style="max-width:600px;width:90vw;">
