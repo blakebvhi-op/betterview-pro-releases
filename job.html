@@ -306,11 +306,16 @@ function renderContent(data){
   const crew=data.assigned||[];
   const viewerId=data.viewer?.user_id||'anon';
 
-  // Find the linked estimate (job.est_id) + any change orders + work order + material order
-  const estimate=docs.find(d=>d.id===job.est_id) || docs.find(d=>d.type==='estimate');
-  const changeOrders=docs.filter(d=>d.type==='changeorder');
-  const materialOrder=docs.find(d=>d.type==='materialorder');
-  const workOrder=docs.find(d=>d.type==='workorder');
+  // Find the linked estimate, change orders, work order, material order.
+  // Job columns: linked_doc_id (primary, usually the estimate), linked_mo_id (material order).
+  // Change orders / contracts / lien waivers link back via docs.source_est_id pointing
+  // at the estimate's id. Work orders are typed and linked via linked_job_id.
+  const primaryDocId = job.linked_doc_id || null;
+  const materialDocId = job.linked_mo_id || null;
+  const estimate = docs.find(d=>d.id===primaryDocId) || docs.find(d=>d.type==='estimate');
+  const changeOrders = docs.filter(d=>d.type==='changeorder');
+  const materialOrder = docs.find(d=>d.id===materialDocId) || docs.find(d=>d.type==='materialorder');
+  const workOrder = docs.find(d=>d.type==='workorder');
 
   let html='';
 
