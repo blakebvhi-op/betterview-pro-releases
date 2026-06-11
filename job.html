@@ -588,15 +588,234 @@ function renderMaterialTab({job,materialOrder,viewerId}){
   document.getElementById('panelMo').innerHTML=html;
 }
 
-// ── Tab: Time (placeholder until next round) ─────────────
+// ── Tab: Time (real clock-in/out, via SECURITY DEFINER functions) ─
+// Anonymous writes are gated by the crew PIN — same trust model as the
+// rest of the crew page. The PIN is sent on every clock-in/out request
+// and validated server-side. RPC functions:
+//   crew_clock_in(p_pin, p_job_id)
+//   crew_clock_out(p_pin, p_entry_id)
+//   crew_get_my_entries(p_pin, p_job_id)
+//
+// Behavior:
+//   - Clock In auto-clocks-out any other open entry (job switching)
+//   - Open entries on a different job show as a warning banner
+//   - Today's entries on THIS job render as a list with durations
+//   - Live ticking timer + tab badge update every second when clocked in
+
+let timeState = {
+  jobId: null,
+  pin: null,
+  myEntries: [],          // entries on THIS job (last 30 days)
+  openHere: null,          // currently-open entry on this job
+  openElsewhere: null,     // currently-open entry on a different job
+  tickInterval: null,      // setInterval id
+};
+
 function renderTimeTab({job,viewerId}){
+  timeState.jobId = job.id;
+  timeState.pin = sessionStorage.getItem('bvJobPin') || '';
+  // Initial paint
+  document.getElementById('panelTime').innerHTML=`
+    <div class="card"><h2>Time Tracking</h2>
+      <div id="timeBody"><div class="loading">Loading…</div></div>
+    </div>`;
+  // Fetch entries + render
+  refreshTimeEntries();
+}
+
+async function refreshTimeEntries(){
+  if(!timeState.pin || !timeState.jobId) return;
+  try{
+    const r=await fetch(SB_URL+'/rest/v1/rpc/crew_get_my_entries',{
+      method:'POST',
+      headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY,'Content-Type':'application/json'},
+      body:JSON.stringify({p_pin:timeState.pin, p_job_id:timeState.jobId})
+    });
+    if(!r.ok){
+      document.getElementById('timeBody').innerHTML='<div class="error-box">Failed to load time entries. '+r.status+'</div>';
+      return;
+    }
+    const data=await r.json();
+    if(!data.ok){
+      document.getElementById('timeBody').innerHTML='<div class="error-box">'+esc(data.error||'unknown error')+'</div>';
+      return;
+    }
+    timeState.myEntries = data.entries || [];
+    timeState.openHere = timeState.myEntries.find(e=>!e.clock_out) || null;
+    timeState.openElsewhere = data.open_other || null;
+    renderTimePanel();
+    // Start or stop the live tick depending on whether we're clocked in here
+    if(timeState.openHere) startTimeTicker(); else stopTimeTicker();
+  }catch(e){
+    document.getElementById('timeBody').innerHTML='<div class="error-box">Error: '+esc(e.message||e)+'</div>';
+  }
+}
+
+function renderTimePanel(){
+  const body=document.getElementById('timeBody');
+  if(!body) return;
   let html='';
-  html+='<div class="card"><h2>Time Tracking</h2>';
-  html+='<div class="time-clock-section">';
-  html+='<strong>Coming Soon</strong>';
-  html+='Clock in/out from this page is in development.<br>For now, use the main app on your phone to clock in.';
-  html+='</div></div>';
-  document.getElementById('panelTime').innerHTML=html;
+
+  // Warning if clocked in to a different job
+  if(timeState.openElsewhere){
+    const o=timeState.openElsewhere;
+    const since=new Date(o.clock_in).toLocaleString('en-US',{
+      hour:'numeric',minute:'2-digit',hour12:true,
+      month:'short',day:'numeric'
+    });
+    html+='<div style="background:rgba(245,158,11,.08);border:1px solid rgba(245,158,11,.3);border-radius:6px;padding:10px 12px;margin-bottom:14px;font-size:12px;color:var(--amber);">';
+    html+='<strong>⚠ You\'re already on the clock</strong><br>';
+    html+='<span style="color:#cfd6e0;">Started '+esc(since)+(o.job_id?' on a different job':' (no job)')+'. Clocking in here will switch you.</span>';
+    html+='</div>';
+  }
+
+  // Main Clock button
+  if(timeState.openHere){
+    const since=new Date(timeState.openHere.clock_in);
+    html+='<div style="text-align:center;padding:14px 0;">';
+    html+='<div style="font-size:11px;color:var(--muted);letter-spacing:.12em;text-transform:uppercase;margin-bottom:6px;">Clocked in since</div>';
+    html+='<div style="font-size:14px;color:var(--ink);margin-bottom:4px;">'+esc(fmtTimeOfDay(since))+'</div>';
+    html+='<div id="timeLiveTimer" style="font-size:32px;font-weight:700;color:var(--green);font-variant-numeric:tabular-nums;letter-spacing:.04em;margin-bottom:14px;">'+fmtDuration(Date.now()-since.getTime())+'</div>';
+    html+='<button class="pin-btn" style="background:var(--rose);color:#fff;" onclick="doClockOut()">⏹ Clock Out</button>';
+    html+='</div>';
+  }else{
+    html+='<div style="text-align:center;padding:14px 0;">';
+    html+='<div style="font-size:13px;color:var(--muted);margin-bottom:12px;">Not currently clocked in to this job.</div>';
+    html+='<button class="pin-btn" onclick="doClockIn()">⏱ Clock In</button>';
+    html+='</div>';
+  }
+
+  // Today's / recent entries list (only completed ones, plus the current open one already shown above)
+  const past = timeState.myEntries.filter(e=>e.clock_out);
+  if(past.length>0){
+    html+='<div style="margin-top:18px;border-top:1px solid var(--line2);padding-top:14px;">';
+    html+='<div style="font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;font-weight:600;">Recent entries (this job)</div>';
+    past.slice(0,20).forEach(e=>{
+      const ci=new Date(e.clock_in), co=new Date(e.clock_out);
+      const dur=fmtDuration(co.getTime()-ci.getTime());
+      html+='<div style="display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.04);font-size:12px;">';
+      html+='<span>'+esc(fmtDateShort(ci))+' · '+esc(fmtTimeOfDay(ci))+' → '+esc(fmtTimeOfDay(co))+'</span>';
+      html+='<span style="color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums;">'+esc(dur)+'</span>';
+      html+='</div>';
+    });
+    html+='</div>';
+  }
+
+  body.innerHTML=html;
+  updateTimeTabBadge();
+}
+
+// Live timer tick — updates the visible timer AND the tab badge every second
+function startTimeTicker(){
+  stopTimeTicker(); // ensure no duplicate timers
+  timeState.tickInterval = setInterval(()=>{
+    if(!timeState.openHere){ stopTimeTicker(); return; }
+    const elapsed = Date.now() - new Date(timeState.openHere.clock_in).getTime();
+    const liveEl = document.getElementById('timeLiveTimer');
+    if(liveEl) liveEl.textContent = fmtDuration(elapsed);
+    updateTimeTabBadge();
+  }, 1000);
+}
+function stopTimeTicker(){
+  if(timeState.tickInterval){
+    clearInterval(timeState.tickInterval);
+    timeState.tickInterval = null;
+  }
+}
+
+// Show live elapsed time on the Time tab label so the crew member can see
+// they're on the clock even when looking at other tabs.
+function updateTimeTabBadge(){
+  const tab = document.querySelector('.tab[data-tab="time"]');
+  if(!tab) return;
+  if(timeState.openHere){
+    const elapsed = Date.now() - new Date(timeState.openHere.clock_in).getTime();
+    tab.innerHTML = '⏱ Time <span class="tab-count" style="background:var(--green);color:#0a0c10;">'+fmtDurationShort(elapsed)+'</span>';
+  }else{
+    tab.innerHTML = '⏱ Time';
+  }
+}
+
+async function doClockIn(){
+  if(!timeState.pin || !timeState.jobId) return;
+  const btn = document.querySelector('#panelTime .pin-btn');
+  if(btn){ btn.disabled=true; btn.textContent='Clocking in…'; }
+  try{
+    const r=await fetch(SB_URL+'/rest/v1/rpc/crew_clock_in',{
+      method:'POST',
+      headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY,'Content-Type':'application/json'},
+      body:JSON.stringify({p_pin:timeState.pin, p_job_id:timeState.jobId})
+    });
+    if(!r.ok){
+      const t=await r.text();
+      alert('Clock in failed: '+r.status+' '+t.slice(0,160));
+      if(btn){ btn.disabled=false; btn.textContent='⏱ Clock In'; }
+      return;
+    }
+    const data=await r.json();
+    if(!data.ok){
+      alert('Clock in failed: '+(data.error||'unknown'));
+      if(btn){ btn.disabled=false; btn.textContent='⏱ Clock In'; }
+      return;
+    }
+    // Refresh from server so we have the canonical entry list
+    await refreshTimeEntries();
+  }catch(e){
+    alert('Network error: '+e.message);
+    if(btn){ btn.disabled=false; btn.textContent='⏱ Clock In'; }
+  }
+}
+
+async function doClockOut(){
+  if(!timeState.pin || !timeState.openHere) return;
+  const btn = document.querySelector('#panelTime .pin-btn');
+  if(btn){ btn.disabled=true; btn.textContent='Clocking out…'; }
+  try{
+    const r=await fetch(SB_URL+'/rest/v1/rpc/crew_clock_out',{
+      method:'POST',
+      headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY,'Content-Type':'application/json'},
+      body:JSON.stringify({p_pin:timeState.pin, p_entry_id:timeState.openHere.id})
+    });
+    if(!r.ok){
+      const t=await r.text();
+      alert('Clock out failed: '+r.status+' '+t.slice(0,160));
+      if(btn){ btn.disabled=false; btn.textContent='⏹ Clock Out'; }
+      return;
+    }
+    const data=await r.json();
+    if(!data.ok){
+      alert('Clock out failed: '+(data.error||'unknown'));
+      if(btn){ btn.disabled=false; btn.textContent='⏹ Clock Out'; }
+      return;
+    }
+    await refreshTimeEntries();
+  }catch(e){
+    alert('Network error: '+e.message);
+    if(btn){ btn.disabled=false; btn.textContent='⏹ Clock Out'; }
+  }
+}
+
+// ── Time formatting helpers ──────────────────────────────────────
+function fmtDuration(ms){
+  if(!ms || ms<0) return '0:00:00';
+  const total = Math.floor(ms/1000);
+  const h = Math.floor(total/3600);
+  const m = Math.floor((total%3600)/60);
+  const s = total%60;
+  return h+':'+String(m).padStart(2,'0')+':'+String(s).padStart(2,'0');
+}
+function fmtDurationShort(ms){
+  if(!ms || ms<0) return '0:00';
+  const total = Math.floor(ms/60000);
+  const h = Math.floor(total/60);
+  const m = total%60;
+  return h+':'+String(m).padStart(2,'0');
+}
+function fmtTimeOfDay(d){
+  return d.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',hour12:true});
+}
+function fmtDateShort(d){
+  return d.toLocaleDateString('en-US',{month:'short',day:'numeric'});
 }
 
 // ── Generic check toggle (used by both scope-items and mat-items) ──
