@@ -5392,12 +5392,8 @@ function renderCustomers(){
   const bulkBtn=document.getElementById('leadBulkBtn');
   if(bulkBtn) bulkBtn.style.display='none';
 
-  // Wire the search input to customer search
-  const searchInput=document.getElementById('leadSearch');
-  if(searchInput && !searchInput._customerWired){
-    searchInput.addEventListener('input',()=>{customerSearchQuery=searchInput.value;renderCustomers();});
-    searchInput._customerWired=true;
-  }
+  // (Search input is wired by the main IIFE handler — it routes to renderCustomers
+  // when mainView==='crm'. No second handler needed here.)
 
   // Filter & sort
   let filtered=activeCustomers.slice();
@@ -5552,7 +5548,10 @@ function renderCustomerDetail(c){
                 <span style="font-size:10px;color:var(--muted)">${date}</span>
               </div>
             </div>
-            <div style="font-weight:700;font-size:14px;color:var(--ink-bright,#fff)">${val}</div>
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px">
+              <div style="font-weight:700;font-size:14px;color:var(--ink-bright,#fff)">${val}</div>
+              <button class="btn btn-ghost" onclick="event.stopPropagation();deleteEstimateFromCustomer('${l.id}')" style="font-size:10px;padding:2px 8px;color:var(--red,#ef4444);opacity:.6" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=.6" title="Delete estimate">🗑</button>
+            </div>
           </div>
         </div>`;
       }).join('');
@@ -5674,6 +5673,42 @@ function createEstimateForCustomer(customerId){
   closeCustomerDetail();
   if(typeof openLeadMov==='function') openLeadMov(newLeadId);
 }
+
+// Delete an estimate (lead) from inside the customer detail view.
+// Confirms, removes from in-memory state, cleans up estimate_tags + tasks,
+// then deletes from remote and re-renders.
+async function deleteEstimateFromCustomer(leadId){
+  const l=leads.find(x=>x.id===leadId);
+  if(!l){return;}
+  const desc=l.notes?l.notes.substring(0,50):(l.name||'this estimate');
+  if(!confirm(`Delete this estimate?\n\n"${desc}"\n\nThis cannot be undone.`)) return;
+
+  const customerId=l.customer_id;
+
+  // Local cleanup: estimate_tags linked to this lead
+  // (DB cascade handles it via FK, but in-memory state needs explicit cleanup)
+  estimateTags=estimateTags.filter(et=>et.lead_id!==leadId);
+  // Unlink any tasks pointing at this lead — don't delete the task, just orphan the pointer
+  if(Array.isArray(tasks)){
+    tasks.forEach(t=>{if(t.leadId===leadId){t.leadId=null;try{saveTaskSync(t);}catch(e){}}});
+    try{saveTasksCache();}catch(e){}
+  }
+  // Remove the lead from memory
+  leads=leads.filter(x=>x.id!==leadId);
+
+  // Remote delete (existing function — handles cache + remote DB)
+  try{await delLead(leadId);}
+  catch(e){console.error('deleteEstimateFromCustomer remote:',e);alert('Delete failed on the server. Refresh to see if it persisted.');return;}
+
+  // Re-render the customer detail (estimates list refreshes)
+  if(customerId){
+    const c=customers.find(x=>x.id===customerId);
+    if(c) renderCustomerDetail(c);
+  }
+  // Re-render the customer list so rollup stage + counts update
+  if(mainView==='crm') renderCustomers();
+}
+
 // Open a "new customer" modal. Includes phone-match suggestion: as you
 // type a phone, we look for existing customers with the same normalized
 // phone and prompt to use the existing record instead.
@@ -7316,26 +7351,46 @@ async function bulkDelete(){
       tt.dataset.wired='1';
       tt.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();saveTaskFromMov();}});
     }
-    // Lead search bar
+    // Lead search bar — handles BOTH the (now-legacy) leads view AND the
+    // new customers view. The right render function is picked based on
+    // mainView at fire-time, and only ONE search-query variable is updated
+    // per render context (leadSearchQuery for any old paths, customerSearchQuery for customer view).
     const ls=document.getElementById('leadSearch');
     if(ls&&!ls.dataset.wired){
       ls.dataset.wired='1';
       const bar=document.querySelector('.lead-search-bar');
       let timer=null;
       ls.addEventListener('input',()=>{
+        // Mirror to BOTH state variables so whichever renderer reads its own
+        // gets the right value
         leadSearchQuery=ls.value;
+        customerSearchQuery=ls.value;
         if(bar) bar.classList.toggle('has-query',!!ls.value);
-        // Debounce slightly to avoid re-rendering on every keystroke for huge lists
         clearTimeout(timer);
-        timer=setTimeout(()=>{if(mainView==='crm') renderCRM();},80);
+        timer=setTimeout(()=>{
+          // Only call the renderer for the CURRENTLY-VISIBLE view.
+          // This is what was bugged before — typing in the search box would
+          // trigger renderCRM (the old leads renderer) and flip the UI.
+          if(mainView==='crm' && typeof renderCustomers==='function') renderCustomers();
+        },80);
       });
-      ls.addEventListener('keydown',e=>{if(e.key==='Escape'){ls.value='';leadSearchQuery='';if(bar)bar.classList.remove('has-query');if(mainView==='crm')renderCRM();}});
+      ls.addEventListener('keydown',e=>{
+        if(e.key==='Escape'){
+          ls.value='';
+          leadSearchQuery='';
+          customerSearchQuery='';
+          if(bar)bar.classList.remove('has-query');
+          if(mainView==='crm' && typeof renderCustomers==='function') renderCustomers();
+        }
+      });
       const clr=document.getElementById('leadSearchClear');
       if(clr) clr.addEventListener('click',()=>{
-        ls.value='';leadSearchQuery='';
+        ls.value='';
+        leadSearchQuery='';
+        customerSearchQuery='';
         if(bar) bar.classList.remove('has-query');
         ls.focus();
-        if(mainView==='crm') renderCRM();
+        if(mainView==='crm' && typeof renderCustomers==='function') renderCustomers();
       });
     }
   };
