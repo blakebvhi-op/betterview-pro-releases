@@ -5283,6 +5283,33 @@ function customerPipelineValue(c){
     .filter(l=>l.stage!=='declined')
     .reduce((sum,l)=>sum+Number(l.value||0),0);
 }
+
+// Customer-level stage rollup. Returns a STAGES entry that summarizes the
+// customer's most-important estimate stage. Priority order:
+//   active work (accepted/invoiced/paid for active flag) > quoting > contacted > new > declined-only/done > none
+// We compute it based on what the customer has across ALL their estimates.
+// Returns null if the customer has no estimates.
+function customerRollupStage(c){
+  const customerLeads=leadsForCustomer(c.id);
+  if(customerLeads.length===0) return null;
+  const stages=new Set(customerLeads.map(l=>l.stage));
+  // Active job (currently working on this customer) — anything accepted/invoiced means work is in progress
+  if(stages.has('accepted')) return STAGES.find(s=>s.id==='accepted');
+  if(stages.has('invoiced')) return STAGES.find(s=>s.id==='invoiced');
+  // Quoting — actively trying to win their business
+  if(stages.has('quote'))    return STAGES.find(s=>s.id==='quote');
+  // Contact — early-stage opportunity
+  if(stages.has('contact'))  return STAGES.find(s=>s.id==='contact');
+  // New — fresh lead, not yet contacted
+  if(stages.has('new'))      return STAGES.find(s=>s.id==='new');
+  // Paid — completed work, no active opportunity (treated as "past customer" but with the paid badge)
+  if(stages.has('paid'))     return STAGES.find(s=>s.id==='paid');
+  // Done — completed work (older completion marker)
+  if(stages.has('done'))     return STAGES.find(s=>s.id==='done');
+  // Only declined estimates left
+  if(stages.has('declined')) return STAGES.find(s=>s.id==='declined');
+  return null;
+}
 // Helper: format phone for display (basic — turns 10 digits into (XXX) XXX-XXXX)
 function formatPhone(p){
   if(!p) return '';
@@ -5326,7 +5353,35 @@ function renderCustomers(){
 
   // Hide the stage filter tabs (#stabs) — stages are estimate-level now
   const stabs=document.getElementById('stabs');
-  if(stabs) stabs.style.display='none';
+  if(stabs){
+    // Re-show and populate with customer-rollup counts. We tally how many
+    // customers fall into each stage based on customerRollupStage().
+    stabs.style.display='';
+    stabs.innerHTML='';
+    const rollupCounts={};
+    for(const c of activeCustomers){
+      const r=customerRollupStage(c);
+      const key=r?r.id:'_no_estimates';
+      rollupCounts[key]=(rollupCounts[key]||0)+1;
+    }
+    // ALL pill
+    const allB=document.createElement('button');
+    allB.className='stab'+(activeStageFilter==='all'?' active':'');
+    allB.style.setProperty('--sc','var(--amber)');
+    allB.innerHTML=`<div class="stabdot" style="background:var(--amber)"></div>ALL (${activeCustomers.length})`;
+    allB.onclick=()=>{activeStageFilter='all';renderCustomers();};
+    stabs.appendChild(allB);
+    // One pill per stage that has at least one customer
+    STAGES.forEach(s=>{
+      const cnt=rollupCounts[s.id]||0;
+      if(cnt===0 && activeStageFilter!==s.id) return; // hide empty stages
+      const b=document.createElement('button');
+      b.className=`stab ${s.cls}`+(activeStageFilter===s.id?' active':'');
+      b.innerHTML=`<div class="stabdot" style="background:${s.color}"></div>${s.label} (${cnt})`;
+      b.onclick=()=>{activeStageFilter=s.id;renderCustomers();};
+      stabs.appendChild(b);
+    });
+  }
   // Hide the assigned-to filter (it operated on leads.assigned_to; for customer view we'd need a different lens)
   const assignedFil=document.getElementById('leadAssignedFilter');
   if(assignedFil) assignedFil.style.display='none';
@@ -5346,6 +5401,13 @@ function renderCustomers(){
 
   // Filter & sort
   let filtered=activeCustomers.slice();
+  // Stage filter (rollup-based)
+  if(activeStageFilter!=='all'){
+    filtered=filtered.filter(c=>{
+      const r=customerRollupStage(c);
+      return r && r.id===activeStageFilter;
+    });
+  }
   const q=(customerSearchQuery||'').trim().toLowerCase();
   if(q){
     filtered=filtered.filter(c=>{
@@ -5385,6 +5447,8 @@ function customerCard(c){
   const cTags=tagsForCustomer(c.id);
   const pipeValue=customerPipelineValue(c);
   const phone=formatPhone(c.phone);
+  // Customer stage rollup — the at-a-glance stage indicator
+  const rollupStage=customerRollupStage(c);
   // Latest stage across customer's leads (for a visual hint)
   const stageSummary=customerLeads.length===0
     ? 'No estimates yet'
@@ -5397,10 +5461,17 @@ function customerCard(c){
   const addrLine=primary
     ? `${esc(primary.street||'')}${primary.city?', '+esc(primary.city):''}${primary.state?', '+esc(primary.state):''}`
     : '<span style="color:var(--muted);font-style:italic">No address on file</span>';
-  return `<div class="lead-card cust-card" onclick="openCustomerDetail('${c.id}')" data-customer-id="${c.id}">
+  // Left border color = the rollup stage's color (or default if no estimates)
+  const borderColor=rollupStage ? rollupStage.color : 'var(--iron)';
+  // Stage badge (only shown if customer has estimates)
+  const stageBadge=rollupStage
+    ? `<span class="lbadge ${rollupStage.cls}" style="font-size:10px;font-weight:700;letter-spacing:.08em">${rollupStage.label}</span>`
+    : '';
+  return `<div class="lead-card cust-card ${rollupStage?rollupStage.cls:''}" onclick="openCustomerDetail('${c.id}')" data-customer-id="${c.id}" style="border-left:3px solid ${borderColor}">
     <div class="lead-card-main">
       <div class="cust-name-row">
         <span class="lead-name">${esc(c.name||'(unnamed)')}</span>
+        ${stageBadge}
         ${cTags.length>0?`<span class="cust-tags">${tagChips}</span>`:''}
       </div>
       <div class="cust-contact-row">
