@@ -273,6 +273,26 @@ header{position:fixed;top:0;left:0;right:0;z-index:50;height:var(--hh);display:f
 .lcacts{display:flex;gap:4px;margin-top:8px;flex-wrap:wrap;}
 .abanner{background:linear-gradient(135deg,rgba(34,197,94,.15),rgba(34,197,94,.05));border:1px solid rgba(34,197,94,.3);border-radius:5px;padding:5px 9px;margin-top:6px;font-size:10px;color:var(--green);display:flex;align-items:center;gap:5px;}
 .lempty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px 24px;gap:12px;text-align:center;}
+
+/* ── CUSTOMER CARDS (Phase 3 — replaces lead cards on CRM tab) ── */
+.cust-card{padding:14px 16px;border:1px solid var(--iron);border-radius:10px;background:var(--bg-card,#1a1c20);margin-bottom:8px;cursor:pointer;transition:border-color .12s,transform .12s;}
+.cust-card:hover{border-color:var(--amber);transform:translateY(-1px);}
+.cust-name-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px;}
+.cust-name-row .lead-name{font-size:15px;font-weight:700;color:var(--ink-bright,#fff);letter-spacing:-.01em;}
+.cust-tags{display:inline-flex;gap:4px;flex-wrap:wrap;}
+.cust-tag{font-size:10px;padding:2px 8px;border-radius:100px;border:1px solid currentColor;font-weight:600;letter-spacing:.04em;}
+.cust-contact-row{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--ink,#d8d4c4);margin-bottom:4px;}
+.cust-phone,.cust-email{display:inline-flex;align-items:center;gap:4px;}
+.cust-addr-row{font-size:12px;color:var(--muted);margin-bottom:6px;}
+.cust-meta-row{display:flex;gap:14px;align-items:center;font-size:11px;color:var(--muted);margin-top:6px;padding-top:6px;border-top:1px solid var(--iron);}
+.cust-est-count{font-weight:600;color:var(--ink,#d8d4c4);}
+.cust-pipe-val{color:var(--amber);font-weight:600;font-variant-numeric:tabular-nums;}
+/* Customer detail modal */
+.cust-sec-label{font-size:10px;font-weight:700;letter-spacing:.18em;color:var(--muted);text-transform:uppercase;margin-bottom:8px;}
+.cust-stat-box{background:var(--bg-soft,#13151a);border:1px solid var(--iron);border-radius:8px;padding:10px 12px;text-align:center;}
+.cust-stat-label{font-size:9px;font-weight:700;letter-spacing:.18em;color:var(--muted);text-transform:uppercase;margin-bottom:2px;}
+.cust-stat-num{font-size:18px;font-weight:700;color:var(--ink-bright,#fff);font-variant-numeric:tabular-nums;}
+.cust-tag-x:hover{opacity:.6;}
 .stage-new{--sc:#3b82f6;}.stage-contact{--sc:#a855f7;}.stage-quote{--sc:#f59e0b;}.stage-accepted{--sc:#22c55e;}.stage-invoiced{--sc:#0ea5e9;}.stage-paid{--sc:#10b981;}.stage-declined{--sc:#ef4444;}.stage-done{--sc:#14b8a6;}
 /* Invoiced/Paid badges — independent of stage so a card can show both */
 .invoiced-badge{background:rgba(14,165,233,.12)!important;color:#0ea5e9!important;border:1px solid rgba(14,165,233,.4)!important;font-weight:700;}
@@ -1241,7 +1261,7 @@ body:not(.role-owner):not(.role-manager) .role-financial-only{display:none!impor
     <span class="sync-lbl" id="syncLbl" onclick="manualResync()" title="Tap to resync"></span>
     <div class="dtabs" id="dtabs">
       <button class="dtab active" id="dtSched" onclick="switchMain('sched')">📅 SCHEDULE <span class="dbadge" id="dtBlBadge">0</span></button>
-      <button class="dtab" id="dtCRM" onclick="switchMain('crm')">📋 LEADS <span class="dbadge" id="dtCrmBadge">0</span></button>
+      <button class="dtab" id="dtCRM" onclick="switchMain('crm')">👥 CUSTOMERS <span class="dbadge" id="dtCrmBadge">0</span></button>
       <button class="dtab" id="dtEst" onclick="switchMain('est')">📄 ESTIMATES</button>
       <button class="dtab" id="dtTasks" onclick="switchMain('tasks')">✓ TASKS <span class="dbadge" id="dtTasksBadge">0</span></button>
       <button class="dtab" id="dtMat" onclick="switchMain('mat')">🏗 MATERIALS</button>
@@ -1259,7 +1279,7 @@ body:not(.role-owner):not(.role-manager) .role-financial-only{display:none!impor
     <div class="bnbadge" id="bnBlBadge"></div>
   </button>
   <button class="bnbtn" id="bnCRM" onclick="switchMain('crm')">
-    <div class="bnicon">📋</div><div class="bnlbl">LEADS</div>
+    <div class="bnicon">👥</div><div class="bnlbl">CUSTOMERS</div>
     <div class="bnbadge" id="bnCrmBadge"></div>
   </button>
   <button class="bnbtn" id="bnEst" onclick="switchMain('est')">
@@ -1478,7 +1498,7 @@ body:not(.role-owner):not(.role-manager) .role-financial-only{display:none!impor
     </div>
     <div class="lead-search-bar">
       <span class="lead-search-icon">🔍</span>
-      <input type="search" id="leadSearch" class="lead-search-input" placeholder="Search by name, phone, email, or address…" autocomplete="off"/>
+      <input type="search" id="leadSearch" class="lead-search-input" placeholder="Search customer name, phone, email, or address…" autocomplete="off"/>
       <button type="button" class="lead-search-clear" id="leadSearchClear" title="Clear">×</button>
       <select id="leadSortSelect" class="lead-sort-select" onchange="setLeadSort(this.value)" title="Sort">
         <option value="default">↕ Default order</option>
@@ -1487,6 +1507,7 @@ body:not(.role-owner):not(.role-manager) .role-financial-only{display:none!impor
         <option value="name_asc">A–Z by name</option>
       </select>
       <button type="button" class="btn btn-ghost btn-sm" id="leadBulkBtn" onclick="toggleLeadBulkMode()" title="Select multiple to delete" style="flex-shrink:0">✏️ Edit</button>
+      <button type="button" class="btn btn-ghost btn-sm" id="custTagLibBtn" onclick="openTagLibrary()" title="Manage tag library" style="flex-shrink:0">🏷 Tags</button>
     </div>
     <!-- Assigned-to filter pills — owner/manager see all 3, employees only see 'mine' (rest is forced by RLS) -->
     <div class="sched-sub-filter" id="leadAssignedFilter">
@@ -3772,7 +3793,8 @@ function lsGet(key,fallback=[]){try{const v=localStorage.getItem(key);return v?J
 function lsSet(key,val){try{localStorage.setItem(key,JSON.stringify(val));}catch{}}
 
 // ── DEBOUNCED SAVE QUEUE ──────────────────────────────────────
-const saveQueue={jobs:{},leads:{},docs:{},templates:{},tasks:{}};
+const saveQueue={jobs:{},leads:{},docs:{},templates:{},tasks:{},
+  customers:{},customer_addresses:{},tags:{},customer_tags:{},estimate_tags:{}};
 const saveTimers={jobs:{},leads:{},docs:{},templates:{},tasks:{}};
 // Persistent queue of saves that haven't reached Supabase yet. Survives
 // reload. Each entry = {table, id, item, attempts, firstQueued}.
@@ -3863,6 +3885,12 @@ function flushSaveQueue(){
   flush('docs',{...saveQueue.docs});
   flush('templates',{...saveQueue.templates});
   flush('tasks',{...saveQueue.tasks});
+  // Customer/tag entities (added Phase 3)
+  flush('customers',{...saveQueue.customers});
+  flush('customer_addresses',{...saveQueue.customer_addresses});
+  flush('tags',{...saveQueue.tags});
+  flush('customer_tags',{...saveQueue.customer_tags});
+  flush('estimate_tags',{...saveQueue.estimate_tags});
 }
 
 // Try every persisted pending save. Returns {ok, fail}.
@@ -4004,6 +4032,14 @@ const MOS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','De
 
 // ── STATE ────────────────────────────────────────────────────
 let jobs=[],leads=[];
+// Customer entity (added in Phase 3 refactor) — leads still exist but
+// now reference customers via leads.customer_id. customers is the spine.
+let customers=[];          // {id, name, phone, phone_normalized, email, notes, source, archived_at, ...}
+let customerAddresses=[];  // {id, customer_id, kind, street, city, state, zip, is_primary, label}
+// Tag system — see tags-phase1-schema.sql
+let tags=[];               // {id, name, color, kind, archived_at}
+let customerTags=[];       // {id, customer_id, tag_id}
+let estimateTags=[];       // {id, lead_id, tag_id}
 let calView='week';       // 'week' | 'month' | 'year'
 let weekOffset=0;
 let monthYear=new Date().getFullYear(), monthMonth=new Date().getMonth();
@@ -4580,7 +4616,13 @@ let _pendingJobLinkType=null; // 'wo' or 'mo'
 // the link, enters their PIN, and sees the job's scope/materials.
 async function copyCrewLink(){
   if(!editJobId){alert('Save the job first to get a crew link.');return;}
-  const link='https://sign.betterview.homes/job.html?id='+encodeURIComponent(editJobId);
+  // Append a timestamp query param so each generated link has a unique URL.
+  // Browsers treat URLs with different query strings as different resources,
+  // forcing a fresh fetch instead of serving a stale cached job.html. This
+  // ensures crew members ALWAYS get the latest version when you re-send a
+  // link, even if their phone has the old job.html cached.
+  const v=Math.floor(Date.now()/1000);
+  const link='https://sign.betterview.homes/job.html?id='+encodeURIComponent(editJobId)+'&v='+v;
   let copied=false;
   if(navigator.clipboard && navigator.clipboard.writeText){
     try{await navigator.clipboard.writeText(link);copied=true;}catch{}
@@ -4610,6 +4652,67 @@ async function delDocRemote(id){try{await sb.del('docs',id);}catch(e){console.er
 async function delTmplRemote(id){try{await sb.del('templates',id);}catch(e){console.error('Template delete failed:',e);}}
 async function delJob(id){setSS('syncing','Deleting…');delete saveQueue.jobs[id];lsSet('jobs_cache',jobs.map(jobToDb));try{await sb.del('jobs',id);setSS('synced','Done ✓');setTimeout(()=>document.getElementById('syncLbl').textContent='',2000);}catch(e){setSS('error','Delete failed');}}
 async function delLead(id){setSS('syncing','Deleting…');delete saveQueue.leads[id];lsSet('leads_cache',leads.map(leadToDb));try{await sb.del('leads',id);setSS('synced','Done ✓');setTimeout(()=>document.getElementById('syncLbl').textContent='',2000);}catch(e){setSS('error','Delete failed');}}
+
+// ── CUSTOMER / TAG DATA HELPERS (Phase 3) ────────────────────
+// Save helpers — same pattern as the existing queueSave-based saves.
+// These tables don't have the dbToX/xToDb conversion layer; their column
+// shape is already what the JS uses, so we save objects directly.
+function saveCustomer(c){setSS('syncing','Saving…');queueSave('customers',c);}
+function saveCustomerAddress(a){setSS('syncing','Saving…');queueSave('customer_addresses',a);}
+function saveTag(t){setSS('syncing','Saving…');queueSave('tags',t);}
+function saveCustomerTag(ct){setSS('syncing','Saving…');queueSave('customer_tags',ct);}
+function saveEstimateTag(et){setSS('syncing','Saving…');queueSave('estimate_tags',et);}
+
+// Delete helpers — straight remote deletes (no in-memory queue lookup needed
+// since we re-fetch on next render for the entities the user can edit)
+async function delCustomerTag(id){
+  customerTags=customerTags.filter(ct=>ct.id!==id);
+  try{await sb.del('customer_tags',id);}catch(e){console.error('delCustomerTag:',e);}
+}
+async function delEstimateTag(id){
+  estimateTags=estimateTags.filter(et=>et.id!==id);
+  try{await sb.del('estimate_tags',id);}catch(e){console.error('delEstimateTag:',e);}
+}
+async function delTagRemote(id){
+  // Tag deletion cascades to customer_tags / estimate_tags via FK ON DELETE CASCADE.
+  tags=tags.filter(t=>t.id!==id);
+  customerTags=customerTags.filter(ct=>ct.tag_id!==id);
+  estimateTags=estimateTags.filter(et=>et.tag_id!==id);
+  try{await sb.del('tags',id);}catch(e){console.error('delTagRemote:',e);}
+}
+
+// Fetch from remote — called from loadAppData() during init.
+// Returns true on success, false on error (so caller can decide UI behavior).
+async function loadCustomersRemote(){
+  try{
+    customers=await sb.get('customers');
+    return true;
+  }catch(e){console.error('loadCustomersRemote:',e);return false;}
+}
+async function loadCustomerAddressesRemote(){
+  try{
+    customerAddresses=await sb.get('customer_addresses');
+    return true;
+  }catch(e){console.error('loadCustomerAddressesRemote:',e);return false;}
+}
+async function loadTagsRemote(){
+  try{
+    tags=await sb.get('tags');
+    return true;
+  }catch(e){console.error('loadTagsRemote:',e);return false;}
+}
+async function loadCustomerTagsRemote(){
+  try{
+    customerTags=await sb.get('customer_tags');
+    return true;
+  }catch(e){console.error('loadCustomerTagsRemote:',e);return false;}
+}
+async function loadEstimateTagsRemote(){
+  try{
+    estimateTags=await sb.get('estimate_tags');
+    return true;
+  }catch(e){console.error('loadEstimateTagsRemote:',e);return false;}
+}
 
 // ── INIT ─────────────────────────────────────────────────────
 async function init(){
@@ -4669,7 +4772,10 @@ async function loadAppData(){
   // in the PWA — see loadDocs() comment). loadDocs() now just clears the array
   // and sweeps any stale cache. loadDocsRemote() does the real load from Supabase.
   loadDocs();loadTemplates();loadTasks();loadTeam();
-  Promise.all([loadDocsRemote(),loadTemplatesRemote(),loadTasksRemote()]).then(([dOk,tOk,tasksOk])=>{
+  Promise.all([loadDocsRemote(),loadTemplatesRemote(),loadTasksRemote(),
+               loadCustomersRemote(),loadCustomerAddressesRemote(),
+               loadTagsRemote(),loadCustomerTagsRemote(),loadEstimateTagsRemote()
+  ]).then(([dOk,tOk,tasksOk])=>{
     // Always re-render the estimates list when docs come back from the server,
     // even if the user isn't on the Estimates view yet. switchMain('est') won't
     // re-fetch — it just shows the existing DOM — so if we skip the render here
@@ -4706,15 +4812,15 @@ function switchMain(v){
   document.getElementById(viewMap[v]||'vSched').classList.add('active');
   ['bnSched','bnCRM','bnEst','bnMat','bnTasks'].forEach(id=>{const el=document.getElementById(id);if(el)el.classList.toggle('active',id==='bn'+v.charAt(0).toUpperCase()+v.slice(1));});
   ['dtSched','dtCRM','dtEst','dtMat','dtTasks'].forEach(id=>{const el=document.getElementById(id);if(el)el.classList.toggle('active',id==='dt'+v.charAt(0).toUpperCase()+v.slice(1));});
-  const lblMap={sched:'New Job',crm:'New Lead',est:'New Estimate',mat:'Search Materials',tasks:'New Task'};
+  const lblMap={sched:'New Job',crm:'New Customer',est:'New Estimate',mat:'Search Materials',tasks:'New Task'};
   document.getElementById('daddLbl').textContent=lblMap[v]||'New';
   document.getElementById('daddBtn').onclick=
     v==='sched'?()=>openJobMov('backlog'):
-    v==='crm'?()=>openLeadMov():
+    v==='crm'?()=>openCustomerMov():
     v==='est'?()=>openDocEditor():
     v==='tasks'?()=>openTaskMov():
     ()=>document.getElementById('matSearch')?.focus();
-  if(v==='crm')renderCRM();
+  if(v==='crm')renderCustomers();
   else if(v==='sched')renderSched();
   else if(v==='est')renderDocList();
   else if(v==='mat')renderMatView();
@@ -4722,7 +4828,7 @@ function switchMain(v){
 }
 function handleFab(){
   if(mainView==='sched')openJobMov('backlog');
-  else if(mainView==='crm')openLeadMov();
+  else if(mainView==='crm')openCustomerMov();
   else if(mainView==='est')openDocEditor();
   else if(mainView==='tasks')openTaskMov();
 }
@@ -5123,6 +5229,775 @@ function renderCRM(){
   }
   const frag=fil.map(l=>leadCard(l)).join(''); list.innerHTML=frag;
   updateBadges();bindLeadEvents();
+}
+
+// ════════════════════════════════════════════════════════════
+// CUSTOMERS VIEW (Phase 3 — customer entity as source of truth)
+// ════════════════════════════════════════════════════════════
+// Replaces the old leads-list rendering for the CRM tab.
+// Leads still exist underneath; they're now "estimates" attached to customers.
+
+let customerSearchQuery='';
+let customerSortMode='recent';  // 'recent' | 'name_asc' | 'value_desc'
+
+// Helper: get tags applied to a specific customer (returns array of tag objects)
+function tagsForCustomer(customerId){
+  const ids=customerTags.filter(ct=>ct.customer_id===customerId).map(ct=>ct.tag_id);
+  return tags.filter(t=>ids.includes(t.id) && !t.archived_at);
+}
+// Helper: get tags applied to a specific estimate (lead)
+function tagsForEstimate(leadId){
+  const ids=estimateTags.filter(et=>et.lead_id===leadId).map(et=>et.tag_id);
+  return tags.filter(t=>ids.includes(t.id) && !t.archived_at);
+}
+// Helper: get all leads (estimates) for a customer
+function leadsForCustomer(customerId){
+  return leads.filter(l=>l.customer_id===customerId);
+}
+// Helper: get all addresses for a customer
+function addressesForCustomer(customerId){
+  return customerAddresses.filter(a=>a.customer_id===customerId);
+}
+// Helper: most-recent activity timestamp for a customer
+// (uses the latest updated_at across their leads, or customer.updated_at as fallback)
+function customerLastActivity(c){
+  const customerLeads=leadsForCustomer(c.id);
+  if(customerLeads.length===0) return c.updated_at||c.created_at||'';
+  let latest=c.updated_at||c.created_at||'';
+  for(const l of customerLeads){
+    const t=l.updated_at||'';
+    if(t>latest) latest=t;
+  }
+  return latest;
+}
+// Helper: total pipeline value across all the customer's non-declined estimates
+function customerPipelineValue(c){
+  return leadsForCustomer(c.id)
+    .filter(l=>l.stage!=='declined')
+    .reduce((sum,l)=>sum+Number(l.value||0),0);
+}
+// Helper: format phone for display (basic — turns 10 digits into (XXX) XXX-XXXX)
+function formatPhone(p){
+  if(!p) return '';
+  const digits=String(p).replace(/[^0-9]/g,'');
+  if(digits.length===10) return `(${digits.slice(0,3)}) ${digits.slice(3,6)}-${digits.slice(6)}`;
+  if(digits.length===11&&digits.startsWith('1')) return `+1 (${digits.slice(1,4)}) ${digits.slice(4,7)}-${digits.slice(7)}`;
+  return p; // give up — show as-is
+}
+
+function renderCustomers(){
+  // Top stats: customers + their active pipeline numbers
+  const activeCustomers=customers.filter(c=>!c.archived_at);
+  document.getElementById('sTotal').textContent=activeCustomers.length;
+
+  // Active pipeline = customers with at least one non-declined non-paid lead
+  const customersByActivity={};
+  for(const l of leads){
+    if(!l.customer_id) continue;
+    if(!customersByActivity[l.customer_id]) customersByActivity[l.customer_id]={stages:new Set(),value:0};
+    customersByActivity[l.customer_id].stages.add(l.stage);
+    if(l.stage!=='declined') customersByActivity[l.customer_id].value+=Number(l.value||0);
+  }
+  const withAccepted=Object.values(customersByActivity).filter(x=>x.stages.has('accepted')).length;
+  const withQuoting=Object.values(customersByActivity).filter(x=>x.stages.has('quote')).length;
+  const declinedOnly=Object.values(customersByActivity).filter(x=>x.stages.has('declined')&&x.stages.size===1).length;
+  document.getElementById('sAcc').textContent=withAccepted;
+  document.getElementById('sQuote').textContent=withQuoting;
+  document.getElementById('sDec').textContent=declinedOnly;
+  const totalValue=Object.values(customersByActivity).reduce((s,x)=>s+x.value,0);
+  const valBox=document.getElementById('sValBox');
+  if(valBox){valBox.style.display='';document.getElementById('sVal').textContent='$'+totalValue.toLocaleString();}
+
+  // Re-label the stat labels for customer context
+  const statLabels=document.querySelectorAll('#vCRM .csml');
+  if(statLabels.length>=4){
+    statLabels[0].textContent='Customers';
+    statLabels[1].textContent='With Job';
+    statLabels[2].textContent='Quoting';
+    statLabels[3].textContent='Lost';
+  }
+
+  // Hide the stage filter tabs (#stabs) — stages are estimate-level now
+  const stabs=document.getElementById('stabs');
+  if(stabs) stabs.style.display='none';
+  // Hide the assigned-to filter (it operated on leads.assigned_to; for customer view we'd need a different lens)
+  const assignedFil=document.getElementById('leadAssignedFilter');
+  if(assignedFil) assignedFil.style.display='none';
+  // Hide the lead job-type filter
+  const jtFil=document.getElementById('leadJobTypeFilter');
+  if(jtFil) jtFil.style.display='none';
+  // Hide the bulk-edit button (lead-specific)
+  const bulkBtn=document.getElementById('leadBulkBtn');
+  if(bulkBtn) bulkBtn.style.display='none';
+
+  // Wire the search input to customer search
+  const searchInput=document.getElementById('leadSearch');
+  if(searchInput && !searchInput._customerWired){
+    searchInput.addEventListener('input',()=>{customerSearchQuery=searchInput.value;renderCustomers();});
+    searchInput._customerWired=true;
+  }
+
+  // Filter & sort
+  let filtered=activeCustomers.slice();
+  const q=(customerSearchQuery||'').trim().toLowerCase();
+  if(q){
+    filtered=filtered.filter(c=>{
+      const hay=[c.name,c.phone,c.email,c.notes].filter(Boolean).join(' ').toLowerCase();
+      if(hay.includes(q)) return true;
+      // Also search the customer's addresses
+      const addrs=addressesForCustomer(c.id).map(a=>[a.street,a.city,a.state,a.zip,a.label].filter(Boolean).join(' ')).join(' ').toLowerCase();
+      return addrs.includes(q);
+    });
+  }
+  // Sort
+  filtered.sort((a,b)=>{
+    if(customerSortMode==='name_asc'){
+      return (a.name||'').toLowerCase().localeCompare((b.name||'').toLowerCase());
+    }
+    if(customerSortMode==='value_desc'){
+      return customerPipelineValue(b)-customerPipelineValue(a);
+    }
+    // Default: most-recent-activity first
+    return (customerLastActivity(b)||'').localeCompare(customerLastActivity(a)||'');
+  });
+
+  const list=document.getElementById('leadList');
+  list.innerHTML='';
+  if(filtered.length===0){
+    const emptyMsg=q?`No customers match "<strong>${esc(customerSearchQuery)}</strong>".`:'No customers yet.<br>Tap + to add.';
+    list.innerHTML=`<div class="lempty"><div style="font-size:36px;opacity:.3">${q?'🔍':'👥'}</div><div style="font-size:13px;color:var(--muted)">${emptyMsg}</div></div>`;
+    return;
+  }
+  list.innerHTML=filtered.map(customerCard).join('');
+}
+
+function customerCard(c){
+  const customerLeads=leadsForCustomer(c.id);
+  const addresses=addressesForCustomer(c.id);
+  const primary=addresses.find(a=>a.is_primary)||addresses[0];
+  const cTags=tagsForCustomer(c.id);
+  const pipeValue=customerPipelineValue(c);
+  const phone=formatPhone(c.phone);
+  // Latest stage across customer's leads (for a visual hint)
+  const stageSummary=customerLeads.length===0
+    ? 'No estimates yet'
+    : customerLeads.length===1
+      ? '1 estimate'
+      : `${customerLeads.length} estimates`;
+  // Tag chips HTML
+  const tagChips=cTags.map(t=>`<span class="cust-tag" style="background:${t.color}22;color:${t.color};border-color:${t.color}55">${esc(t.name)}</span>`).join('');
+  // Address line (street only — keeps card compact)
+  const addrLine=primary
+    ? `${esc(primary.street||'')}${primary.city?', '+esc(primary.city):''}${primary.state?', '+esc(primary.state):''}`
+    : '<span style="color:var(--muted);font-style:italic">No address on file</span>';
+  return `<div class="lead-card cust-card" onclick="openCustomerDetail('${c.id}')" data-customer-id="${c.id}">
+    <div class="lead-card-main">
+      <div class="cust-name-row">
+        <span class="lead-name">${esc(c.name||'(unnamed)')}</span>
+        ${cTags.length>0?`<span class="cust-tags">${tagChips}</span>`:''}
+      </div>
+      <div class="cust-contact-row">
+        ${phone?`<span class="cust-phone">📞 ${esc(phone)}</span>`:''}
+        ${c.email?`<span class="cust-email">✉ ${esc(c.email)}</span>`:''}
+      </div>
+      <div class="cust-addr-row">📍 ${addrLine}</div>
+      <div class="cust-meta-row">
+        <span class="cust-est-count">${stageSummary}</span>
+        ${pipeValue>0?`<span class="cust-pipe-val">$${pipeValue.toLocaleString()} pipeline</span>`:''}
+      </div>
+    </div>
+  </div>`;
+}
+
+// Customer detail view — opens a slide-over panel showing all info about
+// one customer: contact, addresses, tags, estimates, and activity.
+// Built in Pass 3.
+let editCustomerId=null;
+
+function openCustomerDetail(customerId){
+  const c=customers.find(x=>x.id===customerId);
+  if(!c){alert('Customer not found.');return;}
+  editCustomerId=customerId;
+  renderCustomerDetail(c);
+}
+
+function closeCustomerDetail(){
+  const m=document.getElementById('customerDetail');
+  if(m) m.remove();
+  editCustomerId=null;
+}
+
+function renderCustomerDetail(c){
+  const customerLeads=leadsForCustomer(c.id).sort((a,b)=>(b.updated_at||'').localeCompare(a.updated_at||''));
+  const addresses=addressesForCustomer(c.id);
+  const cTags=tagsForCustomer(c.id);
+  const pipeValue=customerPipelineValue(c);
+  const lifetime=customerLeads.filter(l=>l.stage==='paid').reduce((s,l)=>s+Number(l.value||0),0);
+
+  // Build tag chips (with remove buttons)
+  const tagChipsHTML=cTags.map(t=>
+    `<span class="cust-tag" style="background:${t.color}22;color:${t.color};border-color:${t.color}55;display:inline-flex;align-items:center;gap:4px;">
+      ${esc(t.name)}
+      <button class="cust-tag-x" onclick="removeCustomerTag('${c.id}','${t.id}')" title="Remove tag" style="background:transparent;border:0;color:inherit;cursor:pointer;font-size:14px;line-height:1;padding:0 0 0 2px;font-weight:700">×</button>
+    </span>`
+  ).join('');
+
+  // Build addresses
+  const addrHTML=addresses.length===0
+    ? '<div style="color:var(--muted);font-style:italic;font-size:12px">No addresses on file</div>'
+    : addresses.map(a=>{
+        const parts=[a.street,a.city,a.state,a.zip].filter(Boolean).join(', ');
+        const kindBadge=`<span class="cust-addr-kind" style="background:var(--iron);color:var(--ink);font-size:9px;padding:2px 6px;border-radius:3px;letter-spacing:.08em;text-transform:uppercase;margin-right:6px">${esc(a.kind||'jobsite')}</span>`;
+        const primary=a.is_primary?' <span style="color:var(--amber);font-size:10px;font-weight:700">★ PRIMARY</span>':'';
+        return `<div class="cust-addr-item" style="padding:8px 0;border-bottom:1px solid var(--iron-soft,#333)">
+          ${kindBadge}<span>${esc(parts)}</span>${primary}
+          ${a.label?`<div style="font-size:11px;color:var(--muted);margin-top:2px;font-style:italic">${esc(a.label)}</div>`:''}
+        </div>`;
+      }).join('');
+
+  // Build estimates list
+  const estHTML=customerLeads.length===0
+    ? '<div style="color:var(--muted);font-style:italic;font-size:12px;padding:8px 0">No estimates yet. Click + to add one.</div>'
+    : customerLeads.map(l=>{
+        const st=STAGES.find(s=>s.id===l.stage)||STAGES[0];
+        const eTags=tagsForEstimate(l.id);
+        const eTagChips=eTags.map(t=>`<span class="cust-tag" style="background:${t.color}22;color:${t.color};border-color:${t.color}55;font-size:9px;padding:1px 6px">${esc(t.name)}</span>`).join('');
+        const date=l.updated_at?new Date(l.updated_at).toLocaleDateString():'';
+        const val=l.value>0?`$${Number(l.value).toLocaleString()}`:'—';
+        return `<div class="cust-est-item" onclick="openLeadMov('${l.id}')" style="padding:10px 12px;border:1px solid var(--iron);border-radius:8px;margin-bottom:6px;cursor:pointer;transition:border-color .1s" onmouseover="this.style.borderColor='var(--amber)'" onmouseout="this.style.borderColor='var(--iron)'">
+          <div style="display:flex;justify-content:space-between;align-items:center;gap:10px">
+            <div style="flex:1">
+              <div style="font-weight:600;font-size:13px;color:var(--ink-bright,#fff)">${esc(l.notes?l.notes.substring(0,60)+(l.notes.length>60?'…':''):'(no description)')}</div>
+              <div style="display:flex;gap:8px;align-items:center;margin-top:4px;flex-wrap:wrap">
+                <span class="lbadge ${st.cls}" style="font-size:9px">${st.label}</span>
+                ${eTagChips}
+                <span style="font-size:10px;color:var(--muted)">${date}</span>
+              </div>
+            </div>
+            <div style="font-weight:700;font-size:14px;color:var(--ink-bright,#fff)">${val}</div>
+          </div>
+        </div>`;
+      }).join('');
+
+  // Activity summary
+  const activitySummary=`
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:12px">
+      <div class="cust-stat-box"><div class="cust-stat-label">Estimates</div><div class="cust-stat-num">${customerLeads.length}</div></div>
+      <div class="cust-stat-box"><div class="cust-stat-label">Pipeline</div><div class="cust-stat-num">$${pipeValue.toLocaleString()}</div></div>
+      <div class="cust-stat-box"><div class="cust-stat-label">Lifetime</div><div class="cust-stat-num" style="color:var(--green,#22c55e)">$${lifetime.toLocaleString()}</div></div>
+    </div>`;
+
+  // Build the modal HTML
+  const html=`<div class="modal show" id="customerDetail" onclick="if(event.target.id==='customerDetail')closeCustomerDetail()" style="z-index:9000">
+    <div class="modal-content" style="max-width:680px;max-height:92vh;overflow-y:auto;padding:0">
+      <!-- Header -->
+      <div style="position:sticky;top:0;background:var(--bg-card,#1a1c20);padding:18px 20px;border-bottom:1px solid var(--iron);display:flex;justify-content:space-between;align-items:flex-start;gap:12px;z-index:1">
+        <div style="flex:1">
+          <input id="cdName" class="finput" value="${esc(c.name||'')}" onchange="updateCustomerField('name',this.value)" style="font-size:20px;font-weight:700;background:transparent;border:0;padding:0;color:var(--ink-bright,#fff);width:100%"/>
+          <div class="cust-tags" style="margin-top:8px;display:flex;flex-wrap:wrap;gap:4px;align-items:center">
+            ${tagChipsHTML}
+            <button class="btn btn-ghost" onclick="openTagPicker('customer','${c.id}')" style="font-size:11px;padding:3px 10px;border-radius:100px">+ Tag</button>
+          </div>
+        </div>
+        <button class="btn btn-ghost" onclick="closeCustomerDetail()" style="padding:6px 12px">Close</button>
+      </div>
+
+      <!-- Body -->
+      <div style="padding:18px 20px">
+        ${activitySummary}
+
+        <!-- Contact info -->
+        <div class="cust-sec-label">CONTACT</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:16px">
+          <div>
+            <label class="flbl">Phone</label>
+            <input class="finput" value="${esc(c.phone||'')}" onchange="updateCustomerField('phone',this.value)" placeholder="(555) 000-0000"/>
+          </div>
+          <div>
+            <label class="flbl">Email</label>
+            <input class="finput" value="${esc(c.email||'')}" onchange="updateCustomerField('email',this.value)" placeholder="name@example.com"/>
+          </div>
+        </div>
+
+        <!-- Addresses -->
+        <div class="cust-sec-label">ADDRESSES</div>
+        <div style="margin-bottom:16px">${addrHTML}</div>
+
+        <!-- Estimates -->
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+          <div class="cust-sec-label" style="margin-bottom:0">ESTIMATES (${customerLeads.length})</div>
+          <button class="btn btn-ghost" onclick="createEstimateForCustomer('${c.id}')" style="font-size:11px;padding:4px 10px">+ New Estimate</button>
+        </div>
+        <div style="margin-bottom:16px">${estHTML}</div>
+
+        <!-- Notes -->
+        <div class="cust-sec-label">NOTES</div>
+        <textarea class="finput" rows="3" onchange="updateCustomerField('notes',this.value)" placeholder="Notes about this customer…" style="resize:vertical">${esc(c.notes||'')}</textarea>
+
+        <!-- Danger zone -->
+        <div style="margin-top:24px;padding-top:16px;border-top:1px solid var(--iron);display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:11px;color:var(--muted)">Customer ID: <span style="font-family:monospace">${esc(c.id)}</span></span>
+          <button class="btn btn-ghost" onclick="archiveCustomer('${c.id}')" style="font-size:11px;color:var(--red,#ef4444)">Archive</button>
+        </div>
+      </div>
+    </div>
+  </div>`;
+
+  const existing=document.getElementById('customerDetail');
+  if(existing) existing.remove();
+  document.body.insertAdjacentHTML('beforeend',html);
+}
+
+// Field update — saves immediately to remote
+function updateCustomerField(field,value){
+  if(!editCustomerId) return;
+  const c=customers.find(x=>x.id===editCustomerId);
+  if(!c) return;
+  c[field]=value;
+  c.updated_at=new Date().toISOString();
+  saveCustomer(c);
+}
+
+// Archive (soft-delete) a customer
+async function archiveCustomer(customerId){
+  if(!confirm('Archive this customer? They will be hidden from the list but their data is preserved.')) return;
+  const c=customers.find(x=>x.id===customerId);
+  if(!c) return;
+  c.archived_at=new Date().toISOString();
+  saveCustomer(c);
+  closeCustomerDetail();
+  renderCustomers();
+}
+
+// Create a new estimate (lead) attached to this customer.
+// Opens the existing lead modal with the customer's info pre-populated.
+function createEstimateForCustomer(customerId){
+  const c=customers.find(x=>x.id===customerId);
+  if(!c) return;
+  // Build a fresh lead object linked to this customer
+  const newLeadId='l_'+Date.now().toString(36)+Math.random().toString(36).substring(2,7);
+  const primary=addressesForCustomer(customerId).find(a=>a.is_primary)||addressesForCustomer(customerId)[0];
+  const newLead={
+    id:newLeadId,
+    name:c.name,
+    contact:c.name,
+    phone:c.phone||'',
+    email:c.email||'',
+    address:primary?[primary.street,primary.city,primary.state].filter(Boolean).join(', '):'',
+    stage:'new',
+    customer_id:customerId,
+    company_id:c.company_id,
+    created_by:currentUser?.id,
+    updated_at:new Date().toISOString(),
+  };
+  leads.push(newLead);
+  saveLead(newLead);
+  // Close customer detail, open the new lead's modal
+  closeCustomerDetail();
+  if(typeof openLeadMov==='function') openLeadMov(newLeadId);
+}
+// Open a "new customer" modal. Includes phone-match suggestion: as you
+// type a phone, we look for existing customers with the same normalized
+// phone and prompt to use the existing record instead.
+function openCustomerMov(){
+  const html=`<div class="modal show" id="newCustMov" onclick="if(event.target.id==='newCustMov')closeNewCustomerMov()" style="z-index:9000">
+    <div class="modal-content" style="max-width:520px;padding:20px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+        <strong style="font-size:16px">New Customer</strong>
+        <button class="btn btn-ghost" onclick="closeNewCustomerMov()" style="padding:4px 12px">Cancel</button>
+      </div>
+      <div style="display:grid;gap:10px">
+        <div>
+          <label class="flbl">Name *</label>
+          <input id="ncName" class="finput" placeholder="Customer name" autofocus/>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+          <div>
+            <label class="flbl">Phone</label>
+            <input id="ncPhone" class="finput" placeholder="(555) 000-0000" oninput="checkCustomerPhoneMatch()"/>
+          </div>
+          <div>
+            <label class="flbl">Email</label>
+            <input id="ncEmail" class="finput" placeholder="name@example.com"/>
+          </div>
+        </div>
+        <div id="ncPhoneMatch" style="display:none;background:rgba(245,158,11,.1);border:1px solid rgba(245,158,11,.4);border-radius:6px;padding:10px;font-size:12px;color:var(--amber)"></div>
+        <div>
+          <label class="flbl">Address (street)</label>
+          <input id="ncAddr" class="finput" placeholder="123 Main St, Milwaukee, WI"/>
+        </div>
+        <div>
+          <label class="flbl">Notes</label>
+          <textarea id="ncNotes" class="finput" rows="2" placeholder="Optional notes…" style="resize:vertical"></textarea>
+        </div>
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:8px">
+          <span style="font-size:11px;color:var(--muted)">* Phone OR email required</span>
+          <button class="btn btn-amber" onclick="saveNewCustomer()" style="padding:8px 18px">Create Customer</button>
+        </div>
+      </div>
+    </div>
+  </div>`;
+  const existing=document.getElementById('newCustMov');
+  if(existing) existing.remove();
+  document.body.insertAdjacentHTML('beforeend',html);
+}
+
+function closeNewCustomerMov(){
+  const m=document.getElementById('newCustMov');
+  if(m) m.remove();
+}
+
+// Watch phone input — when 10 digits entered, look for matching customer
+function checkCustomerPhoneMatch(){
+  const phoneInput=document.getElementById('ncPhone');
+  const matchBox=document.getElementById('ncPhoneMatch');
+  if(!phoneInput||!matchBox) return;
+  const digits=(phoneInput.value||'').replace(/[^0-9]/g,'');
+  if(digits.length<10){matchBox.style.display='none';return;}
+  const normalized=digits.slice(-10); // last 10 digits handles +1 prefix
+  const match=customers.find(c=>!c.archived_at && c.phone_normalized===normalized);
+  if(match){
+    matchBox.style.display='block';
+    matchBox.innerHTML=`⚠️ <strong>${esc(match.name)}</strong> already has this phone.
+      <button class="btn btn-ghost" onclick="closeNewCustomerMov();openCustomerDetail('${match.id}')" style="margin-left:8px;font-size:11px;padding:3px 10px">Open existing →</button>`;
+  } else {
+    matchBox.style.display='none';
+  }
+}
+
+async function saveNewCustomer(){
+  const name=(document.getElementById('ncName')?.value||'').trim();
+  const phone=(document.getElementById('ncPhone')?.value||'').trim();
+  const email=(document.getElementById('ncEmail')?.value||'').trim();
+  const addr=(document.getElementById('ncAddr')?.value||'').trim();
+  const notes=(document.getElementById('ncNotes')?.value||'').trim();
+  if(!name){alert('Name is required.');document.getElementById('ncName')?.focus();return;}
+  if(!phone && !email){alert('Phone or email is required.');document.getElementById('ncPhone')?.focus();return;}
+
+  // Check for phone match — block if duplicate (the inline warning already showed)
+  const digits=phone.replace(/[^0-9]/g,'').slice(-10);
+  if(digits.length===10){
+    const dup=customers.find(c=>!c.archived_at && c.phone_normalized===digits);
+    if(dup){
+      if(!confirm(`A customer with this phone already exists: ${dup.name}.\n\nCreate a duplicate anyway?`)) return;
+    }
+  }
+
+  const customerId='cust_'+Date.now().toString(36)+Math.random().toString(36).substring(2,7);
+  const company_id=currentProfile?.company_id||'00000000-0000-0000-0000-000000000001';
+  const newCustomer={
+    id:customerId,
+    company_id,
+    name,
+    phone,
+    phone_normalized:digits.length===10?digits:null,
+    email:email||null,
+    notes:notes||null,
+    created_by:currentUser?.id,
+    created_at:new Date().toISOString(),
+    updated_at:new Date().toISOString(),
+  };
+  customers.push(newCustomer);
+  saveCustomer(newCustomer);
+
+  // If address given, create a customer_addresses row
+  if(addr){
+    const addrRow={
+      id:customerId+'_addr_1',
+      customer_id:customerId,
+      company_id,
+      kind:'jobsite',
+      street:addr,
+      is_primary:true,
+      created_at:new Date().toISOString(),
+      updated_at:new Date().toISOString(),
+    };
+    customerAddresses.push(addrRow);
+    saveCustomerAddress(addrRow);
+  }
+
+  closeNewCustomerMov();
+  renderCustomers();
+  // Open the new customer's detail so they can add tags + estimates
+  openCustomerDetail(customerId);
+}
+
+// ══════════════════════════════════════════════════════════════
+// TAG SYSTEM UI (Pass 4)
+// ══════════════════════════════════════════════════════════════
+
+// Can the current user create/edit/delete tags?
+function canManageTags(){
+  const role=currentProfile?.role||'';
+  return role==='owner'||role==='salesman';
+}
+function canDeleteTags(){
+  return (currentProfile?.role||'')==='owner';
+}
+
+// Open the tag picker for a given context.
+// context: 'customer' | 'estimate'
+// targetId: the customer_id or lead_id
+function openTagPicker(context,targetId){
+  // Get applicable tags (kind matches context or 'both')
+  const applicable=tags.filter(t=>!t.archived_at && (t.kind===context||t.kind==='both'));
+  // Get currently applied tag ids for this target
+  const appliedIds=context==='customer'
+    ? customerTags.filter(ct=>ct.customer_id===targetId).map(ct=>ct.tag_id)
+    : estimateTags.filter(et=>et.lead_id===targetId).map(et=>et.tag_id);
+
+  const tagListHTML=applicable.length===0
+    ? '<div style="color:var(--muted);font-style:italic;font-size:12px;padding:8px 0">No tags yet. Create one below.</div>'
+    : applicable.map(t=>{
+        const isApplied=appliedIds.includes(t.id);
+        return `<div class="tag-pick-row" style="display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:6px;cursor:pointer;${isApplied?'background:var(--iron-soft,#222)':''}" onclick="toggleTagApplication('${context}','${targetId}','${t.id}')">
+          <input type="checkbox" ${isApplied?'checked':''} style="pointer-events:none;accent-color:${t.color}"/>
+          <span class="cust-tag" style="background:${t.color}22;color:${t.color};border-color:${t.color}55">${esc(t.name)}</span>
+          <span style="color:var(--muted);font-size:10px;margin-left:auto">${t.kind==='both'?'':t.kind}</span>
+        </div>`;
+      }).join('');
+
+  const createSection=canManageTags()?`
+    <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--iron)">
+      <div class="cust-sec-label">Create new tag</div>
+      <div style="display:flex;gap:6px;align-items:center">
+        <input id="newTagName" class="finput" placeholder="Tag name (e.g. Insurance)" style="flex:1"/>
+        <input id="newTagColor" type="color" value="#3b82f6" style="width:38px;height:34px;border:1px solid var(--iron);border-radius:6px;cursor:pointer;background:transparent" title="Pick a color"/>
+        <button class="btn btn-amber" onclick="createTagAndApply('${context}','${targetId}')" style="padding:8px 14px">+ Add</button>
+      </div>
+      <div style="margin-top:6px"><a onclick="closeTagPicker();openTagLibrary()" style="font-size:11px;color:var(--amber);cursor:pointer;text-decoration:underline">Manage all tags →</a></div>
+    </div>`:'';
+
+  const html=`<div class="modal show" id="tagPicker" onclick="if(event.target.id==='tagPicker')closeTagPicker()" style="z-index:9100">
+    <div class="modal-content" style="max-width:420px;padding:18px 20px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <strong style="font-size:14px;letter-spacing:.04em">Apply tags</strong>
+        <button class="btn btn-ghost" onclick="closeTagPicker()" style="padding:4px 10px">Close</button>
+      </div>
+      <div id="tagPickerList" style="max-height:300px;overflow-y:auto">${tagListHTML}</div>
+      ${createSection}
+    </div>
+  </div>`;
+  const existing=document.getElementById('tagPicker');
+  if(existing) existing.remove();
+  document.body.insertAdjacentHTML('beforeend',html);
+}
+
+function closeTagPicker(){
+  const m=document.getElementById('tagPicker');
+  if(m) m.remove();
+}
+
+// Toggle a tag on/off for a customer or estimate
+async function toggleTagApplication(context,targetId,tagId){
+  const arr=context==='customer'?customerTags:estimateTags;
+  const existing=context==='customer'
+    ? arr.find(ct=>ct.customer_id===targetId && ct.tag_id===tagId)
+    : arr.find(et=>et.lead_id===targetId && et.tag_id===tagId);
+  if(existing){
+    // Remove
+    if(context==='customer') await delCustomerTag(existing.id);
+    else await delEstimateTag(existing.id);
+  } else {
+    // Add
+    const newRow={
+      id:(context==='customer'?'ctag_':'etag_')+Date.now().toString(36)+Math.random().toString(36).substring(2,6),
+      company_id: currentProfile?.company_id || '00000000-0000-0000-0000-000000000001',
+      tag_id:tagId,
+      created_by:currentUser?.id,
+    };
+    if(context==='customer'){
+      newRow.customer_id=targetId;
+      customerTags.push(newRow);
+      saveCustomerTag(newRow);
+    } else {
+      newRow.lead_id=targetId;
+      estimateTags.push(newRow);
+      saveEstimateTag(newRow);
+    }
+  }
+  // Re-render picker to show new state
+  openTagPicker(context,targetId);
+  // Also refresh whatever's open in the background
+  if(context==='customer' && editCustomerId){
+    const c=customers.find(x=>x.id===editCustomerId);
+    if(c) renderCustomerDetail(c);
+  }
+  if(typeof renderCustomers==='function' && mainView==='crm') renderCustomers();
+}
+
+// Create a new tag from the picker and immediately apply it
+async function createTagAndApply(context,targetId){
+  if(!canManageTags()){alert('Only owners and salespeople can create tags.');return;}
+  const nameInput=document.getElementById('newTagName');
+  const colorInput=document.getElementById('newTagColor');
+  const name=(nameInput?.value||'').trim();
+  const color=colorInput?.value||'#3b82f6';
+  if(!name){nameInput?.focus();return;}
+  // Check for duplicates locally
+  const normalized=name.toLowerCase().trim();
+  const dup=tags.find(t=>!t.archived_at && t.name.toLowerCase().trim()===normalized);
+  if(dup){
+    if(confirm(`Tag "${dup.name}" already exists. Use it instead?`)){
+      toggleTagApplication(context,targetId,dup.id);
+    }
+    return;
+  }
+  const newTag={
+    id:'tag_'+Date.now().toString(36)+Math.random().toString(36).substring(2,6),
+    company_id: currentProfile?.company_id || '00000000-0000-0000-0000-000000000001',
+    name,
+    color,
+    kind:'both', // default — can be edited later in tag library
+    created_by:currentUser?.id,
+    created_at:new Date().toISOString(),
+    updated_at:new Date().toISOString(),
+  };
+  tags.push(newTag);
+  saveTag(newTag);
+  // Apply immediately
+  await toggleTagApplication(context,targetId,newTag.id);
+}
+
+// Remove a tag from a customer (called by × button on tag chip)
+async function removeCustomerTag(customerId,tagId){
+  const ct=customerTags.find(x=>x.customer_id===customerId && x.tag_id===tagId);
+  if(!ct) return;
+  await delCustomerTag(ct.id);
+  // Refresh detail view
+  const c=customers.find(x=>x.id===customerId);
+  if(c) renderCustomerDetail(c);
+  // Refresh list
+  if(mainView==='crm') renderCustomers();
+}
+
+// Same for estimate tags (used in lead modal, future)
+async function removeEstimateTag(leadId,tagId){
+  const et=estimateTags.find(x=>x.lead_id===leadId && x.tag_id===tagId);
+  if(!et) return;
+  await delEstimateTag(et.id);
+}
+
+// ══════════════════════════════════════════════════════════════
+// TAG LIBRARY — CRUD on the master list of tags
+// ══════════════════════════════════════════════════════════════
+function openTagLibrary(){
+  const activeTags=tags.filter(t=>!t.archived_at).sort((a,b)=>(a.name||'').localeCompare(b.name||''));
+  const canEdit=canManageTags();
+  const canDel=canDeleteTags();
+
+  const rowsHTML=activeTags.length===0
+    ? '<div style="color:var(--muted);font-style:italic;padding:18px;text-align:center">No tags yet.</div>'
+    : activeTags.map(t=>{
+        // Count uses
+        const custUses=customerTags.filter(ct=>ct.tag_id===t.id).length;
+        const estUses=estimateTags.filter(et=>et.tag_id===t.id).length;
+        const totalUses=custUses+estUses;
+        return `<div class="tag-lib-row" style="display:grid;grid-template-columns:24px 1fr 90px 100px 1fr 80px;gap:8px;align-items:center;padding:8px 10px;border-bottom:1px solid var(--iron-soft,#222)">
+          <input type="color" value="${t.color}" ${canEdit?`onchange="updateTagField('${t.id}','color',this.value)"`:'disabled'} style="width:24px;height:24px;border:0;padding:0;border-radius:4px;cursor:${canEdit?'pointer':'default'};background:transparent"/>
+          <input class="finput" value="${esc(t.name)}" ${canEdit?`onchange="updateTagField('${t.id}','name',this.value)"`:'readonly'} style="font-size:13px;padding:4px 8px"/>
+          <select class="finput" ${canEdit?`onchange="updateTagField('${t.id}','kind',this.value)"`:'disabled'} style="font-size:12px;padding:4px">
+            <option value="both" ${t.kind==='both'?'selected':''}>Both</option>
+            <option value="customer" ${t.kind==='customer'?'selected':''}>Customer</option>
+            <option value="estimate" ${t.kind==='estimate'?'selected':''}>Estimate</option>
+          </select>
+          <span style="font-size:11px;color:var(--muted);text-align:center">${totalUses} use${totalUses===1?'':'s'}</span>
+          <span class="cust-tag" style="background:${t.color}22;color:${t.color};border-color:${t.color}55;font-size:10px;justify-self:start">${esc(t.name)}</span>
+          ${canDel?`<button class="btn btn-ghost" onclick="confirmDeleteTag('${t.id}')" style="font-size:11px;padding:4px 8px;color:var(--red,#ef4444)">Delete</button>`:'<span></span>'}
+        </div>`;
+      }).join('');
+
+  const createSection=canEdit?`
+    <div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--iron)">
+      <div class="cust-sec-label">Create new tag</div>
+      <div style="display:flex;gap:6px;align-items:center">
+        <input id="libNewTagName" class="finput" placeholder="Tag name (e.g. Insurance, Slow Pay)" style="flex:1"/>
+        <select id="libNewTagKind" class="finput" style="width:120px"><option value="both">Both</option><option value="customer">Customer only</option><option value="estimate">Estimate only</option></select>
+        <input id="libNewTagColor" type="color" value="#3b82f6" style="width:38px;height:34px;border:1px solid var(--iron);border-radius:6px;cursor:pointer;background:transparent"/>
+        <button class="btn btn-amber" onclick="createTagFromLibrary()" style="padding:8px 14px">+ Add</button>
+      </div>
+    </div>`:`<div style="margin-top:14px;padding-top:14px;border-top:1px solid var(--iron);color:var(--muted);font-size:11px;font-style:italic">Tag management is restricted to owners and salespeople.</div>`;
+
+  const html=`<div class="modal show" id="tagLibrary" onclick="if(event.target.id==='tagLibrary')closeTagLibrary()" style="z-index:9050">
+    <div class="modal-content" style="max-width:700px;max-height:90vh;overflow-y:auto;padding:18px 20px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px">
+        <strong style="font-size:16px">Tag Library</strong>
+        <button class="btn btn-ghost" onclick="closeTagLibrary()" style="padding:4px 12px">Close</button>
+      </div>
+      <div style="font-size:11px;color:var(--muted);margin-bottom:10px">${activeTags.length} tag${activeTags.length===1?'':'s'}. Tags organize customers and estimates. Edit color, rename, or change scope below.</div>
+
+      <div style="display:grid;grid-template-columns:24px 1fr 90px 100px 1fr 80px;gap:8px;padding:6px 10px;border-bottom:1px solid var(--iron);font-size:9px;font-weight:700;letter-spacing:.15em;color:var(--muted);text-transform:uppercase">
+        <span></span><span>Name</span><span>Kind</span><span style="text-align:center">Used</span><span>Preview</span><span></span>
+      </div>
+      <div>${rowsHTML}</div>
+
+      ${createSection}
+    </div>
+  </div>`;
+  const existing=document.getElementById('tagLibrary');
+  if(existing) existing.remove();
+  document.body.insertAdjacentHTML('beforeend',html);
+}
+
+function closeTagLibrary(){
+  const m=document.getElementById('tagLibrary');
+  if(m) m.remove();
+}
+
+function updateTagField(tagId,field,value){
+  if(!canManageTags()){alert('Only owners and salespeople can edit tags.');openTagLibrary();return;}
+  const t=tags.find(x=>x.id===tagId);
+  if(!t) return;
+  t[field]=value;
+  t.updated_at=new Date().toISOString();
+  saveTag(t);
+  // Re-render any open views that show this tag
+  if(mainView==='crm') renderCustomers();
+  if(editCustomerId){
+    const c=customers.find(x=>x.id===editCustomerId);
+    if(c) renderCustomerDetail(c);
+  }
+}
+
+function createTagFromLibrary(){
+  if(!canManageTags()){alert('Only owners and salespeople can create tags.');return;}
+  const nameInput=document.getElementById('libNewTagName');
+  const kindInput=document.getElementById('libNewTagKind');
+  const colorInput=document.getElementById('libNewTagColor');
+  const name=(nameInput?.value||'').trim();
+  if(!name){nameInput?.focus();return;}
+  const dup=tags.find(t=>!t.archived_at && t.name.toLowerCase().trim()===name.toLowerCase());
+  if(dup){alert(`Tag "${dup.name}" already exists.`);return;}
+  const newTag={
+    id:'tag_'+Date.now().toString(36)+Math.random().toString(36).substring(2,6),
+    company_id: currentProfile?.company_id || '00000000-0000-0000-0000-000000000001',
+    name,
+    color: colorInput?.value||'#3b82f6',
+    kind: kindInput?.value||'both',
+    created_by:currentUser?.id,
+    created_at:new Date().toISOString(),
+    updated_at:new Date().toISOString(),
+  };
+  tags.push(newTag);
+  saveTag(newTag);
+  openTagLibrary(); // refresh
+}
+
+async function confirmDeleteTag(tagId){
+  if(!canDeleteTags()){alert('Only owners can delete tags.');return;}
+  const t=tags.find(x=>x.id===tagId);
+  if(!t) return;
+  const custUses=customerTags.filter(ct=>ct.tag_id===tagId).length;
+  const estUses=estimateTags.filter(et=>et.tag_id===tagId).length;
+  const totalUses=custUses+estUses;
+  if(totalUses>0){
+    if(!confirm(`Tag "${t.name}" is applied to ${custUses} customer${custUses===1?'':'s'} and ${estUses} estimate${estUses===1?'':'s'}.\n\nDeleting will remove it from all of them. Continue?`)) return;
+  } else {
+    if(!confirm(`Delete tag "${t.name}"?`)) return;
+  }
+  await delTagRemote(tagId);
+  openTagLibrary();
+  if(mainView==='crm') renderCustomers();
 }
 function leadCard(l){
   try{
