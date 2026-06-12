@@ -3838,6 +3838,13 @@ function _toDb(table,item){
   if(table==='docs') return docToDb(item);
   if(table==='templates') return tmplToDb(item);
   if(table==='tasks') return taskToDb(item);
+  // Customer/tag entities — these are stored shape-equivalent in JS and DB,
+  // so we pass through directly. Strip any JS-only fields if needed.
+  if(table==='customers') return item;
+  if(table==='customer_addresses') return item;
+  if(table==='tags') return item;
+  if(table==='customer_tags') return item;
+  if(table==='estimate_tags') return item;
   throw new Error('unknown table '+table);
 }
 
@@ -4443,7 +4450,7 @@ const setSS=(s,l)=>{
   document.getElementById('syncLbl').textContent=l;
 };
 const dbToJob=r=>({id:r.id,title:r.title,note:r.note||'',color:r.color||'amber',day:r.day||'backlog',endDay:r.end_day||'',leadId:r.lead_id||null,photos:safeParseArr(r.photos),checklist:safeParseArr(r.checklist),apptType:normalizeApptType(r.appt_type),startTime:r.start_time||'',endTime:r.end_time||'',assigneeId:r.assignee_id||null,assigneeIds:_normAssigneeIds(r),activity:safeParseArr(r.activity),linkedDocId:r.linked_doc_id||null,linkedMoId:r.linked_mo_id||null});
-const dbToLead=r=>({id:r.id,name:r.name,contact:r.contact||'',phone:r.phone||'',email:r.email||'',types:r.type?r.type.split(',').filter(Boolean):[],value:r.value||'',stage:r.stage||'new',address:r.address||'',notes:r.notes||'',color:r.color||'blue',estId:r.est_id||null,matList:safeParseArr(r.mat_list),source:r.source||'',activity:safeParseArr(r.activity),createdAt:r.created_at||null,assignedTo:r.assigned_to||null});
+const dbToLead=r=>({id:r.id,name:r.name,contact:r.contact||'',phone:r.phone||'',email:r.email||'',types:r.type?r.type.split(',').filter(Boolean):[],value:r.value||'',stage:r.stage||'new',address:r.address||'',notes:r.notes||'',color:r.color||'blue',estId:r.est_id||null,matList:safeParseArr(r.mat_list),source:r.source||'',activity:safeParseArr(r.activity),createdAt:r.created_at||null,assignedTo:r.assigned_to||null,customer_id:r.customer_id||null});
 const jobToDb=j=>({id:j.id,title:j.title,note:j.note,color:j.color,day:j.day,end_day:j.endDay||'',lead_id:j.leadId||null,photos:JSON.stringify(j.photos||[]),checklist:JSON.stringify(j.checklist||[]),appt_type:normalizeApptType(j.apptType),start_time:j.startTime||'',end_time:j.endTime||'',assignee_id:_firstAssigneeId(j),assignee_ids:getJobAssigneeIds(j),user_id:currentUser?.id||null,updated_at:new Date().toISOString(),activity:JSON.stringify(j.activity||[]),linked_doc_id:j.linkedDocId||null,linked_mo_id:j.linkedMoId||null});
 
 // ── ASSIGNEE HELPERS ────────────────────────────────────────
@@ -4467,7 +4474,7 @@ function getJobAssigneeIds(j){
   if(j.assigneeId) return [j.assigneeId];
   return [];
 }
-const leadToDb=l=>({id:l.id,name:l.name,contact:l.contact,phone:l.phone,email:l.email,type:(l.types||[]).join(','),value:l.value,stage:l.stage,address:l.address,notes:l.notes,color:l.color,est_id:l.estId||null,mat_list:JSON.stringify(l.matList||[]),source:l.source||'',activity:JSON.stringify(l.activity||[]),assigned_to:l.assignedTo||null,user_id:currentUser?.id||null,updated_at:new Date().toISOString()});
+const leadToDb=l=>({id:l.id,name:l.name,contact:l.contact,phone:l.phone,email:l.email,type:(l.types||[]).join(','),value:l.value,stage:l.stage,address:l.address,notes:l.notes,color:l.color,est_id:l.estId||null,mat_list:JSON.stringify(l.matList||[]),source:l.source||'',activity:JSON.stringify(l.activity||[]),assigned_to:l.assignedTo||null,user_id:currentUser?.id||null,customer_id:l.customer_id||null,updated_at:new Date().toISOString()});
 // Helper: parse material order data from a JSON string or object
 const _parseMoData=v=>{try{return typeof v==='string'?JSON.parse(v||'{}'):(v||{});}catch{return {};}};
 const dbToDoc=r=>{
