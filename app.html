@@ -5814,7 +5814,7 @@ async function saveNewCustomer(){
   }
 
   const customerId='cust_'+Date.now().toString(36)+Math.random().toString(36).substring(2,7);
-  const company_id=currentProfile?.company_id||'00000000-0000-0000-0000-000000000001';
+  const company_id=currentCompanyId||'00000000-0000-0000-0000-000000000001';
   const newCustomer={
     id:customerId,
     company_id,
@@ -5858,11 +5858,11 @@ async function saveNewCustomer(){
 
 // Can the current user create/edit/delete tags?
 function canManageTags(){
-  const role=currentProfile?.role||'';
+  const role=currentRole||'';
   return role==='owner'||role==='salesman';
 }
 function canDeleteTags(){
-  return (currentProfile?.role||'')==='owner';
+  return (currentRole||'')==='owner';
 }
 
 // Open the tag picker for a given context.
@@ -5932,7 +5932,7 @@ async function toggleTagApplication(context,targetId,tagId){
     // Add
     const newRow={
       id:(context==='customer'?'ctag_':'etag_')+Date.now().toString(36)+Math.random().toString(36).substring(2,6),
-      company_id: currentProfile?.company_id || '00000000-0000-0000-0000-000000000001',
+      company_id: currentCompanyId || '00000000-0000-0000-0000-000000000001',
       tag_id:tagId,
       created_by:currentUser?.id,
     };
@@ -5975,7 +5975,7 @@ async function createTagAndApply(context,targetId){
   }
   const newTag={
     id:'tag_'+Date.now().toString(36)+Math.random().toString(36).substring(2,6),
-    company_id: currentProfile?.company_id || '00000000-0000-0000-0000-000000000001',
+    company_id: currentCompanyId || '00000000-0000-0000-0000-000000000001',
     name,
     color,
     kind:'both', // default — can be edited later in tag library
@@ -6100,7 +6100,7 @@ function createTagFromLibrary(){
   if(dup){alert(`Tag "${dup.name}" already exists.`);return;}
   const newTag={
     id:'tag_'+Date.now().toString(36)+Math.random().toString(36).substring(2,6),
-    company_id: currentProfile?.company_id || '00000000-0000-0000-0000-000000000001',
+    company_id: currentCompanyId || '00000000-0000-0000-0000-000000000001',
     name,
     color: colorInput?.value||'#3b82f6',
     kind: kindInput?.value||'both',
