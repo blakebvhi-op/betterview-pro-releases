@@ -3812,7 +3812,8 @@ function lsSet(key,val){try{localStorage.setItem(key,JSON.stringify(val));}catch
 // ── DEBOUNCED SAVE QUEUE ──────────────────────────────────────
 const saveQueue={jobs:{},leads:{},docs:{},templates:{},tasks:{},
   customers:{},customer_addresses:{},tags:{},customer_tags:{},estimate_tags:{}};
-const saveTimers={jobs:{},leads:{},docs:{},templates:{},tasks:{}};
+const saveTimers={jobs:{},leads:{},docs:{},templates:{},tasks:{},
+  customers:{},customer_addresses:{},tags:{},customer_tags:{},estimate_tags:{}};
 // Persistent queue of saves that haven't reached Supabase yet. Survives
 // reload. Each entry = {table, id, item, attempts, firstQueued}.
 // Stored as an array (not keyed) so multiple edits to the same id over
@@ -4727,13 +4728,15 @@ async function loadTagsRemote(){
 }
 async function loadCustomerTagsRemote(){
   try{
-    customerTags=await sb.get('customer_tags');
+    // customer_tags has no updated_at column — use sb.req directly with created_at ordering
+    customerTags=await sb.req('GET','customer_tags?order=created_at.asc');
     return true;
   }catch(e){console.error('loadCustomerTagsRemote:',e);return false;}
 }
 async function loadEstimateTagsRemote(){
   try{
-    estimateTags=await sb.get('estimate_tags');
+    // estimate_tags has no updated_at column — use sb.req directly
+    estimateTags=await sb.req('GET','estimate_tags?order=created_at.asc');
     return true;
   }catch(e){console.error('loadEstimateTagsRemote:',e);return false;}
 }
