@@ -4406,12 +4406,11 @@ async function fetchWeather(){
   const strip=document.getElementById('wxStrip');
   strip.innerHTML='<span class="wx-loading">Loading forecast…</span>';
   try{
-    // Use IP geolocation first, fall back to a US default (Chicago)
-    let lat=41.85,lon=-87.65;
-    try{
-      const geo=await fetch('https://ipapi.co/json/');
-      if(geo.ok){const g=await geo.json();if(g.latitude){lat=g.latitude;lon=g.longitude;}}
-    }catch{}
+    // Default to Menomonee Falls, WI (Better View HQ). We used to call ipapi.co
+    // for IP-based geolocation, but they now reject CORS from this origin and
+    // spam the console with errors. The fallback was always Menomonee anyway,
+    // so we skip the lookup entirely.
+    const lat=43.1789, lon=-88.1170;
     const url=`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_probability_max&temperature_unit=fahrenheit&timezone=auto&forecast_days=7`;
     const r=await fetch(url);
     if(!r.ok)throw new Error('wx failed');
@@ -4945,10 +4944,10 @@ function mobileCard(j,dates,dayKey){
   const mSpanLabel=mSpanTotal>1?`<span class="jduration">📅 Day ${mSpanIdx+1} of ${mSpanTotal}</span>`:'';
   const mMdClass=mSpanTotal>1?(mSpanIdx===0?'multiday-start':mSpanIdx===mSpanTotal-1?'multiday-end':'multiday-mid'):'';
   return `<div class="job-card ${mMdClass}" data-id="${j.id}" style="border-left-color:${c.hex};background:linear-gradient(135deg,rgba(${hexRgb(c.hex)},.1) 0%,var(--steel-light) 100%)">
-    <div class="jct" onclick="toggleCardCollapse('${j.id}',this)">
-      <div class="jtitle">${esc(j.title)}</div>
+    <div class="jct">
+      <div class="jtitle" onclick="openJobQuickView('${j.id}')" style="cursor:pointer">${esc(j.title)}</div>
       <div class="jacts" onclick="event.stopPropagation()"><button class="jbtn ebtn" data-id="${j.id}">✎</button><button class="jbtn dbtn" data-id="${j.id}">×</button></div>
-      <span class="jchev">▼</span>
+      <span class="jchev" onclick="toggleCardCollapse('${j.id}',this.parentElement)" style="cursor:pointer">▼</span>
     </div>
     <div class="jcard-summary">${summaryParts.map(p=>esc(p)).join(' · ')}</div>
     <div class="jcard-body">
@@ -5006,7 +5005,7 @@ function desktopContCard(j,dayKey){
   const isLast=dayKey===j.endDay;
   return `<div class="job-card-cont" data-id="${j.id}"
     style="border-left:3px solid ${c.hex};background:linear-gradient(90deg,rgba(${hexRgb(c.hex)},.18) 0%,var(--steel-light) 100%)"
-    onclick="openJobMov(null,'${j.id}')">
+    onclick="openJobQuickView('${j.id}')">
     <div class="job-card-cont-inner">
       <span style="font-size:9px;color:${c.hex};flex-shrink:0">${isLast?'⬛':'▶'}</span>
       <span class="job-card-cont-title">${esc(j.title)}</span>
@@ -5022,10 +5021,10 @@ function desktopCard(j,dayKey){
   const spanTotal=j.endDay&&j.endDay>j.day?getDaysBetween(j.day,j.endDay).length:1;
   const spanLabel=spanTotal>1?`<span class="jduration">📅 ${spanTotal} days</span>`:'';
   const mdClass=spanTotal>1?'multiday-start':'';  return `<div class="job-card ${mdClass}" draggable="true" data-id="${j.id}" style="border-left-color:${c.hex};background:linear-gradient(135deg,rgba(${hexRgb(c.hex)},.08) 0%,var(--steel-light) 100%)">
-    <div class="jct" onclick="toggleCardCollapse('${j.id}',this)">
-      <div class="jtitle">${esc(j.title)}</div>
+    <div class="jct">
+      <div class="jtitle" onclick="openJobQuickView('${j.id}')" style="cursor:pointer">${esc(j.title)}</div>
       <div class="jacts" onclick="event.stopPropagation()"><button class="jbtn ebtn" data-id="${j.id}">✎</button><button class="jbtn dbtn" data-id="${j.id}">×</button></div>
-      <span class="jchev">▼</span>
+      <span class="jchev" onclick="toggleCardCollapse('${j.id}',this.parentElement)" style="cursor:pointer">▼</span>
     </div>
     <div class="jcard-summary">${spanTotal>1?`${spanTotal} days · `:''}${summaryParts.map(p=>esc(p)).join(' · ')}</div>
     <div class="jcard-body">
@@ -5831,9 +5830,18 @@ async function saveNewCustomer(){
     updated_at:new Date().toISOString(),
   };
   customers.push(newCustomer);
-  saveCustomer(newCustomer);
+  // Save the customer synchronously so any FK-dependent inserts (address)
+  // are guaranteed to have a parent row to point at.
+  try{
+    await sb.upsert('customers', newCustomer);
+  }catch(e){
+    console.error('saveNewCustomer:', e);
+    customers=customers.filter(c=>c.id!==newCustomer.id);
+    alert('Could not save customer. Please try again.\n\n'+(e.message||''));
+    return;
+  }
 
-  // If address given, create a customer_addresses row
+  // If address given, create a customer_addresses row (parent customer exists now)
   if(addr){
     const addrRow={
       id:customerId+'_addr_1',
@@ -5846,7 +5854,12 @@ async function saveNewCustomer(){
       updated_at:new Date().toISOString(),
     };
     customerAddresses.push(addrRow);
-    saveCustomerAddress(addrRow);
+    try{
+      await sb.upsert('customer_addresses', addrRow);
+    }catch(e){
+      console.error('saveNewCustomer address:', e);
+      // Customer is saved, just address failed — keep going, user can re-add it
+    }
   }
 
   closeNewCustomerMov();
@@ -5987,8 +6000,21 @@ async function createTagAndApply(context,targetId){
     updated_at:new Date().toISOString(),
   };
   tags.push(newTag);
-  saveTag(newTag);
-  // Apply immediately
+  // CRITICAL: save the tag SYNCHRONOUSLY (await direct upsert) before applying it.
+  // The normal saveTag() goes through a 800ms-debounced queue, which means the
+  // customer_tags/estimate_tags insert would hit the database BEFORE the tag
+  // itself was written — causing a FK violation. We bypass the queue here so
+  // the tag exists in the DB before the application row references it.
+  try{
+    await sb.upsert('tags', newTag);
+  }catch(e){
+    console.error('createTagAndApply: tag upsert failed:', e);
+    // Roll back local state since the DB save failed
+    tags=tags.filter(t=>t.id!==newTag.id);
+    alert('Could not save tag. Please try again.');
+    return;
+  }
+  // Apply now — tag is guaranteed to exist server-side
   await toggleTagApplication(context,targetId,newTag.id);
 }
 
@@ -6663,6 +6689,111 @@ function buildDaySelect(target){
   if(target&&target!=='backlog') buildEndDaySelect(target);
   document.getElementById('jDay')?.addEventListener('change',function(){buildEndDaySelect(this.value);},{once:true});
 }
+// ══════════════════════════════════════════════════════════════
+// JOB QUICK-VIEW MODAL
+// ══════════════════════════════════════════════════════════════
+// A read-only quick view of a scheduled job. Opens when you click a
+// job card. Shows customer info + 2 action buttons (crew link, maps).
+// A pencil icon in the corner opens the full edit modal.
+function openJobQuickView(jobId){
+  const j=jobs.find(x=>x.id===jobId);
+  if(!j){alert('Job not found.');return;}
+  // Linked lead carries the customer info (name, phone, address)
+  const lr=j.leadId?leads.find(l=>l.id===j.leadId):null;
+  // Pull address from the linked lead; fall back to job note if no lead
+  const custName=lr?.name||j.title||'(no customer name)';
+  const phone=lr?.phone||lr?.contact||'';
+  const addr=lr?.address||'';
+  const email=lr?.email||'';
+  // Date range
+  const startDay=j.day&&j.day!=='backlog'?j.day:null;
+  const endDay=j.endDay||startDay;
+  const dateLine=startDay
+    ? (endDay&&endDay!==startDay
+        ? `${fmtDayLabel(startDay)} → ${fmtDayLabel(endDay)}`
+        : fmtDayLabel(startDay))
+    : 'Backlog (not scheduled)';
+  const timeLine=j.startTime?fmtTimeRange(j.startTime,j.endTime):'';
+  // Crew link URL — same format as Copy Crew Link, with cache-bust
+  const v=Math.floor(Date.now()/1000);
+  const crewUrl=`https://sign.betterview.homes/job.html?id=${encodeURIComponent(j.id)}&v=${v}`;
+  // Maps URL — different per platform.
+  // Mobile (iOS/Android) understand the `geo:` URI which opens whatever map app the
+  // user has set as default. Desktop falls back to opening Google Maps in a new tab.
+  // For both, we encode the full address string for a search query.
+  const mapsEnc=encodeURIComponent(addr);
+  // Detect mobile via touch + small viewport (matches the same check used elsewhere)
+  const mobile=window.matchMedia('(max-width:760px)').matches;
+  const mapsUrl=mobile
+    ? `geo:0,0?q=${mapsEnc}`
+    : `https://www.google.com/maps/search/?api=1&query=${mapsEnc}`;
+
+  const html=`<div class="modal show" id="jobQuickView" onclick="if(event.target.id==='jobQuickView')closeJobQuickView()" style="z-index:9000">
+    <div class="modal-content" style="max-width:480px;padding:0">
+      <!-- Header with pencil edit -->
+      <div style="position:sticky;top:0;background:var(--bg-card,#1a1c20);padding:16px 20px;border-bottom:1px solid var(--iron);display:flex;justify-content:space-between;align-items:flex-start;gap:10px;z-index:1">
+        <div style="flex:1;min-width:0">
+          <div style="font-size:9px;color:var(--muted);letter-spacing:.2em;text-transform:uppercase;font-weight:700">Job Detail</div>
+          <div style="font-size:20px;font-weight:700;color:var(--ink-bright,#fff);margin-top:2px;word-break:break-word">${esc(custName)}</div>
+        </div>
+        <div style="display:flex;gap:4px;flex-shrink:0">
+          <button class="btn btn-ghost" onclick="closeJobQuickView();openJobMov(null,'${j.id}')" title="Edit job" style="padding:6px 10px;font-size:13px">✏️</button>
+          <button class="btn btn-ghost" onclick="closeJobQuickView()" style="padding:6px 12px;font-size:13px">Close</button>
+        </div>
+      </div>
+
+      <!-- Body -->
+      <div style="padding:16px 20px">
+        <!-- Date / time block -->
+        <div style="background:var(--bg-soft,#13151a);border:1px solid var(--iron);border-radius:8px;padding:12px 14px;margin-bottom:14px">
+          <div style="font-size:9px;color:var(--muted);letter-spacing:.18em;text-transform:uppercase;font-weight:700;margin-bottom:4px">Scheduled</div>
+          <div style="font-size:15px;font-weight:600;color:var(--ink-bright,#fff)">${esc(dateLine)}</div>
+          ${timeLine?`<div style="font-size:13px;color:var(--ink,#d8d4c4);margin-top:2px">🕐 ${esc(timeLine)}</div>`:''}
+        </div>
+
+        <!-- Contact block -->
+        <div class="cust-sec-label">Customer</div>
+        <div style="margin-bottom:14px;font-size:14px;color:var(--ink,#d8d4c4);line-height:1.6">
+          ${phone?`<div>📞 <a href="tel:${esc(phone)}" style="color:var(--amber);text-decoration:none">${esc(phone)}</a></div>`:''}
+          ${email?`<div>✉ <a href="mailto:${esc(email)}" style="color:var(--amber);text-decoration:none">${esc(email)}</a></div>`:''}
+          ${addr?`<div>📍 ${esc(addr)}</div>`:'<div style="color:var(--muted);font-style:italic">No address on file</div>'}
+        </div>
+
+        ${j.note?`<div class="cust-sec-label">Notes</div><div style="margin-bottom:14px;font-size:13px;color:var(--ink,#d8d4c4);white-space:pre-wrap">${esc(j.note)}</div>`:''}
+
+        <!-- Action buttons -->
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px">
+          <a href="${crewUrl}" target="_blank" rel="noopener" class="btn btn-amber" style="text-align:center;text-decoration:none;padding:12px;font-size:14px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:6px">
+            🔗 Crew Link
+          </a>
+          ${addr
+            ? `<a href="${mapsUrl}" target="_blank" rel="noopener" class="btn btn-amber" style="text-align:center;text-decoration:none;padding:12px;font-size:14px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:6px">📍 Open in Maps</a>`
+            : `<button class="btn btn-amber" disabled style="padding:12px;font-size:14px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:6px;opacity:.5;cursor:not-allowed" title="No address on file">📍 No Address</button>`
+          }
+        </div>
+      </div>
+    </div>
+  </div>`;
+
+  const existing=document.getElementById('jobQuickView');
+  if(existing) existing.remove();
+  document.body.insertAdjacentHTML('beforeend',html);
+}
+
+function closeJobQuickView(){
+  const m=document.getElementById('jobQuickView');
+  if(m) m.remove();
+}
+
+// Helper: format a YYYY-MM-DD string into a friendly label like "Mon, Jun 12"
+function fmtDayLabel(dayKey){
+  if(!dayKey||dayKey==='backlog') return 'Backlog';
+  const [y,m,d]=dayKey.split('-').map(Number);
+  if(!y||!m||!d) return dayKey;
+  const date=new Date(y,m-1,d);
+  return date.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
+}
+
 function openJobMov(day,editId){
   editJobId=editId||null;modalDay=day||'backlog';
   document.getElementById('jMTitle').textContent=editId?'EDIT JOB':'NEW JOB';
@@ -10709,14 +10840,46 @@ function saveCollapsed(){localStorage.setItem('collapsed_cards',JSON.stringify([
 function toggleCardCollapse(id,el){
   const card=el.closest('.job-card');if(card&&card._dragging)return;
   if(!card)return;
-  if(collapsedCards.has(id)){collapsedCards.delete(id);card.classList.remove('collapsed');}
-  else{collapsedCards.add(id);card.classList.add('collapsed');}
+  const mobile=window.matchMedia('(max-width:760px)').matches;
+  // On mobile, default = collapsed. Tracking is INVERTED: presence in set = user expanded it.
+  // On desktop, default = expanded. Presence in set = user collapsed it.
+  // We use a single set for both with a 'mob:' prefix on mobile entries so they don't collide.
+  const key=mobile?('mob:'+id):id;
+  if(mobile){
+    // Toggle expanded-on-mobile
+    if(collapsedCards.has(key)){
+      collapsedCards.delete(key);
+      card.classList.add('collapsed');
+    } else {
+      collapsedCards.add(key);
+      card.classList.remove('collapsed');
+    }
+  } else {
+    // Desktop original behavior
+    if(collapsedCards.has(key)){
+      collapsedCards.delete(key);
+      card.classList.remove('collapsed');
+    } else {
+      collapsedCards.add(key);
+      card.classList.add('collapsed');
+    }
+  }
   saveCollapsed();
 }
 function applyCollapsed(containerSel){
+  const mobile=window.matchMedia('(max-width:760px)').matches;
   document.querySelectorAll(containerSel+' .job-card[data-id]').forEach(card=>{
-    if(collapsedCards.has(card.dataset.id)) card.classList.add('collapsed');
-    else card.classList.remove('collapsed');
+    const id=card.dataset.id;
+    if(mobile){
+      // Mobile: collapsed by default, expanded only if user toggled
+      const userExpanded=collapsedCards.has('mob:'+id);
+      if(userExpanded) card.classList.remove('collapsed');
+      else card.classList.add('collapsed');
+    } else {
+      // Desktop: expanded by default, collapsed only if user toggled
+      if(collapsedCards.has(id)) card.classList.add('collapsed');
+      else card.classList.remove('collapsed');
+    }
   });
 }
 
