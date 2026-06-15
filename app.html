@@ -6603,53 +6603,111 @@ document.addEventListener('click',e=>{
 });
 
 // ── CUSTOMER SEARCH IN JOB MODAL ─────────────────────────────
+// Searches the CUSTOMERS table (source of truth), not the leads table.
+// On select, links to the customer's most-recent lead — or creates a fresh
+// lead if they have none. This keeps backward compat (every job still has
+// a leadId pointer) while letting you search by customer.
 let jLinkedLeadId=null;
 
 function custSearchInput(q){
   const dropdown=document.getElementById('jCustDropdown');
   if(!q||q.length<2){dropdown.style.display='none';return;}
   const qlo=q.toLowerCase();
-  const matches=leads.filter(l=>
-    l.name.toLowerCase().includes(qlo)||
-    (l.address&&l.address.toLowerCase().includes(qlo))||
-    (l.phone&&l.phone.includes(q))||
-    (l.contact&&l.contact.toLowerCase().includes(qlo))
-  ).slice(0,8);
-  if(!matches.length){dropdown.style.display='none';return;}
-  dropdown.innerHTML=matches.map(l=>`
-    <div class="cust-result" tabindex="0" onclick="selectCust('${l.id}')">
-      <div class="cust-result-name">${esc(l.name)}</div>
-      <div class="cust-result-detail">${[l.contact,l.phone,l.address].filter(Boolean).join(' · ')}</div>
-    </div>`).join('');
+  const qDigits=q.replace(/[^0-9]/g,'');
+  // Build address-lookup keyed by customer_id to enrich the dropdown
+  const primaryAddrFor=(cid)=>{
+    const list=customerAddresses.filter(a=>a.customer_id===cid);
+    return list.find(a=>a.is_primary)||list[0]||null;
+  };
+  const matches=customers.filter(c=>{
+    if(c.archived_at) return false;
+    if((c.name||'').toLowerCase().includes(qlo)) return true;
+    if((c.email||'').toLowerCase().includes(qlo)) return true;
+    if(qDigits.length>=3 && (c.phone_normalized||'').includes(qDigits)) return true;
+    // Also match on any of their addresses
+    const addrs=customerAddresses.filter(a=>a.customer_id===c.id);
+    if(addrs.some(a=>
+      (a.street&&a.street.toLowerCase().includes(qlo))||
+      (a.city&&a.city.toLowerCase().includes(qlo))
+    )) return true;
+    return false;
+  }).slice(0,8);
+  if(!matches.length){
+    dropdown.innerHTML=`<div class="cust-result" style="cursor:default;color:var(--muted);font-style:italic">No customers match "${esc(q)}". <a onclick="closeMov('jMov');openCustomerMov();setTimeout(()=>{const el=document.getElementById('ncName');if(el)el.value='${esc(q).replace(/'/g,"&#39;")}';},50)" style="color:var(--amber);cursor:pointer;text-decoration:underline">+ Create new customer</a></div>`;
+    dropdown.style.display='block';
+    return;
+  }
+  dropdown.innerHTML=matches.map(c=>{
+    const addr=primaryAddrFor(c.id);
+    const addrLine=addr?[addr.street,addr.city,addr.state].filter(Boolean).join(', '):'';
+    const detail=[c.phone||'',c.email||'',addrLine].filter(Boolean).join(' · ');
+    return `<div class="cust-result" tabindex="0" onclick="selectCust('${c.id}')">
+      <div class="cust-result-name">${esc(c.name||'(unnamed)')}</div>
+      <div class="cust-result-detail">${esc(detail)}</div>
+    </div>`;
+  }).join('');
   dropdown.style.display='block';
 }
 
-function selectCust(leadId){
-  const l=leads.find(x=>x.id===leadId);
-  if(!l)return;
-  jLinkedLeadId=leadId;
+// Select a customer for this job. Resolves to a lead (their most-recent,
+// or creates one if they have none) and sets jLinkedLeadId to it for
+// backward compat with all the code that reads job.leadId.
+function selectCust(customerId){
+  const c=customers.find(x=>x.id===customerId);
+  if(!c){alert('Customer not found.');return;}
+  // Find their most-recent lead
+  const customerLeads=leadsForCustomer(c.id);
+  let lead;
+  if(customerLeads.length>0){
+    // Most recently updated wins
+    lead=[...customerLeads].sort((a,b)=>(b.updated_at||'').localeCompare(a.updated_at||''))[0];
+  } else {
+    // No leads yet — create a fresh one for this customer
+    const primaryAddr=customerAddresses.filter(a=>a.customer_id===c.id).find(a=>a.is_primary)||customerAddresses.find(a=>a.customer_id===c.id);
+    const addrStr=primaryAddr?[primaryAddr.street,primaryAddr.city,primaryAddr.state].filter(Boolean).join(', '):'';
+    const newLeadId='l_'+Date.now().toString(36)+Math.random().toString(36).substring(2,7);
+    lead={
+      id:newLeadId,
+      name:c.name||'',
+      contact:c.name||'',
+      phone:c.phone||'',
+      email:c.email||'',
+      address:addrStr,
+      stage:'new',
+      customer_id:c.id,
+      company_id:c.company_id||currentCompanyId,
+      types:[],value:'',notes:'',color:'blue',source:c.source||'',matList:[],activity:[],
+      assignedTo:null,
+      createdAt:new Date().toISOString(),
+      updated_at:new Date().toISOString(),
+    };
+    leads.push(lead);
+    saveLead(lead);
+  }
+  jLinkedLeadId=lead.id;
   // Hide search, show linked chip
   document.getElementById('jCustSearch').value='';
   document.getElementById('jCustDropdown').style.display='none';
   document.getElementById('jCustLinked').style.display='block';
+  const addr=customerAddresses.filter(a=>a.customer_id===c.id).find(a=>a.is_primary)||customerAddresses.find(a=>a.customer_id===c.id);
+  const addrLine=addr?[addr.street,addr.city,addr.state].filter(Boolean).join(', '):(lead.address||'');
   document.getElementById('jCustLinked').innerHTML=`
     <div class="cust-linked-chip">
       <div class="cust-linked-info">
-        <div class="cust-linked-name">✓ ${esc(l.name)}</div>
-        <div class="cust-linked-detail">${[l.contact,l.phone,l.address].filter(Boolean).join(' · ')}</div>
+        <div class="cust-linked-name">✓ ${esc(c.name||'(unnamed)')}</div>
+        <div class="cust-linked-detail">${[c.phone,c.email,addrLine].filter(Boolean).join(' · ')}</div>
       </div>
       <button class="cust-linked-clear" onclick="clearCust()" title="Remove link">×</button>
     </div>`;
   // Auto-fill job name if empty
   const nameEl=document.getElementById('jName');
   if(!nameEl.value){
-    const typeStr=(l.types&&l.types.length)?' – '+l.types.join(', '):'';
-    nameEl.value=l.name+typeStr;
+    nameEl.value=c.name||'';
   }
   // Auto-fill notes if empty
   const noteEl=document.getElementById('jNote');
   if(!noteEl.value){
-    noteEl.value=[l.address,l.contact,l.phone].filter(Boolean).join(' | ');
+    noteEl.value=[addrLine,c.name,c.phone].filter(Boolean).join(' | ');
   }
   // Hide the search input row since we have a selection
   document.getElementById('jCustSearch').style.display='none';
