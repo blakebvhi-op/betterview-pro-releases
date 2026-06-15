@@ -17,8 +17,8 @@
 <title>Better View Pro</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600&display=swap" onload="this.onload=null;this.rel='stylesheet'">
-<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600&display=swap"></noscript>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;600;700&display=swap" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;600;700&display=swap"></noscript>
 <style>
 :root{
   --steel:#1a1e2e;--steel-mid:#252b3d;--steel-light:#2f3650;--iron:#3b4466;
@@ -27,10 +27,87 @@
   --green:#22c55e;--blue:#3b82f6;--purple:#a855f7;
   --pink:#ec4899;--teal:#14b8a6;--orange:#f97316;
   --hh:56px;--bnh:60px;
+  --app-font:'DM Sans',sans-serif;
+  --display-font:'Bebas Neue',sans-serif;
+}
+
+/* ──────────────────────────────────────────────────────────────
+   CLIPBOARD THEME — Foreman's Clipboard
+   Manila paper, mono fonts, iron + burnt orange.
+   Activated by setting <html data-theme="clipboard"> via the
+   theme picker. Owner-only access (gated in JS).
+   ──────────────────────────────────────────────────────────── */
+:root[data-theme="clipboard"]{
+  /* Base palette — manila paper + iron-gall ink + burnt orange */
+  --steel:#1e1a14;          /* deep ink (dark mode equivalent of canvas) */
+  --steel-mid:#2a241b;      /* card / surface */
+  --steel-light:#3a3225;    /* hover surface */
+  --iron:#5a4f3d;           /* warm tan border */
+  --amber:#c2410c;          /* burnt orange — primary accent */
+  --amber-bright:#ea580c;
+  --amber-dim:#9a3412;
+  --white:#e8e1d2;          /* parchment text — softer than pure white */
+  --muted:#a89e88;          /* aged tan for muted */
+  --danger:#a83232;         /* wax-seal red */
+  --green:#3d7d3f;          /* moss for paid/done */
+  --blue:#4a6b8a;           /* slate blue */
+  --purple:#8a5e74;          /* dusty purple */
+  --pink:#b95a73;
+  --teal:#4c8a7e;
+  --orange:#c2410c;
+  --app-font:'JetBrains Mono','Courier New',monospace;
+  --display-font:'JetBrains Mono','Courier New',monospace;
+}
+/* Same theme, light mode — manila paper instead of dark ink */
+:root[data-theme="clipboard-light"]{
+  --steel:#ece6d8;          /* manila paper */
+  --steel-mid:#f5f0e3;      /* card */
+  --steel-light:#e0d8c2;    /* hover */
+  --iron:#1c1a17;           /* iron-gall ink lines */
+  --amber:#c2410c;
+  --amber-bright:#9a3412;
+  --amber-dim:#b45309;
+  --white:#181613;          /* dark ink text */
+  --muted:#6c625a;
+  --danger:#7a2828;
+  --green:#156e44;
+  --blue:#3a5878;
+  --purple:#7a4860;
+  --pink:#a04a64;
+  --teal:#3a6b62;
+  --orange:#b45309;
+  --app-font:'JetBrains Mono','Courier New',monospace;
+  --display-font:'JetBrains Mono','Courier New',monospace;
+}
+/* Bright primary text on clipboard should NOT be the inverted brand color.
+   The brand mark in the header uses --amber for the logo. Override here
+   so it doesn't fight the dark-on-paper aesthetic. */
+:root[data-theme="clipboard"] body,
+:root[data-theme="clipboard-light"] body{
+  font-family: var(--app-font);
+  letter-spacing: .01em;
+}
+:root[data-theme="clipboard"] .logo,
+:root[data-theme="clipboard-light"] .logo,
+:root[data-theme="clipboard"] .dtab,
+:root[data-theme="clipboard-light"] .dtab,
+:root[data-theme="clipboard"] .bnlbl,
+:root[data-theme="clipboard-light"] .bnlbl{
+  font-family: var(--display-font);
+  letter-spacing: .15em;
+}
+/* Subtle paper-grain texture on the clipboard-light theme */
+:root[data-theme="clipboard-light"] body::before{
+  content: ''; position: fixed; inset: 0; pointer-events: none;
+  background-image: repeating-linear-gradient(
+    0deg, transparent 0, transparent 23px,
+    rgba(28,26,23,.04) 23px, rgba(28,26,23,.04) 24px
+  );
+  opacity: .35; z-index: 0;
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
 html,body{height:100%;overscroll-behavior:none;}
-body{font-family:'DM Sans',sans-serif;background:var(--steel);color:var(--white);overflow:hidden;}
+body{font-family:var(--app-font);background:var(--steel);color:var(--white);overflow:hidden;}
 
 /* ── HEADER ── */
 header{position:fixed;top:0;left:0;right:0;z-index:50;height:var(--hh);display:flex;align-items:center;justify-content:space-between;padding:0 14px;background:var(--steel-mid);border-bottom:2px solid var(--amber);box-shadow:0 2px 16px rgba(0,0,0,.4);}
@@ -1272,6 +1349,7 @@ body:not(.role-owner):not(.role-manager) .role-financial-only{display:none!impor
       <div class="user-menu-item role-owner-only" id="qbConnectMenuItem" onclick="openQbConnect()"><span id="qbConnectIcon">🟢</span><span id="qbConnectLabel">Connect QuickBooks</span></div>
       <div class="user-menu-item role-financial-only" id="reportsMenuItem" onclick="openReports()"><span>📊</span><span>Reports</span></div>
       <div class="user-menu-item" id="resyncMenuItem" onclick="manualResync()"><span>🔄</span><span>Resync</span></div>
+      <div class="user-menu-item" id="themePickerMenuItem" onclick="openThemePicker()" style="display:none"><span>🎨</span><span>Theme</span></div>
       <div class="user-menu-item danger" onclick="doSignOut()"><span>⏏</span><span>Sign Out</span></div>
     </div>
     <div class="sync-dot" id="syncDot"></div>
@@ -3691,6 +3769,8 @@ function updateUserUI(){
   }else{
     badge.style.display='none';
   }
+  // Reveal the theme picker menu item if this user is Blake (owner-only beta)
+  if(typeof refreshThemePickerVisibility==='function') refreshThemePickerVisibility();
 }
 function showAuthScreen(){
   document.getElementById('authScreen').classList.remove('hidden');
@@ -4054,6 +4134,101 @@ const DN=['MON','TUE','WED','THU','FRI','SAT','SUN'];
 const DNF=['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday'];
 const MO=['January','February','March','April','May','June','July','August','September','October','November','December'];
 const MOS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+// ── THEME SYSTEM ─────────────────────────────────────────────
+// Three themes available:
+//   - 'default'         — the existing dark steel + amber look (no override)
+//   - 'clipboard'       — Foreman's Clipboard, dark variant (manila/iron/burnt orange)
+//   - 'clipboard-light' — Foreman's Clipboard, light variant
+// 
+// Persisted in localStorage. Owner-only access enforced in the picker UI.
+// Apply IMMEDIATELY on load (before render) to avoid a flash of wrong theme.
+const BLAKE_USER_ID='2c3b667d-c0e8-4aff-843f-9b724b638496';
+function canUseClipboardTheme(){
+  // Owner-only theme. The currentUser check happens after auth, so for the
+  // initial pre-auth load we trust localStorage; we revert if needed once
+  // auth completes.
+  return (currentUser && currentUser.id===BLAKE_USER_ID) || !currentUser;
+}
+function applyTheme(name){
+  const valid=['default','clipboard','clipboard-light'];
+  if(!valid.includes(name)) name='default';
+  if(name==='default'){
+    document.documentElement.removeAttribute('data-theme');
+  } else {
+    document.documentElement.setAttribute('data-theme',name);
+  }
+}
+function setTheme(name){
+  applyTheme(name);
+  try{localStorage.setItem('bvTheme',name);}catch{}
+}
+// Apply persisted theme RIGHT NOW (before any rendering)
+(function(){
+  try{
+    const saved=localStorage.getItem('bvTheme');
+    if(saved) applyTheme(saved);
+  }catch{}
+})();
+
+// Reveal the Theme menu item only for the owner (Blake) user.
+// Called after auth completes (from updateUserUI or similar).
+function refreshThemePickerVisibility(){
+  const el=document.getElementById('themePickerMenuItem');
+  if(!el) return;
+  el.style.display=(currentUser && currentUser.id===BLAKE_USER_ID) ? 'flex' : 'none';
+  // If a non-Blake user somehow has a clipboard theme set, revert
+  if(currentUser && currentUser.id!==BLAKE_USER_ID){
+    const cur=document.documentElement.getAttribute('data-theme');
+    if(cur && cur!=='default'){
+      setTheme('default');
+    }
+  }
+}
+
+// Theme picker modal — small dialog with 3 options
+function openThemePicker(){
+  if(currentUser && currentUser.id!==BLAKE_USER_ID){
+    alert('Theme picker is currently in beta and limited to the owner.');
+    return;
+  }
+  const cur=localStorage.getItem('bvTheme')||'default';
+  // Close user menu first
+  document.getElementById('userMenu')?.classList.remove('open');
+  const html=`<div class="modal show" id="themePicker" onclick="if(event.target.id==='themePicker')closeThemePicker()" style="z-index:9200">
+    <div class="modal-content" style="max-width:420px;padding:20px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+        <strong style="font-size:16px">🎨 Theme</strong>
+        <button class="btn btn-ghost" onclick="closeThemePicker()" style="padding:4px 12px">Close</button>
+      </div>
+      <div style="font-size:12px;color:var(--muted);margin-bottom:14px;font-style:italic">Beta — owner only. The clipboard theme is in active testing; you may see styling stragglers. Send screenshots of any visual oddities.</div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        ${themeChoice('default','Default','Dark steel + amber (the look you know)',cur)}
+        ${themeChoice('clipboard',"Foreman's Clipboard — Dark",'Mono fonts, iron + burnt orange',cur)}
+        ${themeChoice('clipboard-light',"Foreman's Clipboard — Light",'Manila paper, dark ink',cur)}
+      </div>
+    </div>
+  </div>`;
+  const existing=document.getElementById('themePicker');
+  if(existing) existing.remove();
+  document.body.insertAdjacentHTML('beforeend',html);
+}
+function themeChoice(id,label,desc,current){
+  const active=(current===id || (id==='default' && !current));
+  return `<button onclick="pickTheme('${id}')" class="theme-choice ${active?'active':''}" style="text-align:left;padding:12px 14px;border:1px solid ${active?'var(--amber)':'var(--iron)'};border-radius:8px;background:${active?'rgba(245,158,11,.08)':'transparent'};cursor:pointer;color:var(--white);font-family:inherit;display:flex;flex-direction:column;gap:2px">
+    <span style="font-weight:600;font-size:14px">${label} ${active?'✓':''}</span>
+    <span style="font-size:11px;color:var(--muted)">${desc}</span>
+  </button>`;
+}
+function pickTheme(name){
+  setTheme(name);
+  // Re-render the picker so the active state updates without closing
+  openThemePicker();
+}
+function closeThemePicker(){
+  const m=document.getElementById('themePicker');
+  if(m) m.remove();
+}
 
 // ── STATE ────────────────────────────────────────────────────
 let jobs=[],leads=[];
@@ -5588,14 +5763,19 @@ function renderCustomerDetail(c){
     <div class="modal-content" style="max-width:680px;max-height:92vh;overflow-y:auto;padding:0">
       <!-- Header -->
       <div style="position:sticky;top:0;background:var(--bg-card,#1a1c20);padding:18px 20px;border-bottom:1px solid var(--iron);display:flex;justify-content:space-between;align-items:flex-start;gap:12px;z-index:1">
-        <div style="flex:1">
-          <input id="cdName" class="finput" value="${esc(c.name||'')}" onchange="updateCustomerField('name',this.value)" style="font-size:20px;font-weight:700;background:transparent;border:0;padding:0;color:var(--ink-bright,#fff);width:100%"/>
+        <div style="flex:1;min-width:0">
+          <div style="font-size:9px;color:var(--muted);letter-spacing:.18em;text-transform:uppercase;font-weight:700;margin-bottom:2px">Customer · click any field to edit</div>
+          <input id="cdName" class="finput" value="${esc(c.name||'')}" onchange="updateCustomerField('name',this.value)" style="font-size:20px;font-weight:700;background:transparent;border:1px solid transparent;padding:2px 6px;margin:-2px -6px;color:var(--ink-bright,#fff);width:100%;border-radius:4px" onfocus="this.style.borderColor='var(--amber)';this.style.background='rgba(245,158,11,.05)'" onblur="this.style.borderColor='transparent';this.style.background='transparent'"/>
           <div class="cust-tags" style="margin-top:8px;display:flex;flex-wrap:wrap;gap:4px;align-items:center">
             ${tagChipsHTML}
             <button class="btn btn-ghost" onclick="openTagPicker('customer','${c.id}')" style="font-size:11px;padding:3px 10px;border-radius:100px">+ Tag</button>
           </div>
         </div>
-        <button class="btn btn-ghost" onclick="closeCustomerDetail()" style="padding:6px 12px">Close</button>
+        <div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0">
+          <button class="btn btn-ghost" onclick="document.getElementById('cdName')?.focus()" title="Edit fields (or click any field directly)" style="padding:6px 10px;font-size:13px">✏️ Edit</button>
+          <button class="btn btn-ghost" onclick="confirmDeleteCustomer('${c.id}')" title="Delete customer" style="padding:6px 10px;font-size:13px;color:var(--red,#ef4444)">🗑 Delete</button>
+          <button class="btn btn-ghost" onclick="closeCustomerDetail()" style="padding:6px 10px;font-size:13px">Close</button>
+        </div>
       </div>
 
       <!-- Body -->
@@ -5654,13 +5834,116 @@ function updateCustomerField(field,value){
   saveCustomer(c);
 }
 
-// Archive (soft-delete) a customer
+// Archive (soft-delete) a customer. Their data stays in the DB, they just
+// disappear from the active list.
 async function archiveCustomer(customerId){
   if(!confirm('Archive this customer? They will be hidden from the list but their data is preserved.')) return;
   const c=customers.find(x=>x.id===customerId);
   if(!c) return;
   c.archived_at=new Date().toISOString();
   saveCustomer(c);
+  closeCustomerDetail();
+  renderCustomers();
+}
+
+// Hybrid hard-delete flow:
+//   - If customer has zero leads/jobs/docs → open typed-name confirmation, then delete
+//   - If customer has any attached work → show a warning and offer Archive instead
+function confirmDeleteCustomer(customerId){
+  const c=customers.find(x=>x.id===customerId);
+  if(!c){alert('Customer not found.');return;}
+  const cLeads=leadsForCustomer(customerId);
+  const cJobs=jobs.filter(j=>j.customer_id===customerId || (j.leadId && cLeads.find(l=>l.id===j.leadId)));
+  const cDocs=docs.filter(d=>d.customer_id===customerId || (d.lead_id && cLeads.find(l=>l.id===d.lead_id)));
+  const hasWork=cLeads.length>0||cJobs.length>0||cDocs.length>0;
+  if(hasWork){
+    // Show "cannot delete" with archive option
+    const parts=[];
+    if(cLeads.length>0) parts.push(`${cLeads.length} estimate${cLeads.length===1?'':'s'}`);
+    if(cJobs.length>0) parts.push(`${cJobs.length} job${cJobs.length===1?'':'s'}`);
+    if(cDocs.length>0) parts.push(`${cDocs.length} document${cDocs.length===1?'':'s'}`);
+    const html=`<div class="modal show" id="deleteBlocked" onclick="if(event.target.id==='deleteBlocked')this.remove()" style="z-index:9300">
+      <div class="modal-content" style="max-width:440px;padding:20px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+          <strong style="font-size:16px;color:var(--red,#ef4444)">Cannot delete</strong>
+          <button class="btn btn-ghost" onclick="document.getElementById('deleteBlocked').remove()" style="padding:4px 12px">Close</button>
+        </div>
+        <p style="font-size:14px;line-height:1.5;margin-bottom:14px">
+          <strong>${esc(c.name)}</strong> has ${parts.join(', ')} attached.<br><br>
+          Hard-deleting would orphan that work. Archive instead — they'll be hidden from the list but all history preserved.
+        </p>
+        <div style="display:flex;gap:8px;justify-content:flex-end">
+          <button class="btn btn-ghost" onclick="document.getElementById('deleteBlocked').remove()" style="padding:8px 14px">Cancel</button>
+          <button class="btn btn-amber" onclick="document.getElementById('deleteBlocked').remove();archiveCustomer('${c.id}')" style="padding:8px 14px">Archive instead</button>
+        </div>
+      </div>
+    </div>`;
+    const existing=document.getElementById('deleteBlocked');
+    if(existing) existing.remove();
+    document.body.insertAdjacentHTML('beforeend',html);
+    return;
+  }
+
+  // No attached work — show typed-name confirmation
+  const requiredName=c.name||'';
+  const html=`<div class="modal show" id="deleteConfirm" onclick="if(event.target.id==='deleteConfirm')this.remove()" style="z-index:9300">
+    <div class="modal-content" style="max-width:440px;padding:20px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
+        <strong style="font-size:16px;color:var(--red,#ef4444)">Delete customer permanently</strong>
+        <button class="btn btn-ghost" onclick="document.getElementById('deleteConfirm').remove()" style="padding:4px 12px">Cancel</button>
+      </div>
+      <p style="font-size:13px;color:var(--muted);line-height:1.5;margin-bottom:14px">
+        This will permanently remove <strong style="color:var(--white)">${esc(requiredName)}</strong> and any addresses or tag applications on them. This cannot be undone.
+      </p>
+      <label class="flbl" style="display:block;margin-bottom:4px">Type the customer's name to confirm:</label>
+      <input id="delConfirmInput" class="finput" placeholder="${esc(requiredName)}" oninput="document.getElementById('delConfirmBtn').disabled = (this.value !== ${JSON.stringify(requiredName)})" style="margin-bottom:14px" autofocus/>
+      <div style="display:flex;gap:8px;justify-content:flex-end">
+        <button class="btn btn-ghost" onclick="document.getElementById('deleteConfirm').remove()" style="padding:8px 14px">Cancel</button>
+        <button id="delConfirmBtn" class="btn" onclick="executeDeleteCustomer('${c.id}')" disabled style="padding:8px 14px;background:var(--red,#ef4444);color:#fff;border:0;border-radius:6px;cursor:pointer;opacity:.4">Delete forever</button>
+      </div>
+    </div>
+  </div>`;
+  const existing=document.getElementById('deleteConfirm');
+  if(existing) existing.remove();
+  document.body.insertAdjacentHTML('beforeend',html);
+  // Enable button transitions
+  setTimeout(()=>{
+    const btn=document.getElementById('delConfirmBtn');
+    if(btn) btn.style.transition='opacity .15s';
+    // Watch the input to fix disabled-opacity in real-time
+    const inp=document.getElementById('delConfirmInput');
+    if(inp){
+      inp.addEventListener('input',()=>{
+        btn.style.opacity=btn.disabled?'.4':'1';
+      });
+    }
+  },20);
+}
+
+// Actually do the delete after typed-name confirmation passed.
+async function executeDeleteCustomer(customerId){
+  const c=customers.find(x=>x.id===customerId);
+  if(!c) return;
+  // Close confirm modal
+  document.getElementById('deleteConfirm')?.remove();
+  // Local cleanup first
+  customerTags=customerTags.filter(ct=>ct.customer_id!==customerId);
+  customerAddresses=customerAddresses.filter(a=>a.customer_id!==customerId);
+  customers=customers.filter(x=>x.id!==customerId);
+  // Remote delete — customer_addresses cascade, customer_tags cascade too (via FK).
+  // Tags applied to the customer go via the customer_tags cascade.
+  try{
+    await sb.del('customers',customerId);
+  }catch(e){
+    console.error('executeDeleteCustomer:',e);
+    alert('Delete failed on the server. The customer may still exist. Error: '+(e.message||e));
+    // Restore local state by reloading
+    await loadCustomersRemote();
+    await loadCustomerAddressesRemote();
+    await loadCustomerTagsRemote();
+    renderCustomers();
+    return;
+  }
   closeCustomerDetail();
   renderCustomers();
 }
