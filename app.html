@@ -1904,7 +1904,7 @@ body:not(.role-owner):not(.role-manager) .role-financial-only{display:none!impor
       </div>
     </div>
     <div class="macts">
-      <button class="btn btn-ghost" onclick="closeMov('jMov')">Cancel</button>
+      <button class="btn btn-ghost" onclick="dropUnsavedAutoLeads();closeMov('jMov')">Cancel</button>
       <button class="btn btn-ghost" id="jCrewLink" onclick="copyCrewLink()" style="display:none">📋 Crew Link</button>
       <button class="btn btn-amber" id="jSave">Add Job</button>
     </div>
@@ -5949,31 +5949,74 @@ async function executeDeleteCustomer(customerId){
 }
 
 // Create a new estimate (lead) attached to this customer.
-// Opens the existing lead modal with the customer's info pre-populated.
+// New flow (per design decision): instead of opening the lead-edit modal,
+// jump straight to the estimate DOCUMENT (the line-items / scope / totals UI).
+// The lead is created silently with sensible defaults, then the doc editor
+// opens for the actual estimate work.
 function createEstimateForCustomer(customerId){
   const c=customers.find(x=>x.id===customerId);
   if(!c) return;
-  // Build a fresh lead object linked to this customer
-  const newLeadId='l_'+Date.now().toString(36)+Math.random().toString(36).substring(2,7);
   const primary=addressesForCustomer(customerId).find(a=>a.is_primary)||addressesForCustomer(customerId)[0];
+  const addrStr=primary?[primary.street,primary.city,primary.state].filter(Boolean).join(', '):'';
+
+  // Create the lead silently — the user shouldn't see/edit it directly.
+  // It exists to track stage and link the document back to the customer.
+  const newLeadId='l_'+Date.now().toString(36)+Math.random().toString(36).substring(2,7);
   const newLead={
     id:newLeadId,
-    name:c.name,
-    contact:c.name,
+    name:c.name||'',
+    contact:c.name||'',
     phone:c.phone||'',
     email:c.email||'',
-    address:primary?[primary.street,primary.city,primary.state].filter(Boolean).join(', '):'',
-    stage:'new',
+    address:addrStr,
+    stage:'quote',     // jumping straight to estimate doc means we're in quoting
     customer_id:customerId,
-    company_id:c.company_id,
-    created_by:currentUser?.id,
+    company_id:c.company_id||currentCompanyId,
+    types:[],value:'',notes:'',color:'blue',
+    source:c.source||'',
+    matList:[],activity:[],
+    assignedTo:null,
+    createdAt:new Date().toISOString(),
     updated_at:new Date().toISOString(),
   };
   leads.push(newLead);
   saveLead(newLead);
-  // Close customer detail, open the new lead's modal
+
+  // Close customer detail so the doc editor has a clean stage
   closeCustomerDetail();
-  if(typeof openLeadMov==='function') openLeadMov(newLeadId);
+
+  // Open the estimate document editor. We pre-populate it via the doc record
+  // BEFORE calling openDocEditor — that function reads from the docs array
+  // to find the doc, so we need to create it first.
+  const newDocId=uid();
+  const docNum=(typeof nextDocNum==='function')?nextDocNum('estimate'):'';
+  const newDoc={
+    id:newDocId,
+    type:'estimate',
+    status:'draft',
+    num:docNum,
+    clientName:c.name||'',
+    clientContact:[c.name,c.phone].filter(Boolean).join(' · '),
+    clientAddr:addrStr,
+    date:new Date().toISOString().split('T')[0],
+    dueDate:'',
+    scope:'',
+    lineItems:[],
+    tax:0,discount:0,
+    notes:'',
+    created:Date.now(),
+  };
+  docs.push(newDoc);
+  // Link the lead to this doc (estId) so when the doc saves, it knows
+  // which lead to report stage updates to.
+  newLead.estId=newDocId;
+  // Save both. The doc editor will read from docs array on open.
+  if(typeof saveDocSync==='function') saveDocSync(newDoc);
+  saveLead(newLead);
+
+  // Open the doc editor on this new document
+  if(typeof openDocEditor==='function') openDocEditor(newDocId);
+  else alert('Could not open the estimate editor. Refresh and try again.');
 }
 
 // Delete an estimate (lead) from inside the customer detail view.
@@ -6945,7 +6988,10 @@ function selectCust(customerId){
     // Most recently updated wins
     lead=[...customerLeads].sort((a,b)=>(b.updated_at||'').localeCompare(a.updated_at||''))[0];
   } else {
-    // No leads yet — create a fresh one for this customer
+    // No leads yet — create a fresh one for this customer.
+    // IMPORTANT: don't push to DB yet. We only persist if the user actually
+    // saves the job. Otherwise canceling out of the appointment modal would
+    // leave a phantom blank lead on the customer.
     const primaryAddr=customerAddresses.filter(a=>a.customer_id===c.id).find(a=>a.is_primary)||customerAddresses.find(a=>a.customer_id===c.id);
     const addrStr=primaryAddr?[primaryAddr.street,primaryAddr.city,primaryAddr.state].filter(Boolean).join(', '):'';
     const newLeadId='l_'+Date.now().toString(36)+Math.random().toString(36).substring(2,7);
@@ -6963,9 +7009,12 @@ function selectCust(customerId){
       assignedTo:null,
       createdAt:new Date().toISOString(),
       updated_at:new Date().toISOString(),
+      _unsaved:true, // Marker — saveJob checks this and persists the lead first
     };
+    // Push to in-memory ONLY so the job modal can reference it via jLinkedLeadId.
+    // Do NOT call saveLead() — that would queue a DB save. The lead becomes real
+    // only when the job is saved (see job save flow).
     leads.push(lead);
-    saveLead(lead);
   }
   jLinkedLeadId=lead.id;
   // Hide search, show linked chip
@@ -6997,12 +7046,30 @@ function selectCust(customerId){
 }
 
 function clearCust(){
+  // If the linked lead was auto-created and not yet persisted, drop it
+  if(jLinkedLeadId){
+    const lk=leads.find(l=>l.id===jLinkedLeadId);
+    if(lk && lk._unsaved){
+      leads=leads.filter(l=>l.id!==jLinkedLeadId);
+    }
+  }
   jLinkedLeadId=null;
   document.getElementById('jCustLinked').style.display='none';
   document.getElementById('jCustLinked').innerHTML='';
   document.getElementById('jCustSearch').value='';
   document.getElementById('jCustSearch').style.display='';
   document.getElementById('jCustDropdown').style.display='none';
+}
+
+// Drop any in-memory unsaved leads. Called when the job modal closes without
+// saving (Cancel, X, or backdrop click) so phantom leads don't leak.
+function dropUnsavedAutoLeads(){
+  const before=leads.length;
+  leads=leads.filter(l=>!l._unsaved);
+  if(leads.length!==before){
+    // Reset the linked lead pointer in the job modal too
+    jLinkedLeadId=null;
+  }
 }
 
 // Close dropdown when clicking outside
@@ -7207,6 +7274,18 @@ document.getElementById('jSave').addEventListener('click',async()=>{
   const startTime=document.getElementById('jStartTime').value;
   const endTime=document.getElementById('jEndTime').value;
   const endDay=document.getElementById('jEndDay')?.value||'';
+
+  // If the selected customer caused an _unsaved lead to be created in memory,
+  // persist it NOW. This makes the lead real so the job's leadId FK resolves.
+  if(jLinkedLeadId){
+    const lk=leads.find(l=>l.id===jLinkedLeadId);
+    if(lk && lk._unsaved){
+      delete lk._unsaved;
+      try{ await sb.upsert('leads', leadToDb(lk)); }
+      catch(e){ console.error('Failed to persist auto-lead:', e); }
+    }
+  }
+
   let j;
   if(editJobId){j=jobs.find(x=>x.id===editJobId);if(j){j.title=name;j.note=note;j.color=selColor;j.day=td;j.endDay=endDay;j.apptType=selApptType||'sales';j.startTime=startTime;j.endTime=endTime;j.assigneeIds=jAssigneeIds.slice();j.assigneeId=jAssigneeIds[0]||null;if(jLinkedLeadId)j.leadId=jLinkedLeadId;}}
   else{j={id:uid(),title:name,note,color:selColor,day:td,endDay,leadId:jLinkedLeadId||null,apptType:selApptType||'sales',startTime,endTime,assigneeIds:jAssigneeIds.slice(),assigneeId:jAssigneeIds[0]||null};jobs.push(j);}
@@ -8003,7 +8082,13 @@ function buildCP(cid,sel,onChange){
   cp.querySelectorAll('.cpdot').forEach(d=>d.addEventListener('click',()=>{onChange(d.dataset.c);cp.querySelectorAll('.cpdot').forEach(x=>x.classList.remove('sel'));d.classList.add('sel');}));
 }
 function openMov(id){document.getElementById(id).classList.add('open');}
-function closeMov(id){document.getElementById(id).classList.remove('open');}
+function closeMov(id){
+  // If closing the job modal, drop any in-memory auto-leads that weren't saved.
+  // This handles cancel/backdrop click; the explicit save path persists them
+  // first BEFORE calling closeMov, so the drop is a no-op in that case.
+  if(id==='jMov' && typeof dropUnsavedAutoLeads==='function') dropUnsavedAutoLeads();
+  document.getElementById(id).classList.remove('open');
+}
 document.querySelectorAll('.mov').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open');}));
 function showToast(title,msg,jump=false){ /* notifications removed */ }
 function updateBadges(){
