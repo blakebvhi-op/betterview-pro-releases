@@ -5549,6 +5549,7 @@ function renderCustomers(){
   // Top stats: customers + their active pipeline numbers
   const activeCustomers=customers.filter(c=>!c.archived_at);
   document.getElementById('sTotal').textContent=activeCustomers.length;
+  updateBadges(); // keep the nav CUSTOMERS badge in sync with the loaded customer count
 
   // Active pipeline = customers with at least one non-declined non-paid lead
   const customersByActivity={};
