@@ -370,6 +370,10 @@ header{position:fixed;top:0;left:0;right:0;z-index:50;height:var(--hh);display:f
 .cust-est-meta{display:flex;align-items:center;gap:8px;flex-shrink:0;}
 .cust-est-val{font-size:12px;font-weight:700;color:var(--ink-bright,#fff);}
 .cust-est-empty{margin-top:8px;padding-top:8px;border-top:1px solid var(--iron);font-size:11px;color:var(--muted);font-style:italic;}
+.cust-tag-filter{display:flex;gap:6px;flex-wrap:wrap;padding:8px 14px 2px;align-items:center;}
+.cust-tagchip{font-size:11px;padding:3px 11px;border-radius:100px;background:transparent;border:1px solid var(--iron);color:var(--muted);cursor:pointer;white-space:nowrap;transition:border-color .12s,background .12s;}
+.cust-tagchip:hover{border-color:var(--amber);}
+.cust-tagchip.active{background:var(--amber);border-color:var(--amber);color:#0b0d10;font-weight:700;}
 .cust-pipe-val{color:var(--amber);font-weight:600;font-variant-numeric:tabular-nums;}
 /* Customer detail modal */
 .cust-sec-label{font-size:10px;font-weight:700;letter-spacing:.18em;color:var(--muted);text-transform:uppercase;margin-bottom:8px;}
@@ -1629,6 +1633,7 @@ body:not(.role-owner):not(.role-manager) .role-financial-only{display:none!impor
       <button class="sched-sub-pill" data-jtype="Gutters" onclick="setLeadJobType('Gutters')">🌧️ Gutters</button>
       <button class="sched-sub-pill" data-jtype="Soffit & Fascia" onclick="setLeadJobType('Soffit & Fascia')">📐 Soffit &amp; Fascia</button>
     </div>
+    <div class="cust-tag-filter" id="custTagFilter" style="display:none"></div>
     <div class="stabs" id="stabs"></div>
     <div class="leadlist" id="leadList"></div>
   </div>
@@ -5453,6 +5458,11 @@ function renderCRM(){
 let customerSearchQuery='';
 let customerSortMode=lsGet('customer_sort_mode','newest');  // 'newest' | 'recent' | 'name_asc' | 'value_desc'
 let customerNewOnly=false;  // triage: show only customers with an untouched (new-stage) estimate
+let customerTagFilter=null; // triage: filter customers by a single tag id
+function setCustomerTagFilter(tagId){
+  customerTagFilter=(customerTagFilter===tagId)?null:tagId;
+  if(typeof renderCustomers==='function') renderCustomers();
+}
 function setCustomerSort(mode){
   customerSortMode=mode||'newest';
   lsSet('customer_sort_mode',customerSortMode);
@@ -5571,6 +5581,13 @@ function renderCustomers(){
   // Hide the stage filter tabs entirely; customers are a flat directory.
   const stabs=document.getElementById('stabs');
   if(stabs){ stabs.style.display='none'; stabs.innerHTML=''; }
+
+  // Tag usage across active customers (drives the tag filter chips)
+  const tagCounts={};
+  for(const c of activeCustomers){
+    for(const t of tagsForCustomer(c.id)){ tagCounts[t.id]=(tagCounts[t.id]||0)+1; }
+  }
+  if(customerTagFilter && !tagCounts[customerTagFilter]) customerTagFilter=null;
   // Hide the assigned-to filter (it operated on leads.assigned_to; for customer view we'd need a different lens)
   const assignedFil=document.getElementById('leadAssignedFilter');
   if(assignedFil) assignedFil.style.display='none';
@@ -5601,6 +5618,10 @@ function renderCustomers(){
   if(customerNewOnly){
     filtered=filtered.filter(c=>leadsForCustomer(c.id).some(l=>l.stage==='new'));
   }
+  // Tag filter
+  if(customerTagFilter){
+    filtered=filtered.filter(c=>tagsForCustomer(c.id).some(t=>t.id===customerTagFilter));
+  }
   // Sort
   filtered.sort((a,b)=>{
     if(customerSortMode==='newest'){
@@ -5626,10 +5647,32 @@ function renderCustomers(){
     if(customerNewOnly){newBtn.style.borderColor='var(--amber)';newBtn.style.color='var(--amber)';}
     else{newBtn.style.borderColor='';newBtn.style.color='';}
   }
+  // Tag filter chips — only tags actually applied to a customer show up
+  const tagFilterEl=document.getElementById('custTagFilter');
+  if(tagFilterEl){
+    const usedTags=tags.filter(t=>!t.archived_at && tagCounts[t.id]);
+    if(usedTags.length===0){
+      tagFilterEl.style.display='none';
+      tagFilterEl.innerHTML='';
+    } else {
+      tagFilterEl.style.display='flex';
+      let th=`<button class="cust-tagchip${customerTagFilter===null?' active':''}" onclick="setCustomerTagFilter(null)">All</button>`;
+      usedTags.forEach(t=>{
+        const on=customerTagFilter===t.id;
+        const style=on?`background:${t.color};border-color:${t.color};color:#0b0d10;font-weight:700`:`color:${t.color};border-color:${t.color}66`;
+        th+=`<button class="cust-tagchip" onclick="setCustomerTagFilter('${t.id}')" style="${style}">${esc(t.name)} (${tagCounts[t.id]})</button>`;
+      });
+      tagFilterEl.innerHTML=th;
+    }
+  }
   const list=document.getElementById('leadList');
   list.innerHTML='';
   if(filtered.length===0){
-    const emptyMsg=q?`No customers match "<strong>${esc(customerSearchQuery)}</strong>".`:(customerNewOnly?'No new arrivals to triage. 🎉':'No customers yet.<br>Tap + to add.');
+    const emptyMsg=q
+      ? `No customers match "<strong>${esc(customerSearchQuery)}</strong>".`
+      : customerNewOnly ? 'No new arrivals to triage. 🎉'
+      : customerTagFilter ? 'No customers with this tag.'
+      : 'No customers yet.<br>Tap + to add.';
     list.innerHTML=`<div class="lempty"><div style="font-size:36px;opacity:.3">${q?'🔍':'👥'}</div><div style="font-size:13px;color:var(--muted)">${emptyMsg}</div></div>`;
     return;
   }
