@@ -645,6 +645,7 @@ body.resizing{user-select:none;-webkit-user-select:none;}
 .doc-status.draft{background:rgba(148,163,184,.15);color:var(--muted);}
 .doc-status.sent{background:rgba(59,130,246,.15);color:var(--blue);}
 .doc-status.approved{background:rgba(34,197,94,.15);color:var(--green);}
+.doc-status.signed{background:rgba(34,197,94,.15);color:var(--green);}
 .doc-status.invoiced{background:rgba(245,158,11,.15);color:var(--amber);}
 .doc-status.paid{background:rgba(20,184,166,.15);color:var(--teal);}
 .doc-status.declined{background:rgba(239,68,68,.15);color:var(--danger);}
@@ -1517,6 +1518,7 @@ body:not(.role-owner):not(.role-manager) .role-financial-only{display:none!impor
           </div>
         </div>
       </div>
+      <div class="stabs" id="docStatusTabs"></div>
       <div class="doc-list" id="docList"></div>
     </div>
   </div>
@@ -1653,7 +1655,7 @@ body:not(.role-owner):not(.role-manager) .role-financial-only{display:none!impor
       <select class="doc-finput" id="docStatus" style="font-size:11px;padding:4px 8px;max-width:130px;">
         <option value="draft">Draft</option>
         <option value="sent">Sent</option>
-        <option value="approved">Approved</option>
+        <option value="signed">Signed</option>
         <option value="invoiced">Invoiced</option>
         <option value="paid">Paid</option>
         <option value="declined">Declined</option>
@@ -8141,6 +8143,7 @@ const BV_LOGO_SVG=`<img class="lh-logo-svg" src="data:image/png;base64,iVBORw0KG
 let docs=[]; // {id, type, status, num, clientName, clientContact, clientAddr, date, dueDate, scope, lineItems, tax, discount, notes, created}
 let editDocId=null;
 let docFilter='all';
+let docStatusFilter='all'; // pipeline status filter: all|sent|signed|declined|invoiced|paid
 let docSearchQuery=''; // free-text search across name, address, est number
 function onDocSearchChange(v){
   docSearchQuery=(v||'').toString().trim().toLowerCase();
@@ -8382,6 +8385,11 @@ function filterDocs(f){
   renderDocList();
 }
 
+function filterDocStatus(s){
+  docStatusFilter=s;
+  renderDocList();
+}
+
 function renderDocList(){
   // NOTE: do NOT call loadDocs() here. loadDocs() now clears the docs array
   // (it used to read from a localStorage cache, but that cache was removed
@@ -8403,14 +8411,38 @@ function renderDocList(){
       return hay.includes(q);
     });
   }
-  if(!filtered.length){
+  // ── Status pipeline tabs (Sent → Signed → Declined → Invoiced → Paid) ──
+  // Legacy 'approved' is folded into 'signed' so older docs land in the right tab.
+  const statusOf=d=>{const s=(d.status||'draft').toLowerCase();return s==='approved'?'signed':s;};
+  const DOC_PIPE=[
+    {id:'sent',label:'Sent',color:'var(--blue)'},
+    {id:'signed',label:'Signed',color:'var(--green)'},
+    {id:'declined',label:'Declined',color:'var(--danger)'},
+    {id:'invoiced',label:'Invoiced',color:'var(--amber)'},
+    {id:'paid',label:'Paid',color:'var(--teal)'},
+  ];
+  const dcounts={}; DOC_PIPE.forEach(s=>dcounts[s.id]=0);
+  filtered.forEach(d=>{const s=statusOf(d); if(Object.prototype.hasOwnProperty.call(dcounts,s))dcounts[s]++;});
+  const tabsEl=document.getElementById('docStatusTabs');
+  if(tabsEl){
+    let thtml=`<button class="stab${docStatusFilter==='all'?' active':''}" style="--sc:var(--amber)" onclick="filterDocStatus('all')"><div class="stabdot" style="background:var(--amber)"></div>ALL (${filtered.length})</button>`;
+    DOC_PIPE.forEach(s=>{
+      thtml+=`<button class="stab${docStatusFilter===s.id?' active':''}" style="--sc:${s.color}" onclick="filterDocStatus('${s.id}')"><div class="stabdot" style="background:${s.color}"></div>${s.label.toUpperCase()} (${dcounts[s.id]})</button>`;
+    });
+    tabsEl.innerHTML=thtml;
+  }
+  // Apply the active status filter to get the cards we actually render
+  const shown=docStatusFilter==='all'?filtered:filtered.filter(d=>statusOf(d)===docStatusFilter);
+  if(!shown.length){
     const msg=docSearchQuery
       ? `No documents match "${esc(docSearchQuery)}".<br>Try a different search.`
-      : 'No documents yet.<br>Create your first estimate.';
+      : (docStatusFilter!=='all'
+          ? `No documents in "${docStatusFilter.toUpperCase()}".`
+          : 'No documents yet.<br>Create your first estimate.');
     list.innerHTML=`<div class="doc-empty"><div class="doc-empty-icon">📄</div><div class="doc-empty-txt">${msg}</div></div>`;
     return;
   }
-  list.innerHTML=filtered.slice().reverse().map(d=>{
+  list.innerHTML=shown.slice().reverse().map(d=>{
     const isWo=d.type==='workorder';
     const isMo=d.type==='matorder';
     const isInv=d.type==='invoice';
@@ -9189,7 +9221,7 @@ function printDoc(){
       .lh-footer{text-align:center;font-size:10px;color:#94a3b8;padding-top:12px;border-top:1px solid #e2e8f0;margin-top:8px;}
       .doc-status{font-size:9px;padding:2px 7px;border-radius:4px;font-weight:700;}
       .doc-status.draft{background:#e2e8f0;color:#64748b;}.doc-status.sent{background:#dbeafe;color:#3b82f6;}
-      .doc-status.approved{background:#dcfce7;color:#16a34a;}.doc-status.paid{background:#ccfbf1;color:#0d9488;}
+      .doc-status.approved{background:#dcfce7;color:#16a34a;}.doc-status.signed{background:#dcfce7;color:#16a34a;}.doc-status.paid{background:#ccfbf1;color:#0d9488;}
       @media print{body{padding:0;}@page{margin:0.5in;}}
       </style></head><body>${lhHTML}</body></html>`);
       w.document.close();
