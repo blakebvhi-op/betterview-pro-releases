@@ -662,6 +662,24 @@ body.resizing{user-select:none;-webkit-user-select:none;}
 .doc-status.paid{background:rgba(20,184,166,.15);color:var(--teal);}
 .doc-status.declined{background:rgba(239,68,68,.15);color:var(--danger);}
 .doc-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:48px 24px;text-align:center;}
+.qv-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;z-index:9999;padding:20px;}
+.qv-card{background:var(--steel,#1b1e24);border:1px solid var(--iron);border-radius:12px;width:100%;max-width:440px;max-height:90vh;overflow:auto;box-shadow:0 20px 60px rgba(0,0,0,.5);}
+.qv-head{display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-bottom:1px solid var(--iron);}
+.qv-title{font-size:16px;font-weight:700;color:var(--ink-bright,#fff);}
+.qv-close{background:transparent;border:0;color:var(--muted);font-size:24px;line-height:1;cursor:pointer;padding:0 4px;}
+.qv-close:hover{color:var(--ink-bright,#fff);}
+.qv-body{padding:10px 18px;}
+.qv-row{display:flex;justify-content:space-between;gap:16px;padding:8px 0;border-bottom:1px solid var(--iron-soft,#2a2e35);align-items:center;}
+.qv-row:last-child{border-bottom:0;}
+.qv-k{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;flex-shrink:0;}
+.qv-v{font-size:13px;color:var(--ink,#d8d4c4);text-align:right;}
+.qv-custlink{background:transparent;border:0;color:var(--amber);font-size:13px;font-weight:600;cursor:pointer;padding:0;text-align:right;}
+.qv-custlink:hover{text-decoration:underline;}
+.qv-actions{display:flex;gap:10px;padding:14px 18px;border-top:1px solid var(--iron);justify-content:flex-end;flex-wrap:wrap;}
+.qv-btn-ghost{background:transparent;border:1px solid var(--iron);color:var(--ink,#d8d4c4);padding:8px 14px;border-radius:8px;cursor:pointer;font-size:13px;}
+.qv-btn-ghost:hover{border-color:var(--amber);color:var(--amber);}
+.qv-btn-primary{background:var(--amber);border:0;color:#0b0d10;font-weight:700;padding:8px 16px;border-radius:8px;cursor:pointer;font-size:13px;}
+.qv-btn-primary:hover{filter:brightness(1.08);}
 .doc-empty-icon{font-size:42px;opacity:.3;}
 .doc-empty-txt{font-size:13px;color:var(--muted);}
 
@@ -8436,6 +8454,66 @@ function filterDocStatus(s){
   renderDocList();
 }
 
+// ── ESTIMATE QUICK-VIEW ───────────────────────────────────────────────
+// Clicking an estimate/sales-doc card opens this summary first: estimate
+// number, customer, address, total, etc. — with links to open the full
+// document or jump to the customer's page. The customer is resolved through
+// the lead linked to this doc (lead.estId === doc.id, lead.customer_id),
+// falling back to a name match for docs not tied to a customer.
+function openEstimateQuickView(docId){
+  const d=docs.find(x=>x.id===docId);
+  if(!d){ openDocEditor(docId); return; }
+  let cust=null;
+  const linkedLead=leads.find(l=>l.estId===d.id);
+  if(linkedLead && linkedLead.customer_id){
+    cust=customers.find(c=>c.id===linkedLead.customer_id);
+  }
+  if(!cust && d.clientName){
+    const want=d.clientName.trim().toLowerCase();
+    cust=customers.find(c=>!c.archived_at && (c.name||'').trim().toLowerCase()===want);
+  }
+  const cfg=(typeof getDocTypeConfig==='function')?getDocTypeConfig(d.type):{label:(d.type||'estimate')};
+  const total=calcDocTotal(d);
+  const signed=!!d.signature;
+  const statusTxt=(d.status||'draft').toUpperCase();
+  const custLine=cust
+    ? `<button class="qv-custlink" onclick="closeEstimateQuickView();openCustomerDetail('${cust.id}')">${esc(cust.name||d.clientName||'Customer')} &rarr;</button>`
+    : `<span>${esc(d.clientName||'—')}</span>`;
+  const rows=[
+    ['Estimate #', esc(d.num||'—')],
+    ['Status', `<span class="doc-status ${d.status||'draft'}">${statusTxt}</span>${signed?' <span class="doc-signed-badge">✓ SIGNED</span>':''}`],
+    ['Type', esc((cfg.label||d.type||'').toString())],
+    ['Customer', custLine],
+    d.clientContact?['Contact', esc(d.clientContact)]:null,
+    ['Address', d.clientAddr?('📍 '+esc(d.clientAddr)):'<span style="color:var(--muted)">No address on file</span>'],
+    total?['Total', `$${total.grand.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}`]:null,
+    ['Date', esc(d.date||'No date')],
+  ].filter(Boolean);
+  const rowsHTML=rows.map(([k,v])=>`<div class="qv-row"><span class="qv-k">${k}</span><span class="qv-v">${v}</span></div>`).join('');
+  closeEstimateQuickView();
+  const overlay=document.createElement('div');
+  overlay.id='estimateQuickView';
+  overlay.className='qv-overlay';
+  overlay.onclick=(e)=>{ if(e.target===overlay) closeEstimateQuickView(); };
+  overlay.innerHTML=`
+    <div class="qv-card">
+      <div class="qv-head">
+        <div class="qv-title">${esc(d.num||'Estimate')}</div>
+        <button class="qv-close" onclick="closeEstimateQuickView()" title="Close">×</button>
+      </div>
+      <div class="qv-body">${rowsHTML}</div>
+      <div class="qv-actions">
+        ${cust?`<button class="qv-btn-ghost" onclick="closeEstimateQuickView();openCustomerDetail('${cust.id}')">👤 View Customer</button>`:''}
+        <button class="qv-btn-primary" onclick="closeEstimateQuickView();openDocEditor('${d.id}')">📄 Open Full ${esc((cfg.label||'Estimate').toString())}</button>
+      </div>
+    </div>`;
+  document.body.appendChild(overlay);
+}
+function closeEstimateQuickView(){
+  const o=document.getElementById('estimateQuickView');
+  if(o) o.remove();
+}
+
 function renderDocList(){
   // NOTE: do NOT call loadDocs() here. loadDocs() now clears the docs array
   // (it used to read from a localStorage cache, but that cache was removed
@@ -8526,7 +8604,10 @@ function renderDocList(){
     const displayName=isMo?(d.clientAddr||d.clientName||'Unnamed Job'):(d.clientName||'Unnamed Client');
     // Bulk selection support
     const isSelected=bulkMode==='docs'&&bulkSelected.has(d.id);
-    const cardClick=`if(bulkMode==='docs'){bulkToggle('${d.id}',event);return false;}openDocEditor('${d.id}')`;
+    const isQuickViewType=!['workorder','matorder'].includes(d.type);
+    const cardClick=isQuickViewType
+      ? `if(bulkMode==='docs'){bulkToggle('${d.id}',event);return false;}openEstimateQuickView('${d.id}')`
+      : `if(bulkMode==='docs'){bulkToggle('${d.id}',event);return false;}openDocEditor('${d.id}')`;
     const finalCardClass=cardClass+(isSelected?' selected':'');
     return `<div class="${finalCardClass}" data-bulk-id="${d.id}" onclick="${cardClick}">
       <div class="doc-card-top">
