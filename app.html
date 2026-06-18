@@ -1605,11 +1605,12 @@ body:not(.role-owner):not(.role-manager) .role-financial-only{display:none!impor
       <span class="lead-search-icon">🔍</span>
       <input type="search" id="leadSearch" class="lead-search-input" placeholder="Search customer name, phone, email, or address…" autocomplete="off"/>
       <button type="button" class="lead-search-clear" id="leadSearchClear" title="Clear">×</button>
-      <select id="leadSortSelect" class="lead-sort-select" onchange="setLeadSort(this.value)" title="Sort">
-        <option value="default">↕ Default order</option>
-        <option value="revenue_desc">💰 Top revenue</option>
-        <option value="lastjob_desc">📅 Recent activity</option>
+      <button type="button" class="btn btn-ghost btn-sm" id="custNewFilterBtn" onclick="toggleCustomerNewOnly()" title="Show only new arrivals to triage" style="flex-shrink:0">🆕 New</button>
+      <select id="leadSortSelect" class="lead-sort-select" onchange="setCustomerSort(this.value)" title="Sort">
+        <option value="newest">🆕 Newest first</option>
+        <option value="recent">📅 Recent activity</option>
         <option value="name_asc">A–Z by name</option>
+        <option value="value_desc">💰 Top value</option>
       </select>
       <button type="button" class="btn btn-ghost btn-sm" id="leadBulkBtn" onclick="toggleLeadBulkMode()" title="Select multiple to delete" style="flex-shrink:0">✏️ Edit</button>
       <button type="button" class="btn btn-ghost btn-sm" id="custTagLibBtn" onclick="openTagLibrary()" title="Manage tag library" style="flex-shrink:0">🏷 Tags</button>
@@ -5450,7 +5451,17 @@ function renderCRM(){
 // Leads still exist underneath; they're now "estimates" attached to customers.
 
 let customerSearchQuery='';
-let customerSortMode='recent';  // 'recent' | 'name_asc' | 'value_desc'
+let customerSortMode=lsGet('customer_sort_mode','newest');  // 'newest' | 'recent' | 'name_asc' | 'value_desc'
+let customerNewOnly=false;  // triage: show only customers with an untouched (new-stage) estimate
+function setCustomerSort(mode){
+  customerSortMode=mode||'newest';
+  lsSet('customer_sort_mode',customerSortMode);
+  if(typeof renderCustomers==='function') renderCustomers();
+}
+function toggleCustomerNewOnly(){
+  customerNewOnly=!customerNewOnly;
+  if(typeof renderCustomers==='function') renderCustomers();
+}
 
 // Helper: get tags applied to a specific customer (returns array of tag objects)
 function tagsForCustomer(customerId){
@@ -5586,8 +5597,15 @@ function renderCustomers(){
       return addrs.includes(q);
     });
   }
+  // Triage filter: only customers with an untouched (new-stage) estimate
+  if(customerNewOnly){
+    filtered=filtered.filter(c=>leadsForCustomer(c.id).some(l=>l.stage==='new'));
+  }
   // Sort
   filtered.sort((a,b)=>{
+    if(customerSortMode==='newest'){
+      return (b.created_at||'').localeCompare(a.created_at||'');
+    }
     if(customerSortMode==='name_asc'){
       return (a.name||'').toLowerCase().localeCompare((b.name||'').toLowerCase());
     }
@@ -5598,10 +5616,20 @@ function renderCustomers(){
     return (customerLastActivity(b)||'').localeCompare(customerLastActivity(a)||'');
   });
 
+  // Sync toolbar controls to current state
+  const sortSel=document.getElementById('leadSortSelect');
+  if(sortSel && sortSel.value!==customerSortMode) sortSel.value=customerSortMode;
+  const newBtn=document.getElementById('custNewFilterBtn');
+  if(newBtn){
+    const newCount=activeCustomers.filter(c=>leadsForCustomer(c.id).some(l=>l.stage==='new')).length;
+    newBtn.textContent=`🆕 New (${newCount})`;
+    if(customerNewOnly){newBtn.style.borderColor='var(--amber)';newBtn.style.color='var(--amber)';}
+    else{newBtn.style.borderColor='';newBtn.style.color='';}
+  }
   const list=document.getElementById('leadList');
   list.innerHTML='';
   if(filtered.length===0){
-    const emptyMsg=q?`No customers match "<strong>${esc(customerSearchQuery)}</strong>".`:'No customers yet.<br>Tap + to add.';
+    const emptyMsg=q?`No customers match "<strong>${esc(customerSearchQuery)}</strong>".`:(customerNewOnly?'No new arrivals to triage. 🎉':'No customers yet.<br>Tap + to add.');
     list.innerHTML=`<div class="lempty"><div style="font-size:36px;opacity:.3">${q?'🔍':'👥'}</div><div style="font-size:13px;color:var(--muted)">${emptyMsg}</div></div>`;
     return;
   }
@@ -8068,7 +8096,7 @@ function closeMov(id){
 document.querySelectorAll('.mov').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open');}));
 function showToast(title,msg,jump=false){ /* notifications removed */ }
 function updateBadges(){
-  const bl=jobs.filter(j=>j.day==='backlog').length,cm=leads.filter(l=>!['declined','done'].includes(l.stage)).length;
+  const bl=jobs.filter(j=>j.day==='backlog').length,cm=customers.filter(c=>!c.archived_at).length;
   const bb=document.getElementById('bnBlBadge');bb.textContent=bl;bb.classList.toggle('show',bl>0);
   const cb=document.getElementById('bnCrmBadge');cb.textContent=cm;cb.classList.toggle('show',cm>0);
   document.getElementById('dtBlBadge').textContent=bl;document.getElementById('dtCrmBadge').textContent=cm;
