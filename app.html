@@ -38,23 +38,25 @@
    theme picker. Owner-only access (gated in JS).
    ──────────────────────────────────────────────────────────── */
 :root[data-theme="clipboard"]{
-  /* Base palette — manila paper + iron-gall ink + burnt orange */
-  --steel:#1e1a14;          /* deep ink (dark mode equivalent of canvas) */
-  --steel-mid:#2a241b;      /* card / surface */
-  --steel-light:#3a3225;    /* hover surface */
-  --iron:#5a4f3d;           /* warm tan border */
-  --amber:#c2410c;          /* burnt orange — primary accent */
-  --amber-bright:#ea580c;
-  --amber-dim:#9a3412;
-  --white:#e8e1d2;          /* parchment text — softer than pure white */
-  --muted:#a89e88;          /* aged tan for muted */
-  --danger:#a83232;         /* wax-seal red */
-  --green:#3d7d3f;          /* moss for paid/done */
-  --blue:#4a6b8a;           /* slate blue */
-  --purple:#8a5e74;          /* dusty purple */
-  --pink:#b95a73;
-  --teal:#4c8a7e;
-  --orange:#c2410c;
+  /* Base palette — exact mockup-1 dark values: near-black paper, light ticket-lines */
+  --steel:#14110d;          /* --bg */
+  --steel-mid:#1c1814;      /* --bg-card / surface */
+  --steel-light:#241f18;    /* hover surface (derived) */
+  --iron:#d4c8b0;           /* --line: light parchment ticket-lines */
+  --iron-soft:rgba(212,200,176,.16); /* --line-soft */
+  --amber:#ea8a47;          /* --accent: burnt orange, lighter for dark paper */
+  --amber-bright:#f4a76a;
+  --amber-dim:#fbbf24;      /* --warning */
+  --white:#e8e1d2;          /* --ink: parchment text */
+  --muted:#908779;          /* --ink-muted */
+  --danger:#e06c6c;         /* readable wax-seal red on dark */
+  --green:#4ade80;          /* --accent-2: paid/accepted */
+  --blue:#7a9ac0;
+  --purple:#c79ab0;
+  --pink:#d98aa3;
+  --teal:#7ec8b8;
+  --orange:#ea8a47;
+  --bg-stripe:rgba(212,200,176,.04);
   --app-font:'JetBrains Mono','Courier New',monospace;
   --display-font:'JetBrains Mono','Courier New',monospace;
 }
@@ -76,6 +78,8 @@
   --pink:#a04a64;
   --teal:#3a6b62;
   --orange:#b45309;
+  --iron-soft:rgba(28,26,23,.18);  /* --line-soft */
+  --bg-stripe:rgba(28,26,23,.04);
   --app-font:'JetBrains Mono','Courier New',monospace;
   --display-font:'JetBrains Mono','Courier New',monospace;
 }
@@ -105,6 +109,91 @@
   );
   opacity: .35; z-index: 0;
 }
+
+/* ════════ CLIPBOARD THEME — Tier 2 decorative layer (theme-scoped) ════════ */
+/* Paper-grain on the dark variant too (light already has it above) */
+:root[data-theme="clipboard"] body::before{
+  content:'';position:fixed;inset:0;pointer-events:none;
+  background-image:repeating-linear-gradient(0deg,transparent 0,transparent 23px,rgba(212,200,176,.04) 23px,rgba(212,200,176,.04) 24px);
+  opacity:.35;z-index:0;
+}
+/* Square the UI — clipboard / job-ticket aesthetic */
+:root[data-theme="clipboard"] .lead-card,:root[data-theme="clipboard-light"] .lead-card,
+:root[data-theme="clipboard"] .cust-card,:root[data-theme="clipboard-light"] .cust-card,
+:root[data-theme="clipboard"] .doc-card,:root[data-theme="clipboard-light"] .doc-card,
+:root[data-theme="clipboard"] .qv-card,:root[data-theme="clipboard-light"] .qv-card,
+:root[data-theme="clipboard"] .qv-btn-primary,:root[data-theme="clipboard-light"] .qv-btn-primary,
+:root[data-theme="clipboard"] .qv-btn-ghost,:root[data-theme="clipboard-light"] .qv-btn-ghost,
+:root[data-theme="clipboard"] .btn,:root[data-theme="clipboard-light"] .btn,
+:root[data-theme="clipboard"] .lead-search-bar,:root[data-theme="clipboard-light"] .lead-search-bar,
+:root[data-theme="clipboard"] .lead-sort-select,:root[data-theme="clipboard-light"] .lead-sort-select,
+:root[data-theme="clipboard"] input[type="text"],:root[data-theme="clipboard-light"] input[type="text"],
+:root[data-theme="clipboard"] input[type="search"],:root[data-theme="clipboard-light"] input[type="search"],
+:root[data-theme="clipboard"] input[type="email"],:root[data-theme="clipboard-light"] input[type="email"],
+:root[data-theme="clipboard"] input[type="tel"],:root[data-theme="clipboard-light"] input[type="tel"],
+:root[data-theme="clipboard"] input[type="number"],:root[data-theme="clipboard-light"] input[type="number"],
+:root[data-theme="clipboard"] input[type="date"],:root[data-theme="clipboard-light"] input[type="date"],
+:root[data-theme="clipboard"] select,:root[data-theme="clipboard-light"] select,
+:root[data-theme="clipboard"] textarea,:root[data-theme="clipboard-light"] textarea,
+:root[data-theme="clipboard"] .doc-status,:root[data-theme="clipboard-light"] .doc-status,
+:root[data-theme="clipboard"] .lbadge,:root[data-theme="clipboard-light"] .lbadge,
+:root[data-theme="clipboard"] .cust-tagchip,:root[data-theme="clipboard-light"] .cust-tagchip,
+:root[data-theme="clipboard"] .stab,:root[data-theme="clipboard-light"] .stab,
+:root[data-theme="clipboard"] .sched-sub-pill,:root[data-theme="clipboard-light"] .sched-sub-pill{
+  border-radius:0 !important;
+}
+/* Cards become job tickets: square, ink-lined, accent edge */
+:root[data-theme="clipboard"] .lead-card,:root[data-theme="clipboard-light"] .lead-card,
+:root[data-theme="clipboard"] .cust-card,:root[data-theme="clipboard-light"] .cust-card,
+:root[data-theme="clipboard"] .doc-card,:root[data-theme="clipboard-light"] .doc-card{
+  border:1px solid var(--iron-soft) !important;
+  border-left:3px solid var(--amber) !important;
+  background:var(--steel-mid);
+}
+/* Stamped, outlined stage/status badges */
+:root[data-theme="clipboard"] .doc-status,:root[data-theme="clipboard-light"] .doc-status,
+:root[data-theme="clipboard"] .lbadge,:root[data-theme="clipboard-light"] .lbadge{
+  background:transparent !important;
+  border:1px solid currentColor;
+  text-transform:uppercase;letter-spacing:.16em;font-weight:700;
+}
+/* Clipboard buttons: uppercase, letterspaced */
+:root[data-theme="clipboard"] .btn,:root[data-theme="clipboard-light"] .btn,
+:root[data-theme="clipboard"] .qv-btn-primary,:root[data-theme="clipboard-light"] .qv-btn-primary,
+:root[data-theme="clipboard"] .qv-btn-ghost,:root[data-theme="clipboard-light"] .qv-btn-ghost,
+:root[data-theme="clipboard"] .dadd,:root[data-theme="clipboard-light"] .dadd{
+  text-transform:uppercase;letter-spacing:.08em;font-weight:700;
+}
+/* Filter chips/pills invert (ink fill) when active */
+:root[data-theme="clipboard"] .cust-tagchip,:root[data-theme="clipboard-light"] .cust-tagchip,
+:root[data-theme="clipboard"] .stab,:root[data-theme="clipboard-light"] .stab,
+:root[data-theme="clipboard"] .sched-sub-pill,:root[data-theme="clipboard-light"] .sched-sub-pill{
+  text-transform:uppercase;letter-spacing:.06em;
+}
+:root[data-theme="clipboard"] .cust-tagchip.active,:root[data-theme="clipboard-light"] .cust-tagchip.active,
+:root[data-theme="clipboard"] .sched-sub-pill.active,:root[data-theme="clipboard-light"] .sched-sub-pill.active,
+:root[data-theme="clipboard"] .stab.active,:root[data-theme="clipboard-light"] .stab.active{
+  background:var(--white) !important;color:var(--steel) !important;border-color:var(--white) !important;
+}
+/* Square, ink-bordered form inputs */
+:root[data-theme="clipboard"] input[type="text"],:root[data-theme="clipboard-light"] input[type="text"],
+:root[data-theme="clipboard"] input[type="search"],:root[data-theme="clipboard-light"] input[type="search"],
+:root[data-theme="clipboard"] input[type="email"],:root[data-theme="clipboard-light"] input[type="email"],
+:root[data-theme="clipboard"] input[type="tel"],:root[data-theme="clipboard-light"] input[type="tel"],
+:root[data-theme="clipboard"] input[type="number"],:root[data-theme="clipboard-light"] input[type="number"],
+:root[data-theme="clipboard"] input[type="date"],:root[data-theme="clipboard-light"] input[type="date"],
+:root[data-theme="clipboard"] select,:root[data-theme="clipboard-light"] select,
+:root[data-theme="clipboard"] textarea,:root[data-theme="clipboard-light"] textarea{
+  border:1px solid var(--iron-soft) !important;background:var(--steel-mid);
+}
+/* Nav tab count badge contrast now that --iron is a light line color */
+:root[data-theme="clipboard"] .dtab:not(.active) .dbadge,
+:root[data-theme="clipboard-light"] .dtab:not(.active) .dbadge{
+  background:var(--steel-light);color:var(--white);
+}
+/* Tracking-sheet numerals */
+:root[data-theme="clipboard"] body,:root[data-theme="clipboard-light"] body{font-variant-numeric:tabular-nums;}
+/* ════════ end clipboard decorative layer ════════ */
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
 html,body{height:100%;overscroll-behavior:none;}
 body{font-family:var(--app-font);background:var(--steel);color:var(--white);overflow:hidden;}
