@@ -363,6 +363,13 @@ header{position:fixed;top:0;left:0;right:0;z-index:50;height:var(--hh);display:f
 .cust-addr-row{font-size:12px;color:var(--muted);margin-bottom:6px;}
 .cust-meta-row{display:flex;gap:14px;align-items:center;font-size:11px;color:var(--muted);margin-top:6px;padding-top:6px;border-top:1px solid var(--iron);}
 .cust-est-count{font-weight:600;color:var(--ink,#d8d4c4);}
+.cust-est-list{margin-top:8px;padding-top:8px;border-top:1px solid var(--iron);display:flex;flex-direction:column;gap:4px;}
+.cust-est-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:5px 8px;border-radius:6px;background:var(--steel,#22252b);cursor:pointer;transition:background .12s;}
+.cust-est-row:hover{background:var(--steel-mid,#2a2e35);}
+.cust-est-desc{font-size:12px;color:var(--ink,#d8d4c4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;}
+.cust-est-meta{display:flex;align-items:center;gap:8px;flex-shrink:0;}
+.cust-est-val{font-size:12px;font-weight:700;color:var(--ink-bright,#fff);}
+.cust-est-empty{margin-top:8px;padding-top:8px;border-top:1px solid var(--iron);font-size:11px;color:var(--muted);font-style:italic;}
 .cust-pipe-val{color:var(--amber);font-weight:600;font-variant-numeric:tabular-nums;}
 /* Customer detail modal */
 .cust-sec-label{font-size:10px;font-weight:700;letter-spacing:.18em;color:var(--muted);text-transform:uppercase;margin-bottom:8px;}
@@ -646,6 +653,7 @@ body.resizing{user-select:none;-webkit-user-select:none;}
 .doc-status.sent{background:rgba(59,130,246,.15);color:var(--blue);}
 .doc-status.approved{background:rgba(34,197,94,.15);color:var(--green);}
 .doc-status.signed{background:rgba(34,197,94,.15);color:var(--green);}
+.doc-status.finished{background:rgba(168,85,247,.15);color:var(--purple);}
 .doc-status.invoiced{background:rgba(245,158,11,.15);color:var(--amber);}
 .doc-status.paid{background:rgba(20,184,166,.15);color:var(--teal);}
 .doc-status.declined{background:rgba(239,68,68,.15);color:var(--danger);}
@@ -1658,6 +1666,7 @@ body:not(.role-owner):not(.role-manager) .role-financial-only{display:none!impor
         <option value="signed">Signed</option>
         <option value="invoiced">Invoiced</option>
         <option value="paid">Paid</option>
+        <option value="finished">Finished</option>
         <option value="declined">Declined</option>
       </select>
       <select class="doc-finput" id="docType" onchange="updateDocType()" style="font-size:11px;padding:4px 8px;max-width:120px;">
@@ -5547,37 +5556,10 @@ function renderCustomers(){
     statLabels[3].textContent='Lost';
   }
 
-  // Hide the stage filter tabs (#stabs) — stages are estimate-level now
+  // Pipeline removed from the customer view — stages live on estimates now.
+  // Hide the stage filter tabs entirely; customers are a flat directory.
   const stabs=document.getElementById('stabs');
-  if(stabs){
-    // Re-show and populate with customer-rollup counts. We tally how many
-    // customers fall into each stage based on customerRollupStage().
-    stabs.style.display='';
-    stabs.innerHTML='';
-    const rollupCounts={};
-    for(const c of activeCustomers){
-      const r=customerRollupStage(c);
-      const key=r?r.id:'_no_estimates';
-      rollupCounts[key]=(rollupCounts[key]||0)+1;
-    }
-    // ALL pill
-    const allB=document.createElement('button');
-    allB.className='stab'+(activeStageFilter==='all'?' active':'');
-    allB.style.setProperty('--sc','var(--amber)');
-    allB.innerHTML=`<div class="stabdot" style="background:var(--amber)"></div>ALL (${activeCustomers.length})`;
-    allB.onclick=()=>{activeStageFilter='all';renderCustomers();};
-    stabs.appendChild(allB);
-    // One pill per stage that has at least one customer
-    STAGES.forEach(s=>{
-      const cnt=rollupCounts[s.id]||0;
-      if(cnt===0 && activeStageFilter!==s.id) return; // hide empty stages
-      const b=document.createElement('button');
-      b.className=`stab ${s.cls}`+(activeStageFilter===s.id?' active':'');
-      b.innerHTML=`<div class="stabdot" style="background:${s.color}"></div>${s.label} (${cnt})`;
-      b.onclick=()=>{activeStageFilter=s.id;renderCustomers();};
-      stabs.appendChild(b);
-    });
-  }
+  if(stabs){ stabs.style.display='none'; stabs.innerHTML=''; }
   // Hide the assigned-to filter (it operated on leads.assigned_to; for customer view we'd need a different lens)
   const assignedFil=document.getElementById('leadAssignedFilter');
   if(assignedFil) assignedFil.style.display='none';
@@ -5593,13 +5575,7 @@ function renderCustomers(){
 
   // Filter & sort
   let filtered=activeCustomers.slice();
-  // Stage filter (rollup-based)
-  if(activeStageFilter!=='all'){
-    filtered=filtered.filter(c=>{
-      const r=customerRollupStage(c);
-      return r && r.id===activeStageFilter;
-    });
-  }
+  // (Stage filtering removed — the customer list is a flat directory now.)
   const q=(customerSearchQuery||'').trim().toLowerCase();
   if(q){
     filtered=filtered.filter(c=>{
@@ -5637,33 +5613,34 @@ function customerCard(c){
   const addresses=addressesForCustomer(c.id);
   const primary=addresses.find(a=>a.is_primary)||addresses[0];
   const cTags=tagsForCustomer(c.id);
-  const pipeValue=customerPipelineValue(c);
   const phone=formatPhone(c.phone);
-  // Customer stage rollup — the at-a-glance stage indicator
-  const rollupStage=customerRollupStage(c);
-  // Latest stage across customer's leads (for a visual hint)
-  const stageSummary=customerLeads.length===0
-    ? 'No estimates yet'
-    : customerLeads.length===1
-      ? '1 estimate'
-      : `${customerLeads.length} estimates`;
   // Tag chips HTML
   const tagChips=cTags.map(t=>`<span class="cust-tag" style="background:${t.color}22;color:${t.color};border-color:${t.color}55">${esc(t.name)}</span>`).join('');
   // Address line (street only — keeps card compact)
   const addrLine=primary
     ? `${esc(primary.street||'')}${primary.city?', '+esc(primary.city):''}${primary.state?', '+esc(primary.state):''}`
     : '<span style="color:var(--muted);font-style:italic">No address on file</span>';
-  // Left border color = the rollup stage's color (or default if no estimates)
-  const borderColor=rollupStage ? rollupStage.color : 'var(--iron)';
-  // Stage badge (only shown if customer has estimates)
-  const stageBadge=rollupStage
-    ? `<span class="lbadge ${rollupStage.cls}" style="font-size:10px;font-weight:700;letter-spacing:.08em">${rollupStage.label}</span>`
-    : '';
-  return `<div class="lead-card cust-card ${rollupStage?rollupStage.cls:''}" onclick="openCustomerDetail('${c.id}')" data-customer-id="${c.id}" style="border-left:3px solid ${borderColor}">
+  // Estimates list — each estimate (lead) attached to this customer, shown with
+  // its own status badge. Clicking a row opens that estimate; clicking elsewhere
+  // on the card opens the customer page. Pipeline stage *filtering* lives on the
+  // estimates view now — this just surfaces each estimate's current status.
+  const estList=customerLeads.length===0
+    ? '<div class="cust-est-empty">No estimates yet</div>'
+    : customerLeads.map(l=>{
+        const st=STAGES.find(s=>s.id===l.stage)||STAGES[0];
+        const desc=(l.notes&&l.notes.trim())
+          ? l.notes.trim().split('\n')[0].slice(0,42)
+          : ((l.types&&l.types.length)?l.types.join(', '):'Estimate');
+        const val=(l.value&&Number(l.value)>0)?`$${Number(l.value).toLocaleString()}`:'';
+        return `<div class="cust-est-row" onclick="event.stopPropagation();openLeadMov('${l.id}')">
+          <span class="cust-est-desc">${esc(desc)}</span>
+          <span class="cust-est-meta">${val?`<span class="cust-est-val">${val}</span>`:''}<span class="lbadge ${st.cls}">${st.label}</span></span>
+        </div>`;
+      }).join('');
+  return `<div class="lead-card cust-card" onclick="openCustomerDetail('${c.id}')" data-customer-id="${c.id}">
     <div class="lead-card-main">
       <div class="cust-name-row">
         <span class="lead-name">${esc(c.name||'(unnamed)')}</span>
-        ${stageBadge}
         ${cTags.length>0?`<span class="cust-tags">${tagChips}</span>`:''}
       </div>
       <div class="cust-contact-row">
@@ -5671,10 +5648,7 @@ function customerCard(c){
         ${c.email?`<span class="cust-email">✉ ${esc(c.email)}</span>`:''}
       </div>
       <div class="cust-addr-row">📍 ${addrLine}</div>
-      <div class="cust-meta-row">
-        <span class="cust-est-count">${stageSummary}</span>
-        ${pipeValue>0?`<span class="cust-pipe-val">$${pipeValue.toLocaleString()} pipeline</span>`:''}
-      </div>
+      <div class="cust-est-list">${estList}</div>
     </div>
   </div>`;
 }
@@ -8420,6 +8394,7 @@ function renderDocList(){
     {id:'declined',label:'Declined',color:'var(--danger)'},
     {id:'invoiced',label:'Invoiced',color:'var(--amber)'},
     {id:'paid',label:'Paid',color:'var(--teal)'},
+    {id:'finished',label:'Finished',color:'var(--purple)'},
   ];
   const dcounts={}; DOC_PIPE.forEach(s=>dcounts[s.id]=0);
   filtered.forEach(d=>{const s=statusOf(d); if(Object.prototype.hasOwnProperty.call(dcounts,s))dcounts[s]++;});
@@ -9221,7 +9196,7 @@ function printDoc(){
       .lh-footer{text-align:center;font-size:10px;color:#94a3b8;padding-top:12px;border-top:1px solid #e2e8f0;margin-top:8px;}
       .doc-status{font-size:9px;padding:2px 7px;border-radius:4px;font-weight:700;}
       .doc-status.draft{background:#e2e8f0;color:#64748b;}.doc-status.sent{background:#dbeafe;color:#3b82f6;}
-      .doc-status.approved{background:#dcfce7;color:#16a34a;}.doc-status.signed{background:#dcfce7;color:#16a34a;}.doc-status.paid{background:#ccfbf1;color:#0d9488;}
+      .doc-status.approved{background:#dcfce7;color:#16a34a;}.doc-status.signed{background:#dcfce7;color:#16a34a;}.doc-status.finished{background:#f3e8ff;color:#9333ea;}.doc-status.paid{background:#ccfbf1;color:#0d9488;}
       @media print{body{padding:0;}@page{margin:0.5in;}}
       </style></head><body>${lhHTML}</body></html>`);
       w.document.close();
