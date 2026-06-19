@@ -25,6 +25,7 @@
   --amber:#f59e0b;--amber-bright:#fbbf24;--amber-dim:#d97706;
   --white:#f1f5f9;--muted:#94a3b8;--danger:#ef4444;
   --ink:var(--white);--ink-bright:var(--white); /* alias: text color tracks the theme's ink so light themes stay legible */
+  --red:var(--danger);--rose:var(--danger);--bg-card:#1a1c20;--bg-soft:#13151a; /* define vars some renderers referenced without defining */
   --green:#22c55e;--blue:#3b82f6;--purple:#a855f7;
   --pink:#ec4899;--teal:#14b8a6;--orange:#f97316;
   --hh:56px;--bnh:60px;
@@ -58,6 +59,7 @@
   --teal:#7ec8b8;
   --orange:#ea8a47;
   --bg-stripe:rgba(212,200,176,.04);
+  --bg-card:var(--steel-mid);--bg-soft:var(--steel);
   --app-font:'JetBrains Mono','Courier New',monospace;
   --display-font:'JetBrains Mono','Courier New',monospace;
 }
@@ -81,6 +83,7 @@
   --orange:#b45309;
   --iron-soft:rgba(28,26,23,.18);  /* --line-soft */
   --bg-stripe:rgba(28,26,23,.04);
+  --bg-card:var(--steel-mid);--bg-soft:var(--steel);
   --app-font:'JetBrains Mono','Courier New',monospace;
   --display-font:'JetBrains Mono','Courier New',monospace;
 }
@@ -195,6 +198,36 @@
 /* Tracking-sheet numerals */
 :root[data-theme="clipboard"] body,:root[data-theme="clipboard-light"] body{font-variant-numeric:tabular-nums;}
 /* ════════ end clipboard decorative layer ════════ */
+
+/* ════════ CLIPBOARD — Phase C: job-ticket cards + polish (scoped) ════════ */
+/* Ticket ID stripe — hidden on the default theme, shown on clipboard */
+.ticket-stripe{display:none;}
+:root[data-theme="clipboard"] .cust-card,:root[data-theme="clipboard-light"] .cust-card,
+:root[data-theme="clipboard"] .doc-card,:root[data-theme="clipboard-light"] .doc-card{
+  position:relative;padding-left:36px !important;overflow:hidden;
+  border:1px solid var(--iron-soft) !important;border-left:0 !important;
+}
+:root[data-theme="clipboard"] .ticket-stripe,:root[data-theme="clipboard-light"] .ticket-stripe{
+  display:flex;position:absolute;left:0;top:0;bottom:0;width:28px;
+  background:var(--white);color:var(--steel);
+  align-items:center;justify-content:center;
+  writing-mode:vertical-rl;transform:rotate(180deg);
+  font-size:9px;font-weight:700;letter-spacing:.1em;font-variant-numeric:tabular-nums;
+  border-right:1px solid var(--iron-soft);white-space:nowrap;
+}
+/* Estimate rows on a customer card read as boxed line items */
+:root[data-theme="clipboard"] .cust-est-row,:root[data-theme="clipboard-light"] .cust-est-row{
+  background:transparent !important;border:1px solid var(--iron-soft);
+}
+:root[data-theme="clipboard"] .cust-est-row:hover,:root[data-theme="clipboard-light"] .cust-est-row:hover{
+  background:var(--bg-stripe) !important;
+}
+/* Customer-detail stat boxes become a square tally grid */
+:root[data-theme="clipboard"] .cust-stat-box,:root[data-theme="clipboard-light"] .cust-stat-box{
+  border-radius:0 !important;border:1px solid var(--iron-soft) !important;background:var(--steel-mid) !important;
+}
+:root[data-theme="clipboard"] .cust-stat-num,:root[data-theme="clipboard-light"] .cust-stat-num{letter-spacing:-.02em;}
+/* ════════ end Phase C ════════ */
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
 html,body{height:100%;overscroll-behavior:none;}
 body{font-family:var(--app-font);background:var(--steel);color:var(--white);overflow:hidden;}
@@ -1717,7 +1750,7 @@ body:not(.role-owner):not(.role-manager) .role-financial-only{display:none!impor
       <span class="lead-search-icon">🔍</span>
       <input type="search" id="leadSearch" class="lead-search-input" placeholder="Search customer name, phone, email, or address…" autocomplete="off"/>
       <button type="button" class="lead-search-clear" id="leadSearchClear" title="Clear">×</button>
-      <button type="button" class="btn btn-ghost btn-sm" id="custNewFilterBtn" onclick="toggleCustomerNewOnly()" title="Show only new arrivals to triage" style="flex-shrink:0">🆕 New</button>
+      <button type="button" class="btn btn-ghost btn-sm" id="custNewFilterBtn" onclick="toggleCustomerNewOnly()" title="Show only new arrivals to triage" style="flex-shrink:0">New</button>
       <select id="leadSortSelect" class="lead-sort-select" onchange="setCustomerSort(this.value)" title="Sort">
         <option value="newest">🆕 Newest first</option>
         <option value="recent">📅 Recent activity</option>
@@ -1725,7 +1758,7 @@ body:not(.role-owner):not(.role-manager) .role-financial-only{display:none!impor
         <option value="value_desc">💰 Top value</option>
       </select>
       <button type="button" class="btn btn-ghost btn-sm" id="leadBulkBtn" onclick="toggleLeadBulkMode()" title="Select multiple to delete" style="flex-shrink:0">✏️ Edit</button>
-      <button type="button" class="btn btn-ghost btn-sm" id="custTagLibBtn" onclick="openTagLibrary()" title="Manage tag library" style="flex-shrink:0">🏷 Tags</button>
+      <button type="button" class="btn btn-ghost btn-sm" id="custTagLibBtn" onclick="openTagLibrary()" title="Manage tag library" style="flex-shrink:0">Tags</button>
     </div>
     <!-- Assigned-to filter pills — owner/manager see all 3, employees only see 'mine' (rest is forced by RLS) -->
     <div class="sched-sub-filter" id="leadAssignedFilter">
@@ -5752,7 +5785,7 @@ function renderCustomers(){
   const newBtn=document.getElementById('custNewFilterBtn');
   if(newBtn){
     const newCount=activeCustomers.filter(c=>leadsForCustomer(c.id).some(l=>l.stage==='new')).length;
-    newBtn.textContent=`🆕 New (${newCount})`;
+    newBtn.textContent=`New (${newCount})`;
     if(customerNewOnly){newBtn.style.borderColor='var(--amber)';newBtn.style.color='var(--amber)';}
     else{newBtn.style.borderColor='';newBtn.style.color='';}
   }
@@ -5817,7 +5850,9 @@ function customerCard(c){
           <span class="cust-est-meta">${val?`<span class="cust-est-val">${val}</span>`:''}<span class="lbadge ${st.cls}">${st.label}</span></span>
         </div>`;
       }).join('');
+  const initials=((c.name||'?').trim().split(/\s+/).map(w=>w[0]).filter(Boolean).slice(0,2).join('')||'?').toUpperCase();
   return `<div class="lead-card cust-card" onclick="openCustomerDetail('${c.id}')" data-customer-id="${c.id}">
+    <div class="ticket-stripe">${esc(initials)}</div>
     <div class="lead-card-main">
       <div class="cust-name-row">
         <span class="lead-name">${esc(c.name||'(unnamed)')}</span>
@@ -8700,6 +8735,7 @@ function renderDocList(){
       : `if(bulkMode==='docs'){bulkToggle('${d.id}',event);return false;}openDocEditor('${d.id}')`;
     const finalCardClass=cardClass+(isSelected?' selected':'');
     return `<div class="${finalCardClass}" data-bulk-id="${d.id}" onclick="${cardClick}">
+      <div class="ticket-stripe">${esc(d.num||'')}</div>
       <div class="doc-card-top">
         <div style="display:flex;align-items:flex-start;gap:0;flex:1">
           <div class="bulk-cb${isSelected?' checked':''}">${isSelected?'✓':''}</div>
