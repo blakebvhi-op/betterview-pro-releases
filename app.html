@@ -13,7 +13,7 @@
 <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <meta name="referrer" content="no-referrer">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src https://fryaksqvfknxdptrlppy.supabase.co https://ipapi.co https://api.open-meteo.com https://api.abcsupply.com; img-src 'self' data: blob:; media-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self';">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src https://fryaksqvfknxdptrlppy.supabase.co https://ipapi.co https://api.open-meteo.com; img-src 'self' data: blob:; media-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self';">
 <title>Better View Pro</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -24,8 +24,6 @@
   --steel:#1a1e2e;--steel-mid:#252b3d;--steel-light:#2f3650;--iron:#3b4466;
   --amber:#f59e0b;--amber-bright:#fbbf24;--amber-dim:#d97706;
   --white:#f1f5f9;--muted:#94a3b8;--danger:#ef4444;
-  --ink:var(--white);--ink-bright:var(--white); /* alias: text color tracks the theme's ink so light themes stay legible */
-  --red:var(--danger);--rose:var(--danger);--bg-card:#1a1c20;--bg-soft:#13151a; /* define vars some renderers referenced without defining */
   --green:#22c55e;--blue:#3b82f6;--purple:#a855f7;
   --pink:#ec4899;--teal:#14b8a6;--orange:#f97316;
   --hh:56px;--bnh:60px;
@@ -40,26 +38,23 @@
    theme picker. Owner-only access (gated in JS).
    ──────────────────────────────────────────────────────────── */
 :root[data-theme="clipboard"]{
-  /* Base palette — exact mockup-1 dark values: near-black paper, light ticket-lines */
-  --steel:#14110d;          /* --bg */
-  --steel-mid:#1c1814;      /* --bg-card / surface */
-  --steel-light:#241f18;    /* hover surface (derived) */
-  --iron:#d4c8b0;           /* --line: light parchment ticket-lines */
-  --iron-soft:rgba(212,200,176,.16); /* --line-soft */
-  --amber:#ea8a47;          /* --accent: burnt orange, lighter for dark paper */
-  --amber-bright:#f4a76a;
-  --amber-dim:#fbbf24;      /* --warning */
-  --white:#e8e1d2;          /* --ink: parchment text */
-  --muted:#908779;          /* --ink-muted */
-  --danger:#e06c6c;         /* readable wax-seal red on dark */
-  --green:#4ade80;          /* --accent-2: paid/accepted */
-  --blue:#7a9ac0;
-  --purple:#c79ab0;
-  --pink:#d98aa3;
-  --teal:#7ec8b8;
-  --orange:#ea8a47;
-  --bg-stripe:rgba(212,200,176,.04);
-  --bg-card:var(--steel-mid);--bg-soft:var(--steel);
+  /* Base palette — manila paper + iron-gall ink + burnt orange */
+  --steel:#1e1a14;          /* deep ink (dark mode equivalent of canvas) */
+  --steel-mid:#2a241b;      /* card / surface */
+  --steel-light:#3a3225;    /* hover surface */
+  --iron:#5a4f3d;           /* warm tan border */
+  --amber:#c2410c;          /* burnt orange — primary accent */
+  --amber-bright:#ea580c;
+  --amber-dim:#9a3412;
+  --white:#e8e1d2;          /* parchment text — softer than pure white */
+  --muted:#a89e88;          /* aged tan for muted */
+  --danger:#a83232;         /* wax-seal red */
+  --green:#3d7d3f;          /* moss for paid/done */
+  --blue:#4a6b8a;           /* slate blue */
+  --purple:#8a5e74;          /* dusty purple */
+  --pink:#b95a73;
+  --teal:#4c8a7e;
+  --orange:#c2410c;
   --app-font:'JetBrains Mono','Courier New',monospace;
   --display-font:'JetBrains Mono','Courier New',monospace;
 }
@@ -81,9 +76,6 @@
   --pink:#a04a64;
   --teal:#3a6b62;
   --orange:#b45309;
-  --iron-soft:rgba(28,26,23,.18);  /* --line-soft */
-  --bg-stripe:rgba(28,26,23,.04);
-  --bg-card:var(--steel-mid);--bg-soft:var(--steel);
   --app-font:'JetBrains Mono','Courier New',monospace;
   --display-font:'JetBrains Mono','Courier New',monospace;
 }
@@ -113,121 +105,6 @@
   );
   opacity: .35; z-index: 0;
 }
-
-/* ════════ CLIPBOARD THEME — Tier 2 decorative layer (theme-scoped) ════════ */
-/* Paper-grain on the dark variant too (light already has it above) */
-:root[data-theme="clipboard"] body::before{
-  content:'';position:fixed;inset:0;pointer-events:none;
-  background-image:repeating-linear-gradient(0deg,transparent 0,transparent 23px,rgba(212,200,176,.04) 23px,rgba(212,200,176,.04) 24px);
-  opacity:.35;z-index:0;
-}
-/* Square the UI — clipboard / job-ticket aesthetic */
-:root[data-theme="clipboard"] .lead-card,:root[data-theme="clipboard-light"] .lead-card,
-:root[data-theme="clipboard"] .cust-card,:root[data-theme="clipboard-light"] .cust-card,
-:root[data-theme="clipboard"] .doc-card,:root[data-theme="clipboard-light"] .doc-card,
-:root[data-theme="clipboard"] .qv-card,:root[data-theme="clipboard-light"] .qv-card,
-:root[data-theme="clipboard"] .qv-btn-primary,:root[data-theme="clipboard-light"] .qv-btn-primary,
-:root[data-theme="clipboard"] .qv-btn-ghost,:root[data-theme="clipboard-light"] .qv-btn-ghost,
-:root[data-theme="clipboard"] .btn,:root[data-theme="clipboard-light"] .btn,
-:root[data-theme="clipboard"] .lead-search-bar,:root[data-theme="clipboard-light"] .lead-search-bar,
-:root[data-theme="clipboard"] .lead-sort-select,:root[data-theme="clipboard-light"] .lead-sort-select,
-:root[data-theme="clipboard"] input[type="text"],:root[data-theme="clipboard-light"] input[type="text"],
-:root[data-theme="clipboard"] input[type="search"],:root[data-theme="clipboard-light"] input[type="search"],
-:root[data-theme="clipboard"] input[type="email"],:root[data-theme="clipboard-light"] input[type="email"],
-:root[data-theme="clipboard"] input[type="tel"],:root[data-theme="clipboard-light"] input[type="tel"],
-:root[data-theme="clipboard"] input[type="number"],:root[data-theme="clipboard-light"] input[type="number"],
-:root[data-theme="clipboard"] input[type="date"],:root[data-theme="clipboard-light"] input[type="date"],
-:root[data-theme="clipboard"] select,:root[data-theme="clipboard-light"] select,
-:root[data-theme="clipboard"] textarea,:root[data-theme="clipboard-light"] textarea,
-:root[data-theme="clipboard"] .doc-status,:root[data-theme="clipboard-light"] .doc-status,
-:root[data-theme="clipboard"] .lbadge,:root[data-theme="clipboard-light"] .lbadge,
-:root[data-theme="clipboard"] .cust-tagchip,:root[data-theme="clipboard-light"] .cust-tagchip,
-:root[data-theme="clipboard"] .stab,:root[data-theme="clipboard-light"] .stab,
-:root[data-theme="clipboard"] .sched-sub-pill,:root[data-theme="clipboard-light"] .sched-sub-pill{
-  border-radius:0 !important;
-}
-/* Cards become job tickets: square, ink-lined, accent edge */
-:root[data-theme="clipboard"] .lead-card,:root[data-theme="clipboard-light"] .lead-card,
-:root[data-theme="clipboard"] .cust-card,:root[data-theme="clipboard-light"] .cust-card,
-:root[data-theme="clipboard"] .doc-card,:root[data-theme="clipboard-light"] .doc-card{
-  border:1px solid var(--iron-soft) !important;
-  border-left:3px solid var(--amber) !important;
-  background:var(--steel-mid);
-}
-/* Stamped, outlined stage/status badges */
-:root[data-theme="clipboard"] .doc-status,:root[data-theme="clipboard-light"] .doc-status,
-:root[data-theme="clipboard"] .lbadge,:root[data-theme="clipboard-light"] .lbadge{
-  background:transparent !important;
-  border:1px solid currentColor;
-  text-transform:uppercase;letter-spacing:.16em;font-weight:700;
-}
-/* Clipboard buttons: uppercase, letterspaced */
-:root[data-theme="clipboard"] .btn,:root[data-theme="clipboard-light"] .btn,
-:root[data-theme="clipboard"] .qv-btn-primary,:root[data-theme="clipboard-light"] .qv-btn-primary,
-:root[data-theme="clipboard"] .qv-btn-ghost,:root[data-theme="clipboard-light"] .qv-btn-ghost,
-:root[data-theme="clipboard"] .dadd,:root[data-theme="clipboard-light"] .dadd{
-  text-transform:uppercase;letter-spacing:.08em;font-weight:700;
-}
-/* Filter chips/pills invert (ink fill) when active */
-:root[data-theme="clipboard"] .cust-tagchip,:root[data-theme="clipboard-light"] .cust-tagchip,
-:root[data-theme="clipboard"] .stab,:root[data-theme="clipboard-light"] .stab,
-:root[data-theme="clipboard"] .sched-sub-pill,:root[data-theme="clipboard-light"] .sched-sub-pill{
-  text-transform:uppercase;letter-spacing:.06em;
-}
-:root[data-theme="clipboard"] .cust-tagchip.active,:root[data-theme="clipboard-light"] .cust-tagchip.active,
-:root[data-theme="clipboard"] .sched-sub-pill.active,:root[data-theme="clipboard-light"] .sched-sub-pill.active,
-:root[data-theme="clipboard"] .stab.active,:root[data-theme="clipboard-light"] .stab.active{
-  background:var(--white) !important;color:var(--steel) !important;border-color:var(--white) !important;
-}
-/* Square, ink-bordered form inputs */
-:root[data-theme="clipboard"] input[type="text"],:root[data-theme="clipboard-light"] input[type="text"],
-:root[data-theme="clipboard"] input[type="search"],:root[data-theme="clipboard-light"] input[type="search"],
-:root[data-theme="clipboard"] input[type="email"],:root[data-theme="clipboard-light"] input[type="email"],
-:root[data-theme="clipboard"] input[type="tel"],:root[data-theme="clipboard-light"] input[type="tel"],
-:root[data-theme="clipboard"] input[type="number"],:root[data-theme="clipboard-light"] input[type="number"],
-:root[data-theme="clipboard"] input[type="date"],:root[data-theme="clipboard-light"] input[type="date"],
-:root[data-theme="clipboard"] select,:root[data-theme="clipboard-light"] select,
-:root[data-theme="clipboard"] textarea,:root[data-theme="clipboard-light"] textarea{
-  border:1px solid var(--iron-soft) !important;background:var(--steel-mid);
-}
-/* Nav tab count badge contrast now that --iron is a light line color */
-:root[data-theme="clipboard"] .dtab:not(.active) .dbadge,
-:root[data-theme="clipboard-light"] .dtab:not(.active) .dbadge{
-  background:var(--steel-light);color:var(--white);
-}
-/* Tracking-sheet numerals */
-:root[data-theme="clipboard"] body,:root[data-theme="clipboard-light"] body{font-variant-numeric:tabular-nums;}
-/* ════════ end clipboard decorative layer ════════ */
-
-/* ════════ CLIPBOARD — Phase C: job-ticket cards + polish (scoped) ════════ */
-/* Ticket ID stripe — hidden on the default theme, shown on clipboard */
-.ticket-stripe{display:none;}
-:root[data-theme="clipboard"] .cust-card,:root[data-theme="clipboard-light"] .cust-card,
-:root[data-theme="clipboard"] .doc-card,:root[data-theme="clipboard-light"] .doc-card{
-  position:relative;padding-left:36px !important;overflow:hidden;flex-shrink:0;
-  border:1px solid var(--iron-soft) !important;border-left:0 !important;
-}
-:root[data-theme="clipboard"] .ticket-stripe,:root[data-theme="clipboard-light"] .ticket-stripe{
-  display:flex;position:absolute;left:0;top:0;bottom:0;width:28px;
-  background:var(--white);color:var(--steel);
-  align-items:center;justify-content:center;
-  writing-mode:vertical-rl;transform:rotate(180deg);
-  font-size:9px;font-weight:700;letter-spacing:.1em;font-variant-numeric:tabular-nums;
-  border-right:1px solid var(--iron-soft);white-space:nowrap;
-}
-/* Estimate rows on a customer card read as boxed line items */
-:root[data-theme="clipboard"] .cust-est-row,:root[data-theme="clipboard-light"] .cust-est-row{
-  background:transparent !important;border:1px solid var(--iron-soft);
-}
-:root[data-theme="clipboard"] .cust-est-row:hover,:root[data-theme="clipboard-light"] .cust-est-row:hover{
-  background:var(--bg-stripe) !important;
-}
-/* Customer-detail stat boxes become a square tally grid */
-:root[data-theme="clipboard"] .cust-stat-box,:root[data-theme="clipboard-light"] .cust-stat-box{
-  border-radius:0 !important;border:1px solid var(--iron-soft) !important;background:var(--steel-mid) !important;
-}
-:root[data-theme="clipboard"] .cust-stat-num,:root[data-theme="clipboard-light"] .cust-stat-num{letter-spacing:-.02em;}
-/* ════════ end Phase C ════════ */
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
 html,body{height:100%;overscroll-behavior:none;}
 body{font-family:var(--app-font);background:var(--steel);color:var(--white);overflow:hidden;}
@@ -486,17 +363,6 @@ header{position:fixed;top:0;left:0;right:0;z-index:50;height:var(--hh);display:f
 .cust-addr-row{font-size:12px;color:var(--muted);margin-bottom:6px;}
 .cust-meta-row{display:flex;gap:14px;align-items:center;font-size:11px;color:var(--muted);margin-top:6px;padding-top:6px;border-top:1px solid var(--iron);}
 .cust-est-count{font-weight:600;color:var(--ink,#d8d4c4);}
-.cust-est-list{margin-top:8px;padding-top:8px;border-top:1px solid var(--iron);display:flex;flex-direction:column;gap:4px;}
-.cust-est-row{display:flex;align-items:center;justify-content:space-between;gap:8px;padding:5px 8px;border-radius:6px;background:var(--steel,#22252b);cursor:pointer;transition:background .12s;}
-.cust-est-row:hover{background:var(--steel-mid,#2a2e35);}
-.cust-est-desc{font-size:12px;color:var(--ink,#d8d4c4);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1;}
-.cust-est-meta{display:flex;align-items:center;gap:8px;flex-shrink:0;}
-.cust-est-val{font-size:12px;font-weight:700;color:var(--ink-bright,#fff);}
-.cust-est-empty{margin-top:8px;padding-top:8px;border-top:1px solid var(--iron);font-size:11px;color:var(--muted);font-style:italic;}
-.cust-tag-filter{display:flex;gap:6px;flex-wrap:wrap;padding:8px 14px 2px;align-items:center;}
-.cust-tagchip{font-size:11px;padding:3px 11px;border-radius:100px;background:transparent;border:1px solid var(--iron);color:var(--muted);cursor:pointer;white-space:nowrap;transition:border-color .12s,background .12s;}
-.cust-tagchip:hover{border-color:var(--amber);}
-.cust-tagchip.active{background:var(--amber);border-color:var(--amber);color:#0b0d10;font-weight:700;}
 .cust-pipe-val{color:var(--amber);font-weight:600;font-variant-numeric:tabular-nums;}
 /* Customer detail modal */
 .cust-sec-label{font-size:10px;font-weight:700;letter-spacing:.18em;color:var(--muted);text-transform:uppercase;margin-bottom:8px;}
@@ -779,30 +645,10 @@ body.resizing{user-select:none;-webkit-user-select:none;}
 .doc-status.draft{background:rgba(148,163,184,.15);color:var(--muted);}
 .doc-status.sent{background:rgba(59,130,246,.15);color:var(--blue);}
 .doc-status.approved{background:rgba(34,197,94,.15);color:var(--green);}
-.doc-status.signed{background:rgba(34,197,94,.15);color:var(--green);}
-.doc-status.finished{background:rgba(168,85,247,.15);color:var(--purple);}
 .doc-status.invoiced{background:rgba(245,158,11,.15);color:var(--amber);}
 .doc-status.paid{background:rgba(20,184,166,.15);color:var(--teal);}
 .doc-status.declined{background:rgba(239,68,68,.15);color:var(--danger);}
 .doc-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:48px 24px;text-align:center;}
-.qv-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:center;justify-content:center;z-index:9999;padding:20px;}
-.qv-card{background:var(--steel,#1b1e24);border:1px solid var(--iron);border-radius:12px;width:100%;max-width:440px;max-height:90vh;overflow:auto;box-shadow:0 20px 60px rgba(0,0,0,.5);}
-.qv-head{display:flex;align-items:center;justify-content:space-between;padding:16px 18px;border-bottom:1px solid var(--iron);}
-.qv-title{font-size:16px;font-weight:700;color:var(--ink-bright,#fff);}
-.qv-close{background:transparent;border:0;color:var(--muted);font-size:24px;line-height:1;cursor:pointer;padding:0 4px;}
-.qv-close:hover{color:var(--ink-bright,#fff);}
-.qv-body{padding:10px 18px;}
-.qv-row{display:flex;justify-content:space-between;gap:16px;padding:8px 0;border-bottom:1px solid var(--iron-soft,#2a2e35);align-items:center;}
-.qv-row:last-child{border-bottom:0;}
-.qv-k{font-size:11px;color:var(--muted);text-transform:uppercase;letter-spacing:.05em;flex-shrink:0;}
-.qv-v{font-size:13px;color:var(--ink,#d8d4c4);text-align:right;}
-.qv-custlink{background:transparent;border:0;color:var(--amber);font-size:13px;font-weight:600;cursor:pointer;padding:0;text-align:right;}
-.qv-custlink:hover{text-decoration:underline;}
-.qv-actions{display:flex;gap:10px;padding:14px 18px;border-top:1px solid var(--iron);justify-content:flex-end;flex-wrap:wrap;}
-.qv-btn-ghost{background:transparent;border:1px solid var(--iron);color:var(--ink,#d8d4c4);padding:8px 14px;border-radius:8px;cursor:pointer;font-size:13px;}
-.qv-btn-ghost:hover{border-color:var(--amber);color:var(--amber);}
-.qv-btn-primary{background:var(--amber);border:0;color:#0b0d10;font-weight:700;padding:8px 16px;border-radius:8px;cursor:pointer;font-size:13px;}
-.qv-btn-primary:hover{filter:brightness(1.08);}
 .doc-empty-icon{font-size:42px;opacity:.3;}
 .doc-empty-txt{font-size:13px;color:var(--muted);}
 
@@ -972,55 +818,6 @@ select.doc-finput option{background:var(--steel-mid);}
 .doc-total-lbl{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;}
 .doc-total-val{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;}
 
-/* ── MATERIALS / ABC SUPPLY ── */
-.mat-view{display:flex;flex-direction:column;height:100%;overflow:hidden;}
-.mat-toolbar{display:flex;align-items:center;gap:8px;padding:8px 14px;background:var(--steel-mid);border-bottom:1px solid var(--iron);flex-shrink:0;flex-wrap:wrap;}
-.mat-search-wrap{display:flex;flex:1;min-width:180px;gap:6px;}
-.mat-search{flex:1;background:var(--steel-light);border:1px solid var(--iron);border-radius:7px;padding:7px 12px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:13px;}
-.mat-search:focus{outline:none;border-color:var(--amber);}
-.mat-search::placeholder{color:rgba(148,163,184,.4);}
-.mat-creds-btn{background:var(--steel-light);border:1px solid var(--iron);color:var(--muted);padding:6px 10px;border-radius:6px;font-size:11px;cursor:pointer;white-space:nowrap;}
-.mat-creds-btn.connected{border-color:var(--green);color:var(--green);}
-.mat-body{display:flex;flex:1;overflow:hidden;}
-.mat-results{flex:1;overflow-y:auto;padding:10px 14px 80px;display:flex;flex-direction:column;gap:6px;}
-.mat-cart{width:280px;flex-shrink:0;background:var(--steel-mid);border-left:1px solid var(--iron);display:flex;flex-direction:column;overflow:hidden;}
-.mat-cart-hdr{padding:10px 14px;border-bottom:1px solid var(--iron);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
-.mat-cart-title{font-family:'Bebas Neue',sans-serif;font-size:12px;letter-spacing:2px;color:var(--amber);}
-.mat-cart-list{flex:1;overflow-y:auto;padding:8px 12px;display:flex;flex-direction:column;gap:6px;}
-.mat-cart-item{background:var(--steel-light);border-radius:7px;padding:8px 10px;}
-.mat-cart-item-name{font-size:11px;font-weight:600;color:var(--white);margin-bottom:2px;}
-.mat-cart-item-row{display:flex;align-items:center;justify-content:space-between;gap:4px;}
-.mat-cart-item-qty{display:flex;align-items:center;gap:4px;}
-.mat-qty-btn{background:var(--iron);border:none;color:var(--white);width:22px;height:22px;border-radius:4px;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;}
-.mat-qty-val{font-size:12px;font-weight:600;min-width:24px;text-align:center;}
-.mat-cart-item-price{font-family:'Bebas Neue',sans-serif;font-size:13px;color:var(--amber);}
-.mat-cart-item-del{background:none;border:none;color:var(--muted);cursor:pointer;font-size:13px;padding:0;}
-.mat-cart-footer{padding:10px 12px;border-top:1px solid var(--iron);flex-shrink:0;}
-.mat-cart-total{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
-.mat-cart-total-lbl{font-size:11px;color:var(--muted);}
-.mat-cart-total-val{font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--amber);}
-.mat-item{background:var(--steel-light);border-radius:8px;padding:10px 12px;display:flex;gap:10px;align-items:flex-start;}
-.mat-item-info{flex:1;}
-.mat-item-num{font-size:9px;color:var(--teal);font-weight:600;margin-bottom:2px;}
-.mat-item-name{font-size:12px;font-weight:600;color:var(--white);margin-bottom:2px;}
-.mat-item-brand{font-size:10px;color:var(--muted);}
-.mat-item-price{font-family:'Bebas Neue',sans-serif;font-size:15px;color:var(--amber);white-space:nowrap;}
-.mat-item-uom{font-size:9px;color:var(--muted);}
-.mat-item-add{background:var(--amber);color:var(--steel);border:none;border-radius:6px;padding:5px 10px;font-weight:700;font-size:11px;cursor:pointer;white-space:nowrap;flex-shrink:0;}
-.mat-item-add:hover{background:var(--amber-bright);}
-.mat-badge-avail{display:inline-block;font-size:8px;padding:1px 5px;border-radius:3px;font-weight:700;margin-left:4px;}
-.mat-badge-avail.yes{background:rgba(34,197,94,.15);color:var(--green);}
-.mat-badge-avail.no{background:rgba(239,68,68,.15);color:var(--danger);}
-.mat-loading{display:flex;align-items:center;justify-content:center;padding:40px;color:var(--muted);font-size:13px;gap:10px;}
-.mat-creds-panel{background:var(--steel-mid);border-radius:10px;padding:20px;margin:16px;border:1px solid var(--iron);}
-.mat-creds-panel h3{font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:2px;color:var(--amber);margin-bottom:12px;}
-.mat-cat-tabs{display:flex;overflow-x:auto;flex-shrink:0;border-bottom:1px solid var(--iron);scrollbar-width:none;padding:0 14px;}
-.mat-cat-tabs::-webkit-scrollbar{display:none;}
-.mat-cat-tab{flex-shrink:0;padding:7px 12px;font-family:'Bebas Neue',sans-serif;font-size:10px;letter-spacing:1.5px;color:var(--muted);background:transparent;border:none;cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;}
-.mat-cat-tab.active{color:var(--amber);border-bottom-color:var(--amber);}
-.mat-export-btn{background:var(--steel-light);border:1px solid var(--iron);color:var(--white);padding:6px 10px;border-radius:6px;font-size:11px;cursor:pointer;display:flex;align-items:center;gap:4px;}
-.mat-export-btn:hover{border-color:var(--amber);color:var(--amber);}
-
 /* ── ESTIMATE→LEAD LINKAGE ── */
 .est-badge{display:inline-flex;align-items:center;gap:4px;background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.3);border-radius:5px;padding:2px 7px;font-size:9px;font-weight:700;color:var(--amber);cursor:pointer;margin-top:5px;letter-spacing:.5px;}
 .est-badge:hover{background:rgba(245,158,11,.22);}
@@ -1054,10 +851,6 @@ select.doc-finput option{background:var(--steel-mid);}
 .matlist-cat-row::-webkit-scrollbar{display:none;}
 .matlist-cat-btn{flex-shrink:0;padding:3px 10px;border-radius:12px;border:1px solid var(--iron);background:transparent;color:var(--muted);font-size:10px;font-family:'Bebas Neue',sans-serif;letter-spacing:1px;cursor:pointer;}
 .matlist-cat-btn.active{background:var(--amber);color:var(--steel);border-color:var(--amber);}
-
-/* ── ATTACH BUTTON ON LEAD CARD ── */
-.lcard-mat-badge{display:inline-flex;align-items:center;gap:4px;background:rgba(20,184,166,.12);border:1px solid rgba(20,184,166,.3);border-radius:5px;padding:2px 7px;font-size:9px;font-weight:700;color:var(--teal);cursor:pointer;letter-spacing:.5px;}
-.lcard-mat-badge:hover{background:rgba(20,184,166,.22);}
 
 /* ── CUSTOMER SEARCH IN JOB MODAL ── */
 .cust-result{display:flex;flex-direction:column;padding:8px 12px;cursor:pointer;border-bottom:1px solid var(--iron);transition:background .1s;}
@@ -1503,7 +1296,6 @@ body:not(.role-owner):not(.role-manager) .role-financial-only{display:none!impor
       <div class="user-menu-item role-owner-only" id="qbConnectMenuItem" onclick="openQbConnect()"><span id="qbConnectIcon">🟢</span><span id="qbConnectLabel">Connect QuickBooks</span></div>
       <div class="user-menu-item role-financial-only" id="reportsMenuItem" onclick="openReports()"><span>📊</span><span>Reports</span></div>
       <div class="user-menu-item" id="resyncMenuItem" onclick="manualResync()"><span>🔄</span><span>Resync</span></div>
-      <div class="user-menu-item" id="pushAlertsMenuItem" onclick="openPushSettings()"><span>🔔</span><span>Notifications</span></div>
       <div class="user-menu-item" id="themePickerMenuItem" onclick="openThemePicker()" style="display:none"><span>🎨</span><span>Theme</span></div>
       <div class="user-menu-item danger" onclick="doSignOut()"><span>⏏</span><span>Sign Out</span></div>
     </div>
@@ -1514,7 +1306,6 @@ body:not(.role-owner):not(.role-manager) .role-financial-only{display:none!impor
       <button class="dtab" id="dtCRM" onclick="switchMain('crm')">👥 CUSTOMERS <span class="dbadge" id="dtCrmBadge">0</span></button>
       <button class="dtab" id="dtEst" onclick="switchMain('est')">📄 ESTIMATES</button>
       <button class="dtab" id="dtTasks" onclick="switchMain('tasks')">✓ TASKS <span class="dbadge" id="dtTasksBadge">0</span></button>
-      <button class="dtab" id="dtMat" onclick="switchMain('mat')">🏗 MATERIALS</button>
     </div>
     <button class="dadd btn-amber" id="daddBtn" style="border-radius:6px;font-size:12px;padding:6px 12px;">
       <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -1538,9 +1329,6 @@ body:not(.role-owner):not(.role-manager) .role-financial-only{display:none!impor
   <button class="bnbtn" id="bnTasks" onclick="switchMain('tasks')">
     <div class="bnicon">✓</div><div class="bnlbl">TASKS</div>
     <div class="bnbadge" id="bnTasksBadge"></div>
-  </button>
-  <button class="bnbtn" id="bnMat" onclick="switchMain('mat')">
-    <div class="bnicon">🏗</div><div class="bnlbl">MATERIALS</div>
   </button>
 </div>
 
@@ -1672,7 +1460,6 @@ body:not(.role-owner):not(.role-manager) .role-financial-only{display:none!impor
           </div>
         </div>
       </div>
-      <div class="stabs" id="docStatusTabs"></div>
       <div class="doc-list" id="docList"></div>
     </div>
   </div>
@@ -1695,49 +1482,6 @@ body:not(.role-owner):not(.role-manager) .role-financial-only{display:none!impor
     </div>
   </div>
 
-  <!-- ═══ MATERIALS / ABC SUPPLY ═══ -->
-  <div class="view" id="vMat">
-    <div class="mat-view" style="height:100%">
-      <div class="mat-toolbar">
-        <span style="font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:2px;color:var(--amber);flex-shrink:0;">🏗 MATERIALS</span>
-        <div class="mat-search-wrap">
-          <input class="mat-search" id="matSearch" type="text" placeholder="Search ABC Supply catalog…" oninput="debouncedMatSearch()"/>
-          <button class="btn btn-amber btn-sm" onclick="doMatSearch()">Search</button>
-        </div>
-        <button class="mat-creds-btn" id="abcCredsBtn" onclick="toggleAbcCreds()">🔑 ABC API</button>
-        <button class="mat-export-btn" onclick="exportMatList()">⬇ Export List</button>
-      </div>
-      <div class="mat-cat-tabs" id="matCatTabs">
-        <button class="mat-cat-tab active" onclick="setMatCat('all')">ALL</button>
-        <button class="mat-cat-tab" onclick="setMatCat('Roofing')">ROOFING</button>
-        <button class="mat-cat-tab" onclick="setMatCat('Siding')">SIDING</button>
-        <button class="mat-cat-tab" onclick="setMatCat('Gutters')">GUTTERS</button>
-        <button class="mat-cat-tab" onclick="setMatCat('Soffit')">SOFFIT & FASCIA</button>
-        <button class="mat-cat-tab" onclick="setMatCat('Underlayment')">UNDERLAYMENT</button>
-        <button class="mat-cat-tab" onclick="setMatCat('Flashing')">FLASHING</button>
-        <button class="mat-cat-tab" onclick="setMatCat('Fasteners')">FASTENERS</button>
-      </div>
-      <div class="mat-body">
-        <div class="mat-results" id="matResults"></div>
-        <div class="mat-cart" id="matCart">
-          <div class="mat-cart-hdr">
-            <span class="mat-cart-title">MATERIAL LIST</span>
-            <span style="font-size:10px;color:var(--muted)" id="matCartCount">0 items</span>
-          </div>
-          <div class="mat-cart-list" id="matCartList"></div>
-          <div class="mat-cart-footer">
-            <div class="mat-cart-total">
-              <span class="mat-cart-total-lbl">Subtotal</span>
-              <span class="mat-cart-total-val" id="matCartTotal">$0.00</span>
-            </div>
-            <button class="btn btn-amber" style="width:100%;justify-content:center;font-size:12px;" onclick="addMatListToEstimate()">+ Add to Estimate</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-
   <!-- ═══ CRM ═══ -->
   <div class="view" id="vCRM">
     <div class="crmstats">
@@ -1751,15 +1495,14 @@ body:not(.role-owner):not(.role-manager) .role-financial-only{display:none!impor
       <span class="lead-search-icon">🔍</span>
       <input type="search" id="leadSearch" class="lead-search-input" placeholder="Search customer name, phone, email, or address…" autocomplete="off"/>
       <button type="button" class="lead-search-clear" id="leadSearchClear" title="Clear">×</button>
-      <button type="button" class="btn btn-ghost btn-sm" id="custNewFilterBtn" onclick="toggleCustomerNewOnly()" title="Show only new arrivals to triage" style="flex-shrink:0">New</button>
-      <select id="leadSortSelect" class="lead-sort-select" onchange="setCustomerSort(this.value)" title="Sort">
-        <option value="newest">🆕 Newest first</option>
-        <option value="recent">📅 Recent activity</option>
+      <select id="leadSortSelect" class="lead-sort-select" onchange="setLeadSort(this.value)" title="Sort">
+        <option value="default">↕ Default order</option>
+        <option value="revenue_desc">💰 Top revenue</option>
+        <option value="lastjob_desc">📅 Recent activity</option>
         <option value="name_asc">A–Z by name</option>
-        <option value="value_desc">💰 Top value</option>
       </select>
       <button type="button" class="btn btn-ghost btn-sm" id="leadBulkBtn" onclick="toggleLeadBulkMode()" title="Select multiple to delete" style="flex-shrink:0">✏️ Edit</button>
-      <button type="button" class="btn btn-ghost btn-sm" id="custTagLibBtn" onclick="openTagLibrary()" title="Manage tag library" style="flex-shrink:0">Tags</button>
+      <button type="button" class="btn btn-ghost btn-sm" id="custTagLibBtn" onclick="openTagLibrary()" title="Manage tag library" style="flex-shrink:0">🏷 Tags</button>
     </div>
     <!-- Assigned-to filter pills — owner/manager see all 3, employees only see 'mine' (rest is forced by RLS) -->
     <div class="sched-sub-filter" id="leadAssignedFilter">
@@ -1775,7 +1518,6 @@ body:not(.role-owner):not(.role-manager) .role-financial-only{display:none!impor
       <button class="sched-sub-pill" data-jtype="Gutters" onclick="setLeadJobType('Gutters')">🌧️ Gutters</button>
       <button class="sched-sub-pill" data-jtype="Soffit & Fascia" onclick="setLeadJobType('Soffit & Fascia')">📐 Soffit &amp; Fascia</button>
     </div>
-    <div class="cust-tag-filter" id="custTagFilter" style="display:none"></div>
     <div class="stabs" id="stabs"></div>
     <div class="leadlist" id="leadList"></div>
   </div>
@@ -1811,10 +1553,9 @@ body:not(.role-owner):not(.role-manager) .role-financial-only{display:none!impor
       <select class="doc-finput" id="docStatus" style="font-size:11px;padding:4px 8px;max-width:130px;">
         <option value="draft">Draft</option>
         <option value="sent">Sent</option>
-        <option value="signed">Signed</option>
+        <option value="approved">Approved</option>
         <option value="invoiced">Invoiced</option>
         <option value="paid">Paid</option>
-        <option value="finished">Finished</option>
         <option value="declined">Declined</option>
       </select>
       <select class="doc-finput" id="docType" onchange="updateDocType()" style="font-size:11px;padding:4px 8px;max-width:120px;">
@@ -1831,8 +1572,6 @@ body:not(.role-owner):not(.role-manager) .role-financial-only{display:none!impor
     <button class="btn btn-ghost btn-sm" onclick="generateCustomerLink()">🔗 Customer Link</button>
     <button class="btn btn-ghost btn-sm" onclick="openWorkOrder()">🔧 Work Order</button>
     <button class="btn btn-ghost btn-sm" onclick="openMaterialOrder()">📦 Material Order</button>
-    <button class="btn btn-ghost btn-sm" onclick="markDocOutcome('won')" id="docWonBtn" title="Mark this estimate as Won (closed/approved)">🏆 Won</button>
-    <button class="btn btn-ghost btn-sm" onclick="markDocOutcome('lost')" id="docLostBtn" title="Mark this estimate as Lost (didn't close)">✗ Lost</button>
     <button class="btn btn-danger btn-sm" onclick="deleteDoc()" title="Delete this document">🗑 Delete</button>
     <button class="btn btn-ghost btn-sm" id="docQbSyncBtn" onclick="syncDocWithQb()" title="Check QuickBooks for this invoice's payment status" style="display:none">🔄 Check QuickBooks</button>
     <button class="btn btn-ghost btn-sm" id="docQbPushBtn" onclick="pushDocToQb()" title="Create this invoice in QuickBooks" style="display:none">📤 Push to QB</button>
@@ -2222,15 +1961,15 @@ function canSeeAllLeads(){return isOwnerOrManager();}
 function canManageTeam(){return isOwner();}
 function canManageTemplates(){return isOwnerOrManager();}
 function canSeeTab(tab){
-  // Tasks tab visible to all roles; Materials view visible to all roles too
+  // Tasks tab visible to all roles
   if(!currentRole) return true; // pre-auth or no profile yet — show everything
   if(isLaborer()){
-    // Laborers only see schedule + their assigned tasks + materials
-    return ['sched','tasks','mat'].includes(tab);
+    // Laborers only see schedule + their assigned tasks
+    return ['sched','tasks'].includes(tab);
   }
   if(isSalesman()){
     // Salesmen see most things except templates management
-    return ['sched','crm','est','tasks','mat'].includes(tab);
+    return ['sched','crm','est','tasks'].includes(tab);
   }
   return true; // owner & manager see everything
 }
@@ -5168,22 +4907,21 @@ function switchMain(v){
   }
   mainView=v;
   document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));
-  const viewMap={sched:'vSched',crm:'vCRM',est:'vEst',mat:'vMat',tasks:'vTasks'};
+  const viewMap={sched:'vSched',crm:'vCRM',est:'vEst',tasks:'vTasks'};
   document.getElementById(viewMap[v]||'vSched').classList.add('active');
-  ['bnSched','bnCRM','bnEst','bnMat','bnTasks'].forEach(id=>{const el=document.getElementById(id);if(el)el.classList.toggle('active',id==='bn'+v.charAt(0).toUpperCase()+v.slice(1));});
-  ['dtSched','dtCRM','dtEst','dtMat','dtTasks'].forEach(id=>{const el=document.getElementById(id);if(el)el.classList.toggle('active',id==='dt'+v.charAt(0).toUpperCase()+v.slice(1));});
-  const lblMap={sched:'New Job',crm:'New Customer',est:'New Estimate',mat:'Search Materials',tasks:'New Task'};
+  ['bnSched','bnCRM','bnEst','bnTasks'].forEach(id=>{const el=document.getElementById(id);if(el)el.classList.toggle('active',id==='bn'+v.charAt(0).toUpperCase()+v.slice(1));});
+  ['dtSched','dtCRM','dtEst','dtTasks'].forEach(id=>{const el=document.getElementById(id);if(el)el.classList.toggle('active',id==='dt'+v.charAt(0).toUpperCase()+v.slice(1));});
+  const lblMap={sched:'New Job',crm:'New Customer',est:'New Estimate',tasks:'New Task'};
   document.getElementById('daddLbl').textContent=lblMap[v]||'New';
   document.getElementById('daddBtn').onclick=
     v==='sched'?()=>openJobMov('backlog'):
     v==='crm'?()=>openCustomerMov():
     v==='est'?()=>openDocEditor():
     v==='tasks'?()=>openTaskMov():
-    ()=>document.getElementById('matSearch')?.focus();
+    ()=>{};
   if(v==='crm')renderCustomers();
   else if(v==='sched')renderSched();
   else if(v==='est')renderDocList();
-  else if(v==='mat')renderMatView();
   else if(v==='tasks'){renderTaskList();filterTasks(taskFilter);}
 }
 function handleFab(){
@@ -5598,22 +5336,7 @@ function renderCRM(){
 // Leads still exist underneath; they're now "estimates" attached to customers.
 
 let customerSearchQuery='';
-let customerSortMode=lsGet('customer_sort_mode','newest');  // 'newest' | 'recent' | 'name_asc' | 'value_desc'
-let customerNewOnly=false;  // triage: show only customers with an untouched (new-stage) estimate
-let customerTagFilter=null; // triage: filter customers by a single tag id
-function setCustomerTagFilter(tagId){
-  customerTagFilter=(customerTagFilter===tagId)?null:tagId;
-  if(typeof renderCustomers==='function') renderCustomers();
-}
-function setCustomerSort(mode){
-  customerSortMode=mode||'newest';
-  lsSet('customer_sort_mode',customerSortMode);
-  if(typeof renderCustomers==='function') renderCustomers();
-}
-function toggleCustomerNewOnly(){
-  customerNewOnly=!customerNewOnly;
-  if(typeof renderCustomers==='function') renderCustomers();
-}
+let customerSortMode='recent';  // 'recent' | 'name_asc' | 'value_desc'
 
 // Helper: get tags applied to a specific customer (returns array of tag objects)
 function tagsForCustomer(customerId){
@@ -5691,7 +5414,6 @@ function renderCustomers(){
   // Top stats: customers + their active pipeline numbers
   const activeCustomers=customers.filter(c=>!c.archived_at);
   document.getElementById('sTotal').textContent=activeCustomers.length;
-  updateBadges(); // keep the nav CUSTOMERS badge in sync with the loaded customer count
 
   // Active pipeline = customers with at least one non-declined non-paid lead
   const customersByActivity={};
@@ -5720,17 +5442,37 @@ function renderCustomers(){
     statLabels[3].textContent='Lost';
   }
 
-  // Pipeline removed from the customer view — stages live on estimates now.
-  // Hide the stage filter tabs entirely; customers are a flat directory.
+  // Hide the stage filter tabs (#stabs) — stages are estimate-level now
   const stabs=document.getElementById('stabs');
-  if(stabs){ stabs.style.display='none'; stabs.innerHTML=''; }
-
-  // Tag usage across active customers (drives the tag filter chips)
-  const tagCounts={};
-  for(const c of activeCustomers){
-    for(const t of tagsForCustomer(c.id)){ tagCounts[t.id]=(tagCounts[t.id]||0)+1; }
+  if(stabs){
+    // Re-show and populate with customer-rollup counts. We tally how many
+    // customers fall into each stage based on customerRollupStage().
+    stabs.style.display='';
+    stabs.innerHTML='';
+    const rollupCounts={};
+    for(const c of activeCustomers){
+      const r=customerRollupStage(c);
+      const key=r?r.id:'_no_estimates';
+      rollupCounts[key]=(rollupCounts[key]||0)+1;
+    }
+    // ALL pill
+    const allB=document.createElement('button');
+    allB.className='stab'+(activeStageFilter==='all'?' active':'');
+    allB.style.setProperty('--sc','var(--amber)');
+    allB.innerHTML=`<div class="stabdot" style="background:var(--amber)"></div>ALL (${activeCustomers.length})`;
+    allB.onclick=()=>{activeStageFilter='all';renderCustomers();};
+    stabs.appendChild(allB);
+    // One pill per stage that has at least one customer
+    STAGES.forEach(s=>{
+      const cnt=rollupCounts[s.id]||0;
+      if(cnt===0 && activeStageFilter!==s.id) return; // hide empty stages
+      const b=document.createElement('button');
+      b.className=`stab ${s.cls}`+(activeStageFilter===s.id?' active':'');
+      b.innerHTML=`<div class="stabdot" style="background:${s.color}"></div>${s.label} (${cnt})`;
+      b.onclick=()=>{activeStageFilter=s.id;renderCustomers();};
+      stabs.appendChild(b);
+    });
   }
-  if(customerTagFilter && !tagCounts[customerTagFilter]) customerTagFilter=null;
   // Hide the assigned-to filter (it operated on leads.assigned_to; for customer view we'd need a different lens)
   const assignedFil=document.getElementById('leadAssignedFilter');
   if(assignedFil) assignedFil.style.display='none';
@@ -5746,7 +5488,13 @@ function renderCustomers(){
 
   // Filter & sort
   let filtered=activeCustomers.slice();
-  // (Stage filtering removed — the customer list is a flat directory now.)
+  // Stage filter (rollup-based)
+  if(activeStageFilter!=='all'){
+    filtered=filtered.filter(c=>{
+      const r=customerRollupStage(c);
+      return r && r.id===activeStageFilter;
+    });
+  }
   const q=(customerSearchQuery||'').trim().toLowerCase();
   if(q){
     filtered=filtered.filter(c=>{
@@ -5757,19 +5505,8 @@ function renderCustomers(){
       return addrs.includes(q);
     });
   }
-  // Triage filter: only customers with an untouched (new-stage) estimate
-  if(customerNewOnly){
-    filtered=filtered.filter(c=>leadsForCustomer(c.id).some(l=>l.stage==='new'));
-  }
-  // Tag filter
-  if(customerTagFilter){
-    filtered=filtered.filter(c=>tagsForCustomer(c.id).some(t=>t.id===customerTagFilter));
-  }
   // Sort
   filtered.sort((a,b)=>{
-    if(customerSortMode==='newest'){
-      return (b.created_at||'').localeCompare(a.created_at||'');
-    }
     if(customerSortMode==='name_asc'){
       return (a.name||'').toLowerCase().localeCompare((b.name||'').toLowerCase());
     }
@@ -5780,42 +5517,10 @@ function renderCustomers(){
     return (customerLastActivity(b)||'').localeCompare(customerLastActivity(a)||'');
   });
 
-  // Sync toolbar controls to current state
-  const sortSel=document.getElementById('leadSortSelect');
-  if(sortSel && sortSel.value!==customerSortMode) sortSel.value=customerSortMode;
-  const newBtn=document.getElementById('custNewFilterBtn');
-  if(newBtn){
-    const newCount=activeCustomers.filter(c=>leadsForCustomer(c.id).some(l=>l.stage==='new')).length;
-    newBtn.textContent=`New (${newCount})`;
-    if(customerNewOnly){newBtn.style.borderColor='var(--amber)';newBtn.style.color='var(--amber)';}
-    else{newBtn.style.borderColor='';newBtn.style.color='';}
-  }
-  // Tag filter chips — only tags actually applied to a customer show up
-  const tagFilterEl=document.getElementById('custTagFilter');
-  if(tagFilterEl){
-    const usedTags=tags.filter(t=>!t.archived_at && tagCounts[t.id]);
-    if(usedTags.length===0){
-      tagFilterEl.style.display='none';
-      tagFilterEl.innerHTML='';
-    } else {
-      tagFilterEl.style.display='flex';
-      let th=`<button class="cust-tagchip${customerTagFilter===null?' active':''}" onclick="setCustomerTagFilter(null)">All</button>`;
-      usedTags.forEach(t=>{
-        const on=customerTagFilter===t.id;
-        const style=on?`background:${t.color};border-color:${t.color};color:#0b0d10;font-weight:700`:`color:${t.color};border-color:${t.color}66`;
-        th+=`<button class="cust-tagchip" onclick="setCustomerTagFilter('${t.id}')" style="${style}">${esc(t.name)} (${tagCounts[t.id]})</button>`;
-      });
-      tagFilterEl.innerHTML=th;
-    }
-  }
   const list=document.getElementById('leadList');
   list.innerHTML='';
   if(filtered.length===0){
-    const emptyMsg=q
-      ? `No customers match "<strong>${esc(customerSearchQuery)}</strong>".`
-      : customerNewOnly ? 'No new arrivals to triage. 🎉'
-      : customerTagFilter ? 'No customers with this tag.'
-      : 'No customers yet.<br>Tap + to add.';
+    const emptyMsg=q?`No customers match "<strong>${esc(customerSearchQuery)}</strong>".`:'No customers yet.<br>Tap + to add.';
     list.innerHTML=`<div class="lempty"><div style="font-size:36px;opacity:.3">${q?'🔍':'👥'}</div><div style="font-size:13px;color:var(--muted)">${emptyMsg}</div></div>`;
     return;
   }
@@ -5827,36 +5532,33 @@ function customerCard(c){
   const addresses=addressesForCustomer(c.id);
   const primary=addresses.find(a=>a.is_primary)||addresses[0];
   const cTags=tagsForCustomer(c.id);
+  const pipeValue=customerPipelineValue(c);
   const phone=formatPhone(c.phone);
+  // Customer stage rollup — the at-a-glance stage indicator
+  const rollupStage=customerRollupStage(c);
+  // Latest stage across customer's leads (for a visual hint)
+  const stageSummary=customerLeads.length===0
+    ? 'No estimates yet'
+    : customerLeads.length===1
+      ? '1 estimate'
+      : `${customerLeads.length} estimates`;
   // Tag chips HTML
   const tagChips=cTags.map(t=>`<span class="cust-tag" style="background:${t.color}22;color:${t.color};border-color:${t.color}55">${esc(t.name)}</span>`).join('');
   // Address line (street only — keeps card compact)
   const addrLine=primary
     ? `${esc(primary.street||'')}${primary.city?', '+esc(primary.city):''}${primary.state?', '+esc(primary.state):''}`
     : '<span style="color:var(--muted);font-style:italic">No address on file</span>';
-  // Estimates list — each estimate (lead) attached to this customer, shown with
-  // its own status badge. Clicking a row opens that estimate; clicking elsewhere
-  // on the card opens the customer page. Pipeline stage *filtering* lives on the
-  // estimates view now — this just surfaces each estimate's current status.
-  const estList=customerLeads.length===0
-    ? '<div class="cust-est-empty">No estimates yet</div>'
-    : customerLeads.map(l=>{
-        const st=STAGES.find(s=>s.id===l.stage)||STAGES[0];
-        const desc=(l.notes&&l.notes.trim())
-          ? l.notes.trim().split('\n')[0].slice(0,42)
-          : ((l.types&&l.types.length)?l.types.join(', '):'Estimate');
-        const val=(l.value&&Number(l.value)>0)?`$${Number(l.value).toLocaleString()}`:'';
-        return `<div class="cust-est-row" onclick="event.stopPropagation();openLeadMov('${l.id}')">
-          <span class="cust-est-desc">${esc(desc)}</span>
-          <span class="cust-est-meta">${val?`<span class="cust-est-val">${val}</span>`:''}<span class="lbadge ${st.cls}">${st.label}</span></span>
-        </div>`;
-      }).join('');
-  const initials=((c.name||'?').trim().split(/\s+/).map(w=>w[0]).filter(Boolean).slice(0,2).join('')||'?').toUpperCase();
-  return `<div class="lead-card cust-card" onclick="openCustomerDetail('${c.id}')" data-customer-id="${c.id}">
-    <div class="ticket-stripe">${esc(initials)}</div>
+  // Left border color = the rollup stage's color (or default if no estimates)
+  const borderColor=rollupStage ? rollupStage.color : 'var(--iron)';
+  // Stage badge (only shown if customer has estimates)
+  const stageBadge=rollupStage
+    ? `<span class="lbadge ${rollupStage.cls}" style="font-size:10px;font-weight:700;letter-spacing:.08em">${rollupStage.label}</span>`
+    : '';
+  return `<div class="lead-card cust-card ${rollupStage?rollupStage.cls:''}" onclick="openCustomerDetail('${c.id}')" data-customer-id="${c.id}" style="border-left:3px solid ${borderColor}">
     <div class="lead-card-main">
       <div class="cust-name-row">
         <span class="lead-name">${esc(c.name||'(unnamed)')}</span>
+        ${stageBadge}
         ${cTags.length>0?`<span class="cust-tags">${tagChips}</span>`:''}
       </div>
       <div class="cust-contact-row">
@@ -5864,7 +5566,10 @@ function customerCard(c){
         ${c.email?`<span class="cust-email">✉ ${esc(c.email)}</span>`:''}
       </div>
       <div class="cust-addr-row">📍 ${addrLine}</div>
-      <div class="cust-est-list">${estList}</div>
+      <div class="cust-meta-row">
+        <span class="cust-est-count">${stageSummary}</span>
+        ${pipeValue>0?`<span class="cust-pipe-val">$${pipeValue.toLocaleString()} pipeline</span>`:''}
+      </div>
     </div>
   </div>`;
 }
@@ -6737,7 +6442,6 @@ function leadCard(l){
         ${on?'<div class="abanner">✅ On Scheduler</div>':''}
         <div class="lcard-est-row">
           ${linkedDoc?`<span class="est-badge" onclick="event.stopPropagation();openDocEditor('${l.estId}')">📄 EST #${esc(linkedDoc.num||'—')}</span>`:''}
-          ${(l.matList&&l.matList.length)?`<span class="lcard-mat-badge" onclick="event.stopPropagation();openMatListOverlay('lead','${l.id}')">📋 ${l.matList.length} materials</span>`:''}
         </div>
         ${(l.activity&&l.activity.length)?`<div class="lcact">⏱ ${esc(l.activity[l.activity.length-1].msg)} · ${fmtActivityTime(l.activity[l.activity.length-1].ts)}</div>`:''}
         <div class="lcacts">
@@ -7876,97 +7580,11 @@ function _promptOutcomeDate(defaultDate){
   return d.toISOString();
 }
 
-async function markDocOutcome(outcome){
-  if(!editDocId){alert('No document open.');return;}
-  const d=docs.find(x=>x.id===editDocId);
-  if(!d){alert('Document not found.');return;}
-  // Won/Lost only applies to revenue-eligible doc types (estimates + contracts).
-  // Change orders and lien waivers can be signed but they're not deals.
-  if(!getDocTypeConfig(d.type).countsAsWon){
-    alert('Only estimates and contracts can be marked Won or Lost.');
-    return;
-  }
-  const label=outcome==='won'?'Won':'Lost';
-  // Default to existing closed_date if previously set, else signature date, else today
-  const defaultDate=(d.closedDate||d.signatureDate||'').slice(0,10);
-  const iso=_promptOutcomeDate(defaultDate);
-  if(!iso) return;
-  d.outcome=outcome;
-  d.closedDate=iso;
-  // If marking won, also push status to 'signed' for backward compat with
-  // any code path that reads status. Don't undo signature — just status.
-  if(outcome==='won'&&d.status!=='signed') d.status='signed';
-  // Activity log
-  d.activity=d.activity||[];
-  d.activity.push({ts:new Date().toISOString(),msg:'Marked '+label+' on '+iso.slice(0,10)});
-  saveDocs();
-  saveDocSync(d);
-  setSS('syncing','Saving…');
-  try{
-    await sb.upsert('docs',docToDb(d));
-    setSS('synced',label+' ✓');setTimeout(()=>document.getElementById('syncLbl').textContent='',2000);
-    if(typeof renderDocList==='function') renderDocList();
-    // Re-render the editor so the visible status badge updates if it's there
-    if(typeof openDocEditor==='function'&&editDocId===d.id){
-      // Refresh the displayed status without reopening the whole editor
-      updateDocStatusUI();
-    }
-  }catch(e){
-    console.error('mark outcome failed:',e);
-    setSS('error','Save failed');
-    alert('Failed to save. '+(e.message||e));
-  }
-}
-
-// Best-effort UI refresh after marking — finds the status pill if any
 function updateDocStatusUI(){
   const d=docs.find(x=>x.id===editDocId);if(!d)return;
   const pill=document.querySelector('#docEditor .doc-status-pill,#docEditor [data-status-pill]');
   if(pill) pill.textContent=(d.outcome||d.status||'draft').toUpperCase();
 }
-
-async function bulkMarkOutcome(outcome){
-  if(!bulkMode||bulkMode!=='docs'||!bulkSelected.size) return;
-  const ids=Array.from(bulkSelected);
-  // Filter to deal-eligible doc types (estimates + contracts; not WO/MO/CO/LW)
-  const targets=docs.filter(d=>ids.includes(d.id)&&getDocTypeConfig(d.type).countsAsWon);
-  if(!targets.length){
-    alert('No estimates or contracts selected. Work orders, material orders, change orders, and lien waivers can\'t be marked Won/Lost.');
-    return;
-  }
-  const label=outcome==='won'?'Won':'Lost';
-  const iso=_promptOutcomeDate();
-  if(!iso) return;
-  if(!confirm(`Mark ${targets.length} estimate${targets.length===1?'':'s'} as ${label} on ${iso.slice(0,10)}?\n\nThis updates Reports immediately.`)) return;
-  setSS('syncing','Saving…');
-  let okCount=0,failCount=0;
-  for(const d of targets){
-    d.outcome=outcome;
-    d.closedDate=iso;
-    if(outcome==='won'&&d.status!=='signed') d.status='signed';
-    d.activity=d.activity||[];
-    d.activity.push({ts:new Date().toISOString(),msg:'Bulk marked '+label+' on '+iso.slice(0,10)});
-    try{
-      await sb.upsert('docs',docToDb(d));
-      okCount++;
-    }catch(e){
-      console.error('bulk outcome',d.id,e);
-      failCount++;
-    }
-  }
-  saveDocs();
-  if(failCount){setSS('error',`Updated ${okCount}, ${failCount} failed`);}
-  else{setSS('synced',`Updated ${okCount} ✓`);setTimeout(()=>document.getElementById('syncLbl').textContent='',2500);}
-  exitBulkMode();
-  if(typeof renderDocList==='function') renderDocList();
-}
-
-// ── BULK DELETE MODE ────────────────────────────────────────
-// Generic system shared by leads list and docs list.
-// When `bulkMode` is set, cards become selectable and the floating
-// action bar appears with Delete Selected / Cancel / Select All.
-let bulkMode=null;             // null | 'docs' | 'leads'
-let bulkSelected=new Set();    // ids selected in current bulk mode
 
 function toggleDocBulkMode(){
   if(bulkMode==='docs') exitBulkMode();
@@ -7985,11 +7603,6 @@ function enterBulkMode(which){
   const btnId=which==='docs'?'docBulkBtn':'leadBulkBtn';
   const btn=document.getElementById(btnId);
   if(btn){btn.textContent='✓ Done';btn.classList.add('active');}
-  // Outcome buttons only make sense for estimates (docs mode)
-  const wonBtn=document.getElementById('bulkWonBtn');
-  const lostBtn=document.getElementById('bulkLostBtn');
-  if(wonBtn)  wonBtn.style.display =(which==='docs')?'':'none';
-  if(lostBtn) lostBtn.style.display=(which==='docs')?'':'none';
   showBulkBar();
   rerenderForBulk();
 }
@@ -8284,7 +7897,7 @@ function closeMov(id){
 document.querySelectorAll('.mov').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open');}));
 function showToast(title,msg,jump=false){ /* notifications removed */ }
 function updateBadges(){
-  const bl=jobs.filter(j=>j.day==='backlog').length,cm=customers.filter(c=>!c.archived_at).length;
+  const bl=jobs.filter(j=>j.day==='backlog').length,cm=leads.filter(l=>!['declined','done'].includes(l.stage)).length;
   const bb=document.getElementById('bnBlBadge');bb.textContent=bl;bb.classList.toggle('show',bl>0);
   const cb=document.getElementById('bnCrmBadge');cb.textContent=cm;cb.classList.toggle('show',cm>0);
   document.getElementById('dtBlBadge').textContent=bl;document.getElementById('dtCrmBadge').textContent=cm;
@@ -8333,7 +7946,6 @@ const BV_LOGO_SVG=`<img class="lh-logo-svg" src="data:image/png;base64,iVBORw0KG
 let docs=[]; // {id, type, status, num, clientName, clientContact, clientAddr, date, dueDate, scope, lineItems, tax, discount, notes, created}
 let editDocId=null;
 let docFilter='all';
-let docStatusFilter='all'; // pipeline status filter: all|sent|signed|declined|invoiced|paid
 let docSearchQuery=''; // free-text search across name, address, est number
 function onDocSearchChange(v){
   docSearchQuery=(v||'').toString().trim().toLowerCase();
@@ -8491,41 +8103,19 @@ function saveDocs(){
 async function loadDocsRemote(){
   try{
     const rows=await sb.get('docs');
+    const oldSigned=new Set(docs.filter(d=>d.signature).map(d=>d.id));
     docs=rows.map(dbToDoc);
-    try{ notifyNewlySignedDocs(); }catch(e){ console.error('sign-notify:',e); }
+    // Detect newly-signed docs
+    const newlySigned=docs.filter(d=>d.signature&&!oldSigned.has(d.id));
+    if(newlySigned.length){
+      newlySigned.forEach(d=>{
+        try{logDocActivity(d.id,`Signed by ${d.signatureName||'customer'}`);}catch{}
+      });
+      // Show a toast
+      try{showSigToast(newlySigned);}catch{}
+    }
     return true;
   }catch(e){console.error('docs load failed:',e.message||e);return false;}
-}
-
-// One-time, role-targeted notification when an estimate is signed.
-// Audience: owners, managers, and the salesperson the lead is assigned to.
-// "Seen" ids persist per-device, so:
-//   - the existing backlog is NEVER announced (seeded silently on first run),
-//   - each signature notifies at most once,
-//   - a signature that happened while away is announced once on next open.
-function notifyNewlySignedDocs(){
-  const SEEN_KEY='seen_signed_doc_ids';
-  const raw=lsGet(SEEN_KEY,null);            // null => never initialized on this device
-  const seen=new Set(Array.isArray(raw)?raw:[]);
-  const signedNow=docs.filter(d=>d.signature);
-  // First run on this device: seed silently so the current backlog isn't announced.
-  if(raw===null){ lsSet(SEEN_KEY, signedNow.map(d=>d.id)); return; }
-  const newly=signedNow.filter(d=>!seen.has(d.id));
-  // Record everything currently signed as seen so these docs are never re-evaluated.
-  lsSet(SEEN_KEY, Array.from(new Set([...seen, ...signedNow.map(d=>d.id)])));
-  if(!newly.length) return;
-  // Audience gate: owners & managers get every signature; everyone else only
-  // gets signatures for leads assigned to them (the "owner of the lead").
-  const role=(currentRole||'').toLowerCase();
-  const seeAll = role==='owner' || role==='manager';
-  const visible = newly.filter(d=>{
-    if(seeAll) return true;
-    const lead=leads.find(l=>l.estId===d.id);
-    return !!(lead && lead.assignedTo && currentUser && lead.assignedTo===currentUser.id);
-  });
-  if(!visible.length) return;
-  visible.forEach(d=>{ try{logDocActivity(d.id,`Signed by ${d.signatureName||'customer'}`);}catch{} });
-  showSigToast(visible);
 }
 
 function showSigToast(signedDocs){
@@ -8540,87 +8130,6 @@ function showSigToast(signedDocs){
   document.body.appendChild(t);
   setTimeout(()=>{t.style.transition='opacity .3s';t.style.opacity='0';setTimeout(()=>t.remove(),300);},8000);
 }
-
-// ══════════════════ WEB PUSH NOTIFICATIONS ══════════════════
-// True OS-level push: a customer signing fires a server-side push (via the
-// push-send edge function) that this device's service worker shows on the
-// lockscreen / notification center even when the app is closed.
-const VAPID_PUBLIC_KEY='BHKPvuFiMmNKZbAwTTaPn1WjPYeEtCg9Cbkfa75aNnRCUxw83RfpdYcFZjAZY7n6yjaHLZPqSJCDF1qY0RRXgqA';
-function urlBase64ToUint8Array(base64String){
-  const padding='='.repeat((4-base64String.length%4)%4);
-  const base64=(base64String+padding).replace(/-/g,'+').replace(/_/g,'/');
-  const raw=atob(base64);const arr=new Uint8Array(raw.length);
-  for(let i=0;i<raw.length;i++) arr[i]=raw.charCodeAt(i);
-  return arr;
-}
-let pushSWReg=null;
-async function registerPushSW(){
-  if(!('serviceWorker' in navigator)||!('PushManager' in window)) return null;
-  try{ pushSWReg=await navigator.serviceWorker.register('/sw.js'); return pushSWReg; }
-  catch(e){ console.error('SW register failed:',e); return null; }
-}
-async function enablePushNotifications(){
-  if(!('serviceWorker' in navigator)||!('PushManager' in window)){
-    alert('This device or browser does not support push notifications.'); return false;
-  }
-  const perm=await Notification.requestPermission();
-  if(perm!=='granted'){ alert('Notifications were not allowed. Turn them on in your browser/site settings to get sign alerts.'); return false; }
-  const reg=pushSWReg||await registerPushSW();
-  if(!reg){ alert('Could not start the notification service.'); return false; }
-  await navigator.serviceWorker.ready;
-  let sub=await reg.pushManager.getSubscription();
-  if(!sub){
-    sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:urlBase64ToUint8Array(VAPID_PUBLIC_KEY)});
-  }
-  const ok=await savePushSubscription(sub);
-  alert(ok?'✅ Sign alerts enabled on this device.':'Could not save this device. Try again.');
-  try{document.getElementById('pushSettingsOverlay')?.remove();}catch{}
-  return ok;
-}
-async function savePushSubscription(sub){
-  try{
-    const j=sub.toJSON();
-    const r=await fetch(SB_URL+'/rest/v1/push_subscriptions?on_conflict=endpoint',{
-      method:'POST',
-      headers:{apikey:SB_KEY,Authorization:'Bearer '+authAccessToken,'Content-Type':'application/json',Prefer:'resolution=merge-duplicates,return=minimal'},
-      body:JSON.stringify({user_id:currentUser.id,company_id:currentCompanyId,endpoint:j.endpoint,p256dh:j.keys.p256dh,auth:j.keys.auth,user_agent:navigator.userAgent})
-    });
-    return r.ok;
-  }catch(e){ console.error('savePushSubscription:',e); return false; }
-}
-async function sendTestPush(){
-  try{
-    const r=await fetch(SB_URL+'/functions/v1/push-send',{
-      method:'POST',
-      headers:{apikey:SB_KEY,Authorization:'Bearer '+authAccessToken,'Content-Type':'application/json'},
-      body:JSON.stringify({test:true})
-    });
-    const d=await r.json().catch(()=>({}));
-    alert(r.ok?('Test sent to '+(d.sent||0)+' device(s). Check your lockscreen.'):('Test failed: '+(d.error||r.status)));
-  }catch(e){ alert('Test failed: '+e.message); }
-}
-function openPushSettings(){
-  try{document.getElementById('userMenu')?.classList.remove('open');}catch{}
-  const supported=('serviceWorker' in navigator)&&('PushManager' in window);
-  const perm=(typeof Notification!=='undefined')?Notification.permission:'unsupported';
-  const o=document.createElement('div');
-  o.className='qv-overlay'; o.id='pushSettingsOverlay';
-  o.onclick=(e)=>{if(e.target===o)o.remove();};
-  o.innerHTML=`<div class="qv-card" style="max-width:400px">
-    <div class="qv-head"><div class="qv-title">🔔 Notifications</div><button class="qv-close" onclick="document.getElementById('pushSettingsOverlay').remove()">×</button></div>
-    <div class="qv-body">
-      <div style="font-size:13px;line-height:1.5;color:var(--ink);padding-bottom:6px">Get a notification on this device when an estimate is signed or you're assigned a job — even when the app is closed. Enable this on each device you want alerts on.</div>
-      <div class="qv-row"><span class="qv-k">Supported</span><span class="qv-v">${supported?'Yes':'No'}</span></div>
-      <div class="qv-row"><span class="qv-k">Permission</span><span class="qv-v">${perm}</span></div>
-    </div>
-    <div class="qv-actions">
-      <button class="qv-btn-ghost" onclick="sendTestPush()">Send Test</button>
-      <button class="qv-btn-primary" onclick="enablePushNotifications()">Enable On This Device</button>
-    </div>
-  </div>`;
-  document.body.appendChild(o);
-}
-if('serviceWorker' in navigator){ window.addEventListener('load',()=>{registerPushSW();}); }
 
 // Background polling for signed estimates (every 30 seconds while authenticated)
 let docPollTimer=null;
@@ -8678,71 +8187,6 @@ function filterDocs(f){
   renderDocList();
 }
 
-function filterDocStatus(s){
-  docStatusFilter=s;
-  renderDocList();
-}
-
-// ── ESTIMATE QUICK-VIEW ───────────────────────────────────────────────
-// Clicking an estimate/sales-doc card opens this summary first: estimate
-// number, customer, address, total, etc. — with links to open the full
-// document or jump to the customer's page. The customer is resolved through
-// the lead linked to this doc (lead.estId === doc.id, lead.customer_id),
-// falling back to a name match for docs not tied to a customer.
-function openEstimateQuickView(docId){
-  const d=docs.find(x=>x.id===docId);
-  if(!d){ openDocEditor(docId); return; }
-  let cust=null;
-  const linkedLead=leads.find(l=>l.estId===d.id);
-  if(linkedLead && linkedLead.customer_id){
-    cust=customers.find(c=>c.id===linkedLead.customer_id);
-  }
-  if(!cust && d.clientName){
-    const want=d.clientName.trim().toLowerCase();
-    cust=customers.find(c=>!c.archived_at && (c.name||'').trim().toLowerCase()===want);
-  }
-  const cfg=(typeof getDocTypeConfig==='function')?getDocTypeConfig(d.type):{label:(d.type||'estimate')};
-  const total=calcDocTotal(d);
-  const signed=!!d.signature;
-  const statusTxt=(d.status||'draft').toUpperCase();
-  const custLine=cust
-    ? `<button class="qv-custlink" onclick="closeEstimateQuickView();openCustomerDetail('${cust.id}')">${esc(cust.name||d.clientName||'Customer')} &rarr;</button>`
-    : `<span>${esc(d.clientName||'—')}</span>`;
-  const rows=[
-    ['Estimate #', esc(d.num||'—')],
-    ['Status', `<span class="doc-status ${d.status||'draft'}">${statusTxt}</span>${signed?' <span class="doc-signed-badge">✓ SIGNED</span>':''}`],
-    ['Type', esc((cfg.label||d.type||'').toString())],
-    ['Customer', custLine],
-    d.clientContact?['Contact', esc(d.clientContact)]:null,
-    ['Address', d.clientAddr?('📍 '+esc(d.clientAddr)):'<span style="color:var(--muted)">No address on file</span>'],
-    total?['Total', `$${total.grand.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2})}`]:null,
-    ['Date', esc(d.date||'No date')],
-  ].filter(Boolean);
-  const rowsHTML=rows.map(([k,v])=>`<div class="qv-row"><span class="qv-k">${k}</span><span class="qv-v">${v}</span></div>`).join('');
-  closeEstimateQuickView();
-  const overlay=document.createElement('div');
-  overlay.id='estimateQuickView';
-  overlay.className='qv-overlay';
-  overlay.onclick=(e)=>{ if(e.target===overlay) closeEstimateQuickView(); };
-  overlay.innerHTML=`
-    <div class="qv-card">
-      <div class="qv-head">
-        <div class="qv-title">${esc(d.num||'Estimate')}</div>
-        <button class="qv-close" onclick="closeEstimateQuickView()" title="Close">×</button>
-      </div>
-      <div class="qv-body">${rowsHTML}</div>
-      <div class="qv-actions">
-        ${cust?`<button class="qv-btn-ghost" onclick="closeEstimateQuickView();openCustomerDetail('${cust.id}')">👤 View Customer</button>`:''}
-        <button class="qv-btn-primary" onclick="closeEstimateQuickView();openDocEditor('${d.id}')">📄 Open Full ${esc((cfg.label||'Estimate').toString())}</button>
-      </div>
-    </div>`;
-  document.body.appendChild(overlay);
-}
-function closeEstimateQuickView(){
-  const o=document.getElementById('estimateQuickView');
-  if(o) o.remove();
-}
-
 function renderDocList(){
   // NOTE: do NOT call loadDocs() here. loadDocs() now clears the docs array
   // (it used to read from a localStorage cache, but that cache was removed
@@ -8764,39 +8208,14 @@ function renderDocList(){
       return hay.includes(q);
     });
   }
-  // ── Status pipeline tabs (Sent → Signed → Declined → Invoiced → Paid) ──
-  // Legacy 'approved' is folded into 'signed' so older docs land in the right tab.
-  const statusOf=d=>{const s=(d.status||'draft').toLowerCase();return s==='approved'?'signed':s;};
-  const DOC_PIPE=[
-    {id:'sent',label:'Sent',color:'var(--blue)'},
-    {id:'signed',label:'Signed',color:'var(--green)'},
-    {id:'declined',label:'Declined',color:'var(--danger)'},
-    {id:'invoiced',label:'Invoiced',color:'var(--amber)'},
-    {id:'paid',label:'Paid',color:'var(--teal)'},
-    {id:'finished',label:'Finished',color:'var(--purple)'},
-  ];
-  const dcounts={}; DOC_PIPE.forEach(s=>dcounts[s.id]=0);
-  filtered.forEach(d=>{const s=statusOf(d); if(Object.prototype.hasOwnProperty.call(dcounts,s))dcounts[s]++;});
-  const tabsEl=document.getElementById('docStatusTabs');
-  if(tabsEl){
-    let thtml=`<button class="stab${docStatusFilter==='all'?' active':''}" style="--sc:var(--amber)" onclick="filterDocStatus('all')"><div class="stabdot" style="background:var(--amber)"></div>ALL (${filtered.length})</button>`;
-    DOC_PIPE.forEach(s=>{
-      thtml+=`<button class="stab${docStatusFilter===s.id?' active':''}" style="--sc:${s.color}" onclick="filterDocStatus('${s.id}')"><div class="stabdot" style="background:${s.color}"></div>${s.label.toUpperCase()} (${dcounts[s.id]})</button>`;
-    });
-    tabsEl.innerHTML=thtml;
-  }
-  // Apply the active status filter to get the cards we actually render
-  const shown=docStatusFilter==='all'?filtered:filtered.filter(d=>statusOf(d)===docStatusFilter);
-  if(!shown.length){
+  if(!filtered.length){
     const msg=docSearchQuery
       ? `No documents match "${esc(docSearchQuery)}".<br>Try a different search.`
-      : (docStatusFilter!=='all'
-          ? `No documents in "${docStatusFilter.toUpperCase()}".`
-          : 'No documents yet.<br>Create your first estimate.');
+      : 'No documents yet.<br>Create your first estimate.';
     list.innerHTML=`<div class="doc-empty"><div class="doc-empty-icon">📄</div><div class="doc-empty-txt">${msg}</div></div>`;
     return;
   }
-  list.innerHTML=shown.slice().reverse().map(d=>{
+  list.innerHTML=filtered.slice().reverse().map(d=>{
     const isWo=d.type==='workorder';
     const isMo=d.type==='matorder';
     const isInv=d.type==='invoice';
@@ -8833,13 +8252,9 @@ function renderDocList(){
     const displayName=isMo?(d.clientAddr||d.clientName||'Unnamed Job'):(d.clientName||'Unnamed Client');
     // Bulk selection support
     const isSelected=bulkMode==='docs'&&bulkSelected.has(d.id);
-    const isQuickViewType=!['workorder','matorder'].includes(d.type);
-    const cardClick=isQuickViewType
-      ? `if(bulkMode==='docs'){bulkToggle('${d.id}',event);return false;}openEstimateQuickView('${d.id}')`
-      : `if(bulkMode==='docs'){bulkToggle('${d.id}',event);return false;}openDocEditor('${d.id}')`;
+    const cardClick=`if(bulkMode==='docs'){bulkToggle('${d.id}',event);return false;}openDocEditor('${d.id}')`;
     const finalCardClass=cardClass+(isSelected?' selected':'');
     return `<div class="${finalCardClass}" data-bulk-id="${d.id}" onclick="${cardClick}">
-      <div class="ticket-stripe">${esc(d.num||'')}</div>
       <div class="doc-card-top">
         <div style="display:flex;align-items:flex-start;gap:0;flex:1">
           <div class="bulk-cb${isSelected?' checked':''}">${isSelected?'✓':''}</div>
@@ -9579,7 +8994,7 @@ function printDoc(){
       .lh-footer{text-align:center;font-size:10px;color:#94a3b8;padding-top:12px;border-top:1px solid #e2e8f0;margin-top:8px;}
       .doc-status{font-size:9px;padding:2px 7px;border-radius:4px;font-weight:700;}
       .doc-status.draft{background:#e2e8f0;color:#64748b;}.doc-status.sent{background:#dbeafe;color:#3b82f6;}
-      .doc-status.approved{background:#dcfce7;color:#16a34a;}.doc-status.signed{background:#dcfce7;color:#16a34a;}.doc-status.finished{background:#f3e8ff;color:#9333ea;}.doc-status.paid{background:#ccfbf1;color:#0d9488;}
+      .doc-status.approved{background:#dcfce7;color:#16a34a;}.doc-status.paid{background:#ccfbf1;color:#0d9488;}
       @media print{body{padding:0;}@page{margin:0.5in;}}
       </style></head><body>${lhHTML}</body></html>`);
       w.document.close();
@@ -10722,246 +10137,6 @@ function emailMaterialOrder(){
   window.open(mailto,'_blank');
 }
 
-let matCatFilter='all';
-let matSearchTimer=null;
-let abcCredsVisible=false;
-let abcToken=null,abcTokenExp=0;
-
-function getAbcCreds(){
-  try{return JSON.parse(localStorage.getItem('abc_creds')||'{}');}catch{return {};}
-}
-function setAbcCreds(c){localStorage.setItem('abc_creds',JSON.stringify(c));}
-function isAbcConnected(){const c=getAbcCreds();return!!(c.clientId&&c.clientSecret);}
-
-async function getAbcToken(){
-  if(abcToken&&Date.now()<abcTokenExp-60000)return abcToken;
-  const c=getAbcCreds();
-  if(!c.clientId||!c.clientSecret)return null;
-  try{
-    const r=await fetch('https://api.abcsupply.com/oauth/token',{
-      method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},
-      body:new URLSearchParams({grant_type:'client_credentials',client_id:c.clientId,client_secret:c.clientSecret,scope:'api'})
-    });
-    if(!r.ok)throw new Error('Auth failed');
-    const d=await r.json();
-    abcToken=d.access_token;
-    abcTokenExp=Date.now()+(d.expires_in||3600)*1000;
-    return abcToken;
-  }catch(e){console.error('ABC token error:',e);return null;}
-}
-
-async function abcSearchItems(query,category){
-  const token=await getAbcToken();
-  if(!token)return null; // will fall back to demo data
-  try{
-    const body={searchText:query||(category&&category!=='all'?category:'roofing'),pageSize:20};
-    const r=await fetch('https://api.abcsupply.com/product/v1/items/search',{
-      method:'POST',headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify(body)
-    });
-    if(!r.ok)throw new Error('Search failed');
-    const d=await r.json();
-    return(d.items||[]).map(item=>({
-      id:item.itemId,num:item.itemNumber,name:item.description,brand:item.brandName||'',
-      uom:item.unitOfMeasure||'EA',price:item.listPrice||0,avail:true,cat:category||'other',src:'abc'
-    }));
-  }catch(e){console.error('ABC search error:',e);return null;}
-}
-
-// Demo catalog — real ABC Supply product families with realistic pricing
-const DEMO_CATALOG=[
-  // Roofing
-  {id:'r001',num:'GAF-THD-30',name:'GAF Timberline HDZ Architectural Shingles — Charcoal',brand:'GAF',uom:'SQ',price:98.50,avail:true,cat:'Roofing'},
-  {id:'r002',num:'GAF-THD-30-BK',name:'GAF Timberline HDZ Architectural Shingles — Barkwood',brand:'GAF',uom:'SQ',price:98.50,avail:true,cat:'Roofing'},
-  {id:'r003',num:'OC-DURATION-CH',name:'Owens Corning Duration Shingles — Charcoal',brand:'Owens Corning',uom:'SQ',price:94.75,avail:true,cat:'Roofing'},
-  {id:'r004',num:'CL-LANDMARK-GR',name:'CertainTeed Landmark Shingles — Georgetown Gray',brand:'CertainTeed',uom:'SQ',price:96.20,avail:true,cat:'Roofing'},
-  {id:'r005',num:'GAF-STRT-STRP',name:'GAF Starter Strip Plus Shingles',brand:'GAF',uom:'SQ',price:47.00,avail:true,cat:'Roofing'},
-  {id:'r006',num:'GAF-RGE-CAP',name:'GAF Seal-A-Ridge Hip & Ridge Cap Shingles',brand:'GAF',uom:'BDLL',price:52.50,avail:true,cat:'Roofing'},
-  // Underlayment
-  {id:'u001',num:'GAF-FELTBUSTER',name:'GAF FeltBuster Synthetic Roofing Felt 10 SQ Roll',brand:'GAF',uom:'ROLL',price:38.90,avail:true,cat:'Underlayment'},
-  {id:'u002',num:'TRI-HW-BARR',name:'Tri-Built Hi-Walk Synthetic Underlayment 10 SQ',brand:'Tri-Built',uom:'ROLL',price:32.00,avail:true,cat:'Underlayment'},
-  {id:'u003',num:'GAF-STRMGRD-SA',name:'GAF StormGuard Film-Surfaced Ice & Water Barrier 2SQ',brand:'GAF',uom:'ROLL',price:58.40,avail:true,cat:'Underlayment'},
-  {id:'u004',num:'GRACE-ICE-WTR',name:'Grace Ice & Water Shield Peel-&-Stick 2SQ',brand:'Grace',uom:'ROLL',price:63.75,avail:true,cat:'Underlayment'},
-  // Siding
-  {id:'s001',num:'JHW-PLNK-7IN',name:'James Hardie HardiePlank 7" Exposure Lap Siding — Smooth',brand:'James Hardie',uom:'SQ',price:187.00,avail:true,cat:'Siding'},
-  {id:'s002',num:'JHW-PLNK-6.25',name:'James Hardie HardiePlank 6.25" Cedarmill Lap Siding',brand:'James Hardie',uom:'SQ',price:192.50,avail:true,cat:'Siding'},
-  {id:'s003',num:'MNSD-CARRIAGE-7',name:'Mastic Home Exteriors Carriage House 7" D4 Vinyl Siding',brand:'Mastic',uom:'SQ',price:89.00,avail:true,cat:'Siding'},
-  {id:'s004',num:'CL-MONOGRAM-4',name:'CertainTeed Monogram Vinyl Siding 4" D5 Double',brand:'CertainTeed',uom:'SQ',price:95.25,avail:true,cat:'Siding'},
-  // Gutters
-  {id:'g001',num:'ABC-5K-WH-10',name:'5" K-Style Seamless Aluminum Gutter — White 10ft',brand:'ABC Supply',uom:'LF',price:2.85,avail:true,cat:'Gutters'},
-  {id:'g002',num:'ABC-6K-WH-10',name:'6" K-Style Seamless Aluminum Gutter — White 10ft',brand:'ABC Supply',uom:'LF',price:3.45,avail:true,cat:'Gutters'},
-  {id:'g003',num:'ABC-5K-BRZ-10',name:'5" K-Style Seamless Aluminum Gutter — Brown 10ft',brand:'ABC Supply',uom:'LF',price:2.85,avail:true,cat:'Gutters'},
-  {id:'g004',num:'ABC-5K-DWN-10',name:'3" Round Aluminum Downspout 10ft — White',brand:'ABC Supply',uom:'LF',price:2.15,avail:true,cat:'Gutters'},
-  {id:'g005',num:'ABC-ELB-A',name:'Aluminum Elbow Type A — White',brand:'ABC Supply',uom:'EA',price:3.20,avail:true,cat:'Gutters'},
-  {id:'g006',num:'ABC-ELB-B',name:'Aluminum Elbow Type B — White',brand:'ABC Supply',uom:'EA',price:3.20,avail:true,cat:'Gutters'},
-  // Soffit & Fascia
-  {id:'f001',num:'MNSD-SFF-12-WH',name:'Mastic Solid Vinyl Soffit 12" — White 12ft',brand:'Mastic',uom:'EA',price:14.50,avail:true,cat:'Soffit'},
-  {id:'f002',num:'MNSD-SFF-16-WH',name:'Mastic Vented Vinyl Soffit 16" — White 12ft',brand:'Mastic',uom:'EA',price:16.75,avail:true,cat:'Soffit'},
-  {id:'f003',num:'AL-FSC-WH-12',name:'Aluminum Pre-Painted Fascia Coil 12" — White',brand:'ABC Supply',uom:'LF',price:3.60,avail:true,cat:'Soffit'},
-  {id:'f004',num:'AL-FSC-BR-12',name:'Aluminum Pre-Painted Fascia Coil 12" — Brown',brand:'ABC Supply',uom:'LF',price:3.60,avail:true,cat:'Soffit'},
-  // Flashing
-  {id:'fl001',num:'OATEY-PIPE-FL',name:'Oatey No-Calk 3" Pipe Flashing',brand:'Oatey',uom:'EA',price:18.90,avail:true,cat:'Flashing'},
-  {id:'fl002',num:'AL-STEP-FL',name:'Aluminum Step Flashing 4x4x8 — Galvanized',brand:'ABC Supply',uom:'BDL',price:28.50,avail:true,cat:'Flashing'},
-  {id:'fl003',num:'AL-DRP-EDGE-10',name:'Aluminum Drip Edge 3" x 10ft — White',brand:'ABC Supply',uom:'EA',price:4.75,avail:true,cat:'Flashing'},
-  // Fasteners
-  {id:'fn001',num:'BLD-NAIL-1.75',name:'Bostitch Coil Roofing Nails 1-3/4" 7200ct',brand:'Bostitch',uom:'BX',price:46.80,avail:true,cat:'Fasteners'},
-  {id:'fn002',num:'ITW-SIDNG-NAIL',name:'ITW Paslode Siding Nails 2.5" Coil 3600ct',brand:'ITW Paslode',uom:'BX',price:52.40,avail:true,cat:'Fasteners'},
-  {id:'fn003',num:'ZIP-SCR-1.25',name:'Zip System Tape 3-3/4" x 90ft',brand:'Huber Engineered',uom:'ROLL',price:34.20,avail:true,cat:'Fasteners'},
-];
-
-function setMatCat(cat){
-  matCatFilter=cat;
-  document.querySelectorAll('.mat-cat-tab').forEach(t=>t.classList.toggle('active',t.textContent.toLowerCase().includes(cat==='all'?'all':cat.toLowerCase())));
-  renderMatResults(getFilteredCatalog(document.getElementById('matSearch')?.value||''));
-}
-
-function getFilteredCatalog(q){
-  let items=DEMO_CATALOG;
-  if(matCatFilter!=='all') items=items.filter(i=>i.cat.toLowerCase().includes(matCatFilter.toLowerCase()));
-  if(q) items=items.filter(i=>i.name.toLowerCase().includes(q.toLowerCase())||i.num.toLowerCase().includes(q.toLowerCase())||i.brand.toLowerCase().includes(q.toLowerCase()));
-  return items;
-}
-
-function debouncedMatSearch(){
-  clearTimeout(matSearchTimer);
-  matSearchTimer=setTimeout(doMatSearch,400);
-}
-
-async function doMatSearch(){
-  const q=document.getElementById('matSearch')?.value||'';
-  const resultsEl=document.getElementById('matResults');
-  if(!resultsEl)return;
-
-  // Try live ABC API first, fall back to demo
-  if(isAbcConnected()){
-    resultsEl.innerHTML='<div class="mat-loading"><div class="spinner" style="width:18px;height:18px;border-width:2px"></div> Searching ABC Supply…</div>';
-    const liveItems=await abcSearchItems(q,matCatFilter==='all'?'':matCatFilter);
-    if(liveItems){renderMatResults(liveItems);return;}
-    // fall through to demo on error
-  }
-  renderMatResults(getFilteredCatalog(q));
-}
-
-function renderMatView(){
-  // Small defer to ensure the view is visible before rendering
-  requestAnimationFrame(()=>{
-    const resultsEl=document.getElementById('matResults');
-    if(!resultsEl)return;
-    renderMatResults(getFilteredCatalog(document.getElementById('matSearch')?.value||''));
-    renderMatCart();
-    const btn=document.getElementById('abcCredsBtn');
-    if(btn){btn.className='mat-creds-btn'+(isAbcConnected()?' connected':'');btn.textContent=isAbcConnected()?'✓ ABC Connected':'🔑 ABC API';}
-  });
-}
-
-function renderMatResults(items){
-  const el=document.getElementById('matResults');
-  if(!el)return;
-  if(!items.length){el.innerHTML='<div class="mat-loading">No products found</div>';return;}
-  el.innerHTML=items.map(item=>`<div class="mat-item">
-    <div class="mat-item-info">
-      <div class="mat-item-num">${esc(item.num)} <span class="mat-badge-avail ${item.avail?'yes':'no'}">${item.avail?'IN STOCK':'UNAVAIL'}</span></div>
-      <div class="mat-item-name">${esc(item.name)}</div>
-      <div class="mat-item-brand">${esc(item.brand)}</div>
-    </div>
-    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0">
-      <div class="mat-item-price">$${parseFloat(item.price||0).toFixed(2)}</div>
-      <div class="mat-item-uom">per ${esc(item.uom||'EA')}</div>
-      <button class="mat-item-add" onclick="addToMatCart(${JSON.stringify(JSON.stringify(item))})">+ Add</button>
-    </div>
-  </div>`).join('');
-}
-
-function addToMatCart(itemJson){
-  const item=JSON.parse(itemJson);
-  const existing=matCart.find(c=>c.id===item.id);
-  if(existing)existing.qty++;
-  else matCart.push({...item,qty:1});
-  renderMatCart();
-}
-
-function renderMatCart(){
-  const list=document.getElementById('matCartList');
-  const total=document.getElementById('matCartTotal');
-  const count=document.getElementById('matCartCount');
-  if(!list)return;
-  if(!matCart.length){list.innerHTML='<div style="font-size:11px;color:rgba(148,163,184,.3);text-align:center;padding:20px;font-style:italic">No items added yet</div>';
-    if(total)total.textContent='$0.00';if(count)count.textContent='0 items';return;}
-  list.innerHTML=matCart.map((item,i)=>`<div class="mat-cart-item">
-    <div class="mat-cart-item-name">${esc(item.name)}</div>
-    <div class="mat-cart-item-row">
-      <div class="mat-cart-item-qty">
-        <button class="mat-qty-btn" onclick="changeCartQty(${i},-1)">−</button>
-        <span class="mat-qty-val">${item.qty}</span>
-        <button class="mat-qty-btn" onclick="changeCartQty(${i},1)">+</button>
-      </div>
-      <span class="mat-cart-item-price">$${(item.price*item.qty).toFixed(2)}</span>
-      <button class="mat-cart-item-del" onclick="removeFromCart(${i})">×</button>
-    </div>
-  </div>`).join('');
-  const sub=matCart.reduce((s,i)=>s+i.price*i.qty,0);
-  if(total)total.textContent='$'+sub.toFixed(2);
-  if(count)count.textContent=matCart.reduce((s,i)=>s+i.qty,0)+' items';
-}
-
-function changeCartQty(i,delta){
-  matCart[i].qty=Math.max(1,matCart[i].qty+delta);
-  renderMatCart();
-}
-function removeFromCart(i){matCart.splice(i,1);renderMatCart();}
-
-function addMatListToEstimate(){
-  if(!matCart.length)return;
-  openDocEditor();
-  matCart.forEach(item=>addLI('material',{desc:item.name+' ('+item.num+') — '+item.qty+' '+item.uom,qty:item.qty,price:item.price}));
-  updateDocTotals();
-  updateDocPreview(collectDoc({}));
-  switchMain('est');
-}
-
-function exportMatList(){
-  if(!matCart.length)return;
-  const rows=['Item #,Description,Brand,Qty,UOM,Unit Price,Total'];
-  matCart.forEach(i=>rows.push([i.num,'"'+i.name+'"',i.brand,i.qty,i.uom,i.price.toFixed(2),(i.price*i.qty).toFixed(2)].join(',')));
-  const blob=new Blob([rows.join('\n')],{type:'text/csv'});
-  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='material_list.csv';a.click();
-}
-
-function toggleAbcCreds(){
-  abcCredsVisible=!abcCredsVisible;
-  const el=document.getElementById('matResults');
-  if(!el)return;
-  if(abcCredsVisible){
-    const c=getAbcCreds();
-    el.innerHTML=`<div class="mat-creds-panel">
-      <h3>🔑 ABC SUPPLY API CREDENTIALS</h3>
-      <p style="font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.5">Enter your ABC Supply API credentials from the <a href="https://developer.abcsupply.com" target="_blank" style="color:var(--amber)">ABC Developer Portal</a>. You need an approved ABC Supply customer account to access the live API. Without credentials, the app uses a demo product catalog.</p>
-      <div style="display:flex;flex-direction:column;gap:10px">
-        <div class="doc-field"><label class="doc-flbl">Client ID</label><input class="doc-finput" id="abcClientId" value="${esc(c.clientId||'')}" placeholder="Your Okta client_id" autocomplete="off"/></div>
-        <div class="doc-field"><label class="doc-flbl">Client Secret</label><input class="doc-finput" id="abcClientSecret" type="password" value="${esc(c.clientSecret||'')}" placeholder="Your Okta client_secret" autocomplete="off"/></div>
-        <div class="doc-field"><label class="doc-flbl">Sold-To Account # (optional)</label><input class="doc-finput" id="abcSoldTo" value="${esc(c.soldTo||'')}" placeholder="Your ABC Supply account number" autocomplete="off"/></div>
-      </div>
-      <div style="display:flex;gap:8px;margin-top:14px;">
-        <button class="btn btn-amber btn-sm" onclick="saveAbcCreds()">Save & Connect</button>
-        ${c.clientId?'<button class="btn btn-danger btn-sm" onclick="clearAbcCreds()">Disconnect</button>':''}
-        <button class="btn btn-ghost btn-sm" onclick="toggleAbcCreds()">Cancel</button>
-      </div>
-    </div>`;
-  } else {
-    renderMatView();
-  }
-}
-
-function saveAbcCreds(){
-  const c={clientId:document.getElementById('abcClientId').value.trim(),clientSecret:document.getElementById('abcClientSecret').value.trim(),soldTo:document.getElementById('abcSoldTo').value.trim()};
-  setAbcCreds(c);abcCredsVisible=false;abcToken=null;abcTokenExp=0;
-  document.getElementById('abcCredsBtn').className='mat-creds-btn connected';
-  document.getElementById('abcCredsBtn').textContent='✓ ABC Connected';
-  renderMatView();
-}
-function clearAbcCreds(){localStorage.removeItem('abc_creds');abcToken=null;abcTokenExp=0;abcCredsVisible=false;renderMatView();
-  document.getElementById('abcCredsBtn').className='mat-creds-btn';document.getElementById('abcCredsBtn').textContent='🔑 ABC API';}
-
-
 // ── ESTIMATE ↔ LEAD SYNC ─────────────────────────────────────
 function syncEstToLead(doc){
   // Find existing lead linked to this estimate, or match by client name
@@ -10993,238 +10168,6 @@ function syncEstToLead(doc){
     renderCRM();
   }
 }
-
-// ── MATERIAL LIST OVERLAY ─────────────────────────────────────
-let matlistContext=null; // {type:'doc'|'lead'|'job', id:string}
-let matlistItems=[]; // current list items
-let matlistCat='all';
-let matlistTimer=null;
-const MATLIST_CATS=['all','Roofing','Siding','Gutters','Soffit','Underlayment','Flashing','Fasteners'];
-
-function openMatListOverlay(contextType, contextId){
-  matlistContext={type:contextType, id:contextId||editDocId};
-  // Pre-load existing list if context has one
-  matlistItems=[];
-  if(contextType==='lead'&&contextId){
-    const l=leads.find(x=>x.id===contextId);
-    if(l&&l.matList) matlistItems=[...l.matList];
-  } else if(contextType==='doc'&&(contextId||editDocId)){
-    const did=contextId||editDocId;
-    loadDocs();
-    const d=docs.find(x=>x.id===did);
-    if(d&&d.matList) matlistItems=[...d.matList];
-  } else if(contextType==='job'&&contextId){
-    const j=jobs.find(x=>x.id===contextId);
-    if(j&&j.matList) matlistItems=[...j.matList];
-  }
-  // Update context label
-  const lbl=document.getElementById('matlistContextLabel');
-  if(lbl){
-    if(contextType==='doc') lbl.textContent='→ Estimate/Invoice';
-    else if(contextType==='lead'){const l=leads.find(x=>x.id===contextId);lbl.textContent='→ '+esc(l?.name||'Lead');}
-    else if(contextType==='job'){const j=jobs.find(x=>x.id===contextId);lbl.textContent='→ '+esc(j?.title||'Job');}
-  }
-  matlistCat='all';
-  document.querySelectorAll('.matlist-cat-btn').forEach(b=>b.classList.toggle('active',b.textContent.trim()==='ALL'));
-  renderMatlistCatalog('');
-  renderMatlistAdded();
-  document.getElementById('matlistOverlay').classList.add('open');
-  setTimeout(()=>document.getElementById('matlistSearch')?.focus(),150);
-}
-
-function closeMatListOverlay(){
-  document.getElementById('matlistOverlay').classList.remove('open');
-}
-
-function setMatlistCat(cat){
-  matlistCat=cat;
-  document.querySelectorAll('.matlist-cat-btn').forEach(b=>b.classList.toggle('active',
-    cat==='all'?b.textContent.trim()==='ALL':b.textContent.trim().toLowerCase().includes(cat.toLowerCase())
-  ));
-  renderMatlistCatalog(document.getElementById('matlistSearch')?.value||'');
-}
-
-function matlistDebouncedSearch(){
-  clearTimeout(matlistTimer);
-  matlistTimer=setTimeout(()=>matlistDoSearch(),350);
-}
-
-async function matlistDoSearch(){
-  const q=document.getElementById('matlistSearch')?.value||'';
-  const catalog=document.getElementById('matlistCatalog');
-  if(!catalog)return;
-  if(isAbcConnected()){
-    catalog.innerHTML='<div class="mat-loading"><div class="spinner" style="width:16px;height:16px;border-width:2px"></div> Searching ABC Supply…</div>';
-    const live=await abcSearchItems(q,matlistCat==='all'?'':matlistCat);
-    if(live){renderMatlistCatalog(q,live);return;}
-  }
-  renderMatlistCatalog(q);
-}
-
-function renderMatlistCatalog(q, items){
-  const catalog=document.getElementById('matlistCatalog');
-  if(!catalog)return;
-  const list=items||getFilteredCatalog(q); // reuse existing catalog filter
-  if(!list.length){catalog.innerHTML='<div style="padding:20px;text-align:center;color:var(--muted);font-size:12px">No products found</div>';return;}
-  catalog.innerHTML=list.map(item=>`
-    <div class="mat-item" style="padding:7px 10px;">
-      <div class="mat-item-info">
-        <div class="mat-item-num">${esc(item.num)}</div>
-        <div class="mat-item-name" style="font-size:11px">${esc(item.name)}</div>
-        <div class="mat-item-brand" style="font-size:9px">${esc(item.brand)} · ${esc(item.uom)}</div>
-      </div>
-      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px">
-        <div class="mat-item-price" style="font-size:13px">$${parseFloat(item.price||0).toFixed(2)}</div>
-        <button class="mat-item-add" style="font-size:10px;padding:4px 8px;" onclick='addToMatlist(${JSON.stringify(JSON.stringify(item))})'>+ Add</button>
-      </div>
-    </div>`).join('');
-}
-
-function addToMatlist(itemJson){
-  const item=JSON.parse(itemJson);
-  const ex=matlistItems.find(x=>x.id===item.id);
-  if(ex) ex.qty=(ex.qty||1)+1;
-  else matlistItems.push({...item,qty:1});
-  renderMatlistAdded();
-}
-
-function renderMatlistAdded(){
-  const el=document.getElementById('matlistAddedList');
-  const cnt=document.getElementById('matlistAddedCount');
-  const tot=document.getElementById('matlistTotal');
-  if(!el)return;
-  if(!matlistItems.length){
-    el.innerHTML='<div style="padding:16px;text-align:center;color:rgba(148,163,184,.3);font-size:11px;font-style:italic">No items added</div>';
-    if(cnt)cnt.textContent='0 items';
-    if(tot)tot.textContent='$0.00';
-    return;
-  }
-  el.innerHTML=matlistItems.map((item,i)=>`
-    <div class="matlist-added-item">
-      <div class="matlist-added-name">${esc(item.name)}</div>
-      <div class="matlist-added-row">
-        <button class="mat-qty-btn" onclick="matlistQtyChange(${i},-1)">−</button>
-        <span class="mat-qty-val" style="font-size:11px">${item.qty||1}</span>
-        <button class="mat-qty-btn" onclick="matlistQtyChange(${i},1)">+</button>
-        <span style="flex:1;font-size:10px;color:var(--muted);text-align:right">$${((item.price||0)*(item.qty||1)).toFixed(2)}</span>
-        <button class="mat-cart-item-del" onclick="matlistItems.splice(${i},1);renderMatlistAdded()">×</button>
-      </div>
-    </div>`).join('');
-  const total=matlistItems.reduce((s,i)=>s+(i.price||0)*(i.qty||1),0);
-  if(cnt)cnt.textContent=matlistItems.reduce((s,i)=>s+(i.qty||1),0)+' items';
-  if(tot)tot.textContent='$'+total.toFixed(2);
-}
-
-function matlistQtyChange(i,delta){
-  matlistItems[i].qty=Math.max(1,(matlistItems[i].qty||1)+delta);
-  renderMatlistAdded();
-}
-
-function matlistClear(){matlistItems=[];renderMatlistAdded();}
-
-function matlistAttach(){
-  if(!matlistItems.length)return;
-  const ctx=matlistContext;
-  if(!ctx)return;
-  if(ctx.type==='lead'){
-    const l=leads.find(x=>x.id===ctx.id);
-    if(l){l.matList=[...matlistItems];saveLead(l);lsSet('leads_cache',leads.map(leadToDb));if(mainView==='crm')renderCRM();}
-  } else if(ctx.type==='doc'){
-    loadDocs();
-    const d=docs.find(x=>x.id===ctx.id);
-    if(d){d.matList=[...matlistItems];saveDocs();saveDocSync(d);}
-    // Also add as line items to estimate
-    matlistSendToEstimate();
-    return;
-  } else if(ctx.type==='job'){
-    const j=jobs.find(x=>x.id===ctx.id);
-    if(j){j.matList=[...matlistItems];
-      j.checklist=(j.checklist||[]).concat(matlistItems.map(m=>({text:m.name+' x'+(m.qty||1)+' ('+m.num+')',done:false})));
-      saveJob(j);renderSched();}
-  }
-  closeMatListOverlay();
-}
-
-function matlistSendToEstimate(){
-  if(!matlistItems.length)return;
-  // Ensure doc editor is open
-  if(!editDocId) openDocEditor();
-  matlistItems.forEach(item=>{
-    addLI('material',{
-      desc:item.name+' ('+item.num+') — '+item.uom,
-      qty:item.qty||1,
-      price:item.price||0
-    });
-  });
-  updateDocTotals();
-  loadDocs();
-  updateDocPreview(collectDoc(docs.find(x=>x.id===editDocId)||{}));
-  closeMatListOverlay();
-  // Open doc editor if not already open
-  document.getElementById('docEditor').classList.add('open');
-}
-
-function matlistExportCsv(){
-  if(!matlistItems.length)return;
-  const rows=['Item #,Description,Brand,Qty,UOM,Unit Price,Total'];
-  matlistItems.forEach(i=>rows.push([i.num,'"'+i.name.replace(/"/g,"'")+'"',i.brand||'',i.qty||1,i.uom||'EA',(i.price||0).toFixed(2),((i.price||0)*(i.qty||1)).toFixed(2)].join(',')));
-  const blob=new Blob([rows.join('\n')],{type:'text/csv'});
-  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='material_list.csv';a.click();
-}
-
-function matlistPrintPdf(){
-  if(!matlistItems.length)return;
-  const co=getCompany();
-  const total=matlistItems.reduce((s,i)=>s+(i.price||0)*(i.qty||1),0);
-  const rows=matlistItems.map(i=>`<tr>
-    <td>${i.num||''}</td>
-    <td>${i.name||''}</td>
-    <td>${i.brand||''}</td>
-    <td style="text-align:center">${i.qty||1}</td>
-    <td style="text-align:center">${i.uom||'EA'}</td>
-    <td style="text-align:right">$${(i.price||0).toFixed(2)}</td>
-    <td style="text-align:right">$${((i.price||0)*(i.qty||1)).toFixed(2)}</td>
-  </tr>`).join('');
-  const w=window.open('','_blank');
-  w.document.write(`<!DOCTYPE html><html><head><title>Material List</title>
-  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
-  <style>
-    *{box-sizing:border-box;margin:0;padding:0;}
-    body{font-family:'DM Sans',sans-serif;background:#f8fafc;padding:24px;color:#1a1e2e;}
-    .page{background:#fff;max-width:820px;margin:0 auto;padding:28px 32px;border-radius:8px;box-shadow:0 2px 12px rgba(0,0,0,.08);}
-    .head{display:flex;align-items:flex-start;justify-content:space-between;padding-bottom:14px;border-bottom:3px solid #f59e0b;margin-bottom:18px;}
-    .co-name{font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:3px;color:#1a1e2e;}
-    .co-tag{font-size:10px;color:#64748b;letter-spacing:2px;text-transform:uppercase;margin-top:2px;}
-    .doc-type{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:3px;color:#f59e0b;text-align:right;}
-    .doc-date{font-size:11px;color:#64748b;text-align:right;}
-    table{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:16px;}
-    th{background:#f1f5f9;padding:6px 8px;text-align:left;font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#64748b;border-bottom:1px solid #e2e8f0;}
-    th:last-child,td:last-child{text-align:right;}
-    td{padding:7px 8px;border-bottom:1px solid #f1f5f9;color:#334155;}
-    .total-row{display:flex;justify-content:flex-end;gap:20px;padding-top:10px;border-top:2px solid #1a1e2e;font-weight:700;font-size:14px;}
-    @media print{body{background:white;padding:0;}.page{box-shadow:none;border-radius:0;}}
-  </style></head><body>
-  <div class="page">
-    <div class="head">
-      <div><div class="co-name">${co.name}</div><div class="co-tag">${co.tagline}</div><div style="font-size:10px;color:#94a3b8;margin-top:2px">${co.phone} · ${co.email}</div></div>
-      <div><div class="doc-type">MATERIAL LIST</div><div class="doc-date">${new Date().toLocaleDateString()}</div></div>
-    </div>
-    <table>
-      <thead><tr><th>Item #</th><th>Description</th><th>Brand</th><th style="text-align:center">Qty</th><th style="text-align:center">UOM</th><th style="text-align:right">Unit Price</th><th style="text-align:right">Total</th></tr></thead>
-      <tbody>${rows}</tbody>
-    </table>
-    <div class="total-row"><span>TOTAL</span><span>$${total.toFixed(2)}</span></div>
-  </div>
-</body></html>`);
-  w.document.close();setTimeout(()=>w.print(),400);
-}
-
-// close overlay on bg click
-document.getElementById('matlistOverlay')?.addEventListener('click',e=>{
-  if(e.target===document.getElementById('matlistOverlay')) closeMatListOverlay();
-});
-
-
 
 // ── TIME HELPERS ─────────────────────────────────────────────
 function fmtTime(t){
@@ -12118,59 +11061,6 @@ init();
 </script>
 
 
-<!-- ═══ MATERIAL LIST OVERLAY ═══ -->
-<div class="matlist-overlay" id="matlistOverlay">
-  <div class="matlist-panel" onclick="event.stopPropagation()">
-    <div class="matlist-hdr">
-      <span class="matlist-title">📋 MATERIAL LIST</span>
-      <span id="matlistContextLabel" style="font-size:10px;color:var(--muted);font-family:'DM Sans',sans-serif;letter-spacing:0;flex:1;padding:0 8px;"></span>
-      <button class="btn btn-ghost btn-sm" onclick="closeMatListOverlay()">✕</button>
-    </div>
-    <div class="matlist-search-row">
-      <input class="matlist-search" id="matlistSearch" placeholder="Search products…" oninput="matlistDebouncedSearch()" autocomplete="off">
-    </div>
-    <div class="matlist-cat-row">
-      <button class="matlist-cat-btn active" onclick="setMatlistCat('all')">ALL</button>
-      <button class="matlist-cat-btn" onclick="setMatlistCat('Roofing')">ROOFING</button>
-      <button class="matlist-cat-btn" onclick="setMatlistCat('Siding')">SIDING</button>
-      <button class="matlist-cat-btn" onclick="setMatlistCat('Gutters')">GUTTERS</button>
-      <button class="matlist-cat-btn" onclick="setMatlistCat('Soffit')">SOFFIT</button>
-      <button class="matlist-cat-btn" onclick="setMatlistCat('Underlayment')">UNDERLAYMENT</button>
-      <button class="matlist-cat-btn" onclick="setMatlistCat('Flashing')">FLASHING</button>
-      <button class="matlist-cat-btn" onclick="setMatlistCat('Fasteners')">FASTENERS</button>
-    </div>
-    <div class="matlist-body">
-      <div class="matlist-catalog" id="matlistCatalog"></div>
-      <div class="matlist-added">
-        <div class="matlist-added-hdr">
-          <span>MY LIST</span>
-          <span id="matlistAddedCount" style="font-family:'DM Sans',sans-serif;font-size:10px;color:var(--muted);font-weight:400;letter-spacing:0;">0 items</span>
-        </div>
-        <div class="matlist-added-list" id="matlistAddedList">
-          <div style="padding:16px;text-align:center;color:rgba(148,163,184,.3);font-size:11px;font-style:italic">No items added</div>
-        </div>
-        <div class="matlist-added-footer">
-          <div class="matlist-total">
-            <span style="color:var(--muted);font-size:11px;">TOTAL</span>
-            <span class="matlist-total-val" id="matlistTotal">$0.00</span>
-          </div>
-          <div class="matlist-actions">
-            <button class="btn btn-amber btn-sm" style="width:100%;font-size:11px;" onclick="matlistAttach()">✓ Save &amp; Attach</button>
-            <button class="btn btn-ghost btn-sm" style="width:100%;font-size:10px;" onclick="matlistExportCsv()">⬇ Export CSV</button>
-            <button class="btn btn-ghost btn-sm" style="width:100%;font-size:10px;" onclick="matlistPrintPdf()">🖨 Print / PDF</button>
-            <button class="btn btn-danger btn-sm" style="width:100%;font-size:10px;" onclick="matlistClear()">✕ Clear All</button>
-          </div>
-        </div>
-      </div>
-    </div>
-    <div class="matlist-footer">
-      <button class="btn btn-ghost btn-sm" onclick="closeMatListOverlay()">Cancel</button>
-    </div>
-  </div>
-</div>
-
-
-<!-- ═══ TEAM MANAGER MODAL ═══ -->
 <div class="matlist-overlay" id="teamOverlay">
   <div class="team-modal" onclick="event.stopPropagation()">
     <div class="team-modal-hdr">
@@ -12446,8 +11336,6 @@ init();
   <span class="bulk-action-count" id="bulkActionCount">0 selected</span>
   <button class="btn btn-ghost btn-sm" onclick="bulkSelectAll()">Select All</button>
   <button class="btn btn-ghost btn-sm" onclick="bulkClear()">Clear</button>
-  <button class="btn btn-ghost btn-sm" onclick="bulkMarkOutcome('won')" id="bulkWonBtn" style="display:none">🏆 Mark Won</button>
-  <button class="btn btn-ghost btn-sm" onclick="bulkMarkOutcome('lost')" id="bulkLostBtn" style="display:none">✗ Mark Lost</button>
   <button class="btn btn-danger btn-sm" onclick="bulkDelete()">🗑 Delete Selected</button>
   <button class="btn btn-ghost btn-sm" onclick="exitBulkMode()">Cancel</button>
 </div>
