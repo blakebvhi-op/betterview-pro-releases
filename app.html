@@ -1503,6 +1503,7 @@ body:not(.role-owner):not(.role-manager) .role-financial-only{display:none!impor
       <div class="user-menu-item role-owner-only" id="qbConnectMenuItem" onclick="openQbConnect()"><span id="qbConnectIcon">🟢</span><span id="qbConnectLabel">Connect QuickBooks</span></div>
       <div class="user-menu-item role-financial-only" id="reportsMenuItem" onclick="openReports()"><span>📊</span><span>Reports</span></div>
       <div class="user-menu-item" id="resyncMenuItem" onclick="manualResync()"><span>🔄</span><span>Resync</span></div>
+      <div class="user-menu-item" id="pushAlertsMenuItem" onclick="openPushSettings()"><span>🔔</span><span>Notifications</span></div>
       <div class="user-menu-item" id="themePickerMenuItem" onclick="openThemePicker()" style="display:none"><span>🎨</span><span>Theme</span></div>
       <div class="user-menu-item danger" onclick="doSignOut()"><span>⏏</span><span>Sign Out</span></div>
     </div>
@@ -8490,19 +8491,41 @@ function saveDocs(){
 async function loadDocsRemote(){
   try{
     const rows=await sb.get('docs');
-    const oldSigned=new Set(docs.filter(d=>d.signature).map(d=>d.id));
     docs=rows.map(dbToDoc);
-    // Detect newly-signed docs
-    const newlySigned=docs.filter(d=>d.signature&&!oldSigned.has(d.id));
-    if(newlySigned.length){
-      newlySigned.forEach(d=>{
-        try{logDocActivity(d.id,`Signed by ${d.signatureName||'customer'}`);}catch{}
-      });
-      // Show a toast
-      try{showSigToast(newlySigned);}catch{}
-    }
+    try{ notifyNewlySignedDocs(); }catch(e){ console.error('sign-notify:',e); }
     return true;
   }catch(e){console.error('docs load failed:',e.message||e);return false;}
+}
+
+// One-time, role-targeted notification when an estimate is signed.
+// Audience: owners, managers, and the salesperson the lead is assigned to.
+// "Seen" ids persist per-device, so:
+//   - the existing backlog is NEVER announced (seeded silently on first run),
+//   - each signature notifies at most once,
+//   - a signature that happened while away is announced once on next open.
+function notifyNewlySignedDocs(){
+  const SEEN_KEY='seen_signed_doc_ids';
+  const raw=lsGet(SEEN_KEY,null);            // null => never initialized on this device
+  const seen=new Set(Array.isArray(raw)?raw:[]);
+  const signedNow=docs.filter(d=>d.signature);
+  // First run on this device: seed silently so the current backlog isn't announced.
+  if(raw===null){ lsSet(SEEN_KEY, signedNow.map(d=>d.id)); return; }
+  const newly=signedNow.filter(d=>!seen.has(d.id));
+  // Record everything currently signed as seen so these docs are never re-evaluated.
+  lsSet(SEEN_KEY, Array.from(new Set([...seen, ...signedNow.map(d=>d.id)])));
+  if(!newly.length) return;
+  // Audience gate: owners & managers get every signature; everyone else only
+  // gets signatures for leads assigned to them (the "owner of the lead").
+  const role=(currentRole||'').toLowerCase();
+  const seeAll = role==='owner' || role==='manager';
+  const visible = newly.filter(d=>{
+    if(seeAll) return true;
+    const lead=leads.find(l=>l.estId===d.id);
+    return !!(lead && lead.assignedTo && currentUser && lead.assignedTo===currentUser.id);
+  });
+  if(!visible.length) return;
+  visible.forEach(d=>{ try{logDocActivity(d.id,`Signed by ${d.signatureName||'customer'}`);}catch{} });
+  showSigToast(visible);
 }
 
 function showSigToast(signedDocs){
@@ -8517,6 +8540,87 @@ function showSigToast(signedDocs){
   document.body.appendChild(t);
   setTimeout(()=>{t.style.transition='opacity .3s';t.style.opacity='0';setTimeout(()=>t.remove(),300);},8000);
 }
+
+// ══════════════════ WEB PUSH NOTIFICATIONS ══════════════════
+// True OS-level push: a customer signing fires a server-side push (via the
+// push-send edge function) that this device's service worker shows on the
+// lockscreen / notification center even when the app is closed.
+const VAPID_PUBLIC_KEY='BHKPvuFiMmNKZbAwTTaPn1WjPYeEtCg9Cbkfa75aNnRCUxw83RfpdYcFZjAZY7n6yjaHLZPqSJCDF1qY0RRXgqA';
+function urlBase64ToUint8Array(base64String){
+  const padding='='.repeat((4-base64String.length%4)%4);
+  const base64=(base64String+padding).replace(/-/g,'+').replace(/_/g,'/');
+  const raw=atob(base64);const arr=new Uint8Array(raw.length);
+  for(let i=0;i<raw.length;i++) arr[i]=raw.charCodeAt(i);
+  return arr;
+}
+let pushSWReg=null;
+async function registerPushSW(){
+  if(!('serviceWorker' in navigator)||!('PushManager' in window)) return null;
+  try{ pushSWReg=await navigator.serviceWorker.register('/sw.js'); return pushSWReg; }
+  catch(e){ console.error('SW register failed:',e); return null; }
+}
+async function enablePushNotifications(){
+  if(!('serviceWorker' in navigator)||!('PushManager' in window)){
+    alert('This device or browser does not support push notifications.'); return false;
+  }
+  const perm=await Notification.requestPermission();
+  if(perm!=='granted'){ alert('Notifications were not allowed. Turn them on in your browser/site settings to get sign alerts.'); return false; }
+  const reg=pushSWReg||await registerPushSW();
+  if(!reg){ alert('Could not start the notification service.'); return false; }
+  await navigator.serviceWorker.ready;
+  let sub=await reg.pushManager.getSubscription();
+  if(!sub){
+    sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:urlBase64ToUint8Array(VAPID_PUBLIC_KEY)});
+  }
+  const ok=await savePushSubscription(sub);
+  alert(ok?'✅ Sign alerts enabled on this device.':'Could not save this device. Try again.');
+  try{document.getElementById('pushSettingsOverlay')?.remove();}catch{}
+  return ok;
+}
+async function savePushSubscription(sub){
+  try{
+    const j=sub.toJSON();
+    const r=await fetch(SB_URL+'/rest/v1/push_subscriptions?on_conflict=endpoint',{
+      method:'POST',
+      headers:{apikey:SB_KEY,Authorization:'Bearer '+authAccessToken,'Content-Type':'application/json',Prefer:'resolution=merge-duplicates,return=minimal'},
+      body:JSON.stringify({user_id:currentUser.id,company_id:currentCompanyId,endpoint:j.endpoint,p256dh:j.keys.p256dh,auth:j.keys.auth,user_agent:navigator.userAgent})
+    });
+    return r.ok;
+  }catch(e){ console.error('savePushSubscription:',e); return false; }
+}
+async function sendTestPush(){
+  try{
+    const r=await fetch(SB_URL+'/functions/v1/push-send',{
+      method:'POST',
+      headers:{apikey:SB_KEY,Authorization:'Bearer '+authAccessToken,'Content-Type':'application/json'},
+      body:JSON.stringify({test:true})
+    });
+    const d=await r.json().catch(()=>({}));
+    alert(r.ok?('Test sent to '+(d.sent||0)+' device(s). Check your lockscreen.'):('Test failed: '+(d.error||r.status)));
+  }catch(e){ alert('Test failed: '+e.message); }
+}
+function openPushSettings(){
+  try{document.getElementById('userMenu')?.classList.remove('open');}catch{}
+  const supported=('serviceWorker' in navigator)&&('PushManager' in window);
+  const perm=(typeof Notification!=='undefined')?Notification.permission:'unsupported';
+  const o=document.createElement('div');
+  o.className='qv-overlay'; o.id='pushSettingsOverlay';
+  o.onclick=(e)=>{if(e.target===o)o.remove();};
+  o.innerHTML=`<div class="qv-card" style="max-width:400px">
+    <div class="qv-head"><div class="qv-title">🔔 Notifications</div><button class="qv-close" onclick="document.getElementById('pushSettingsOverlay').remove()">×</button></div>
+    <div class="qv-body">
+      <div style="font-size:13px;line-height:1.5;color:var(--ink);padding-bottom:6px">Get a notification on this device when an estimate is signed or you're assigned a job — even when the app is closed. Enable this on each device you want alerts on.</div>
+      <div class="qv-row"><span class="qv-k">Supported</span><span class="qv-v">${supported?'Yes':'No'}</span></div>
+      <div class="qv-row"><span class="qv-k">Permission</span><span class="qv-v">${perm}</span></div>
+    </div>
+    <div class="qv-actions">
+      <button class="qv-btn-ghost" onclick="sendTestPush()">Send Test</button>
+      <button class="qv-btn-primary" onclick="enablePushNotifications()">Enable On This Device</button>
+    </div>
+  </div>`;
+  document.body.appendChild(o);
+}
+if('serviceWorker' in navigator){ window.addEventListener('load',()=>{registerPushSW();}); }
 
 // Background polling for signed estimates (every 30 seconds while authenticated)
 let docPollTimer=null;
