@@ -13,7 +13,7 @@
 <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <meta name="referrer" content="no-referrer">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src https://fryaksqvfknxdptrlppy.supabase.co https://ipapi.co https://api.open-meteo.com; img-src 'self' data: blob:; media-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self';">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src https://fryaksqvfknxdptrlppy.supabase.co https://ipapi.co https://api.open-meteo.com https://api.abcsupply.com; img-src 'self' data: blob:; media-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self';">
 <title>Better View Pro</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -818,6 +818,55 @@ select.doc-finput option{background:var(--steel-mid);}
 .doc-total-lbl{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;}
 .doc-total-val{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;}
 
+/* ── MATERIALS / ABC SUPPLY ── */
+.mat-view{display:flex;flex-direction:column;height:100%;overflow:hidden;}
+.mat-toolbar{display:flex;align-items:center;gap:8px;padding:8px 14px;background:var(--steel-mid);border-bottom:1px solid var(--iron);flex-shrink:0;flex-wrap:wrap;}
+.mat-search-wrap{display:flex;flex:1;min-width:180px;gap:6px;}
+.mat-search{flex:1;background:var(--steel-light);border:1px solid var(--iron);border-radius:7px;padding:7px 12px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:13px;}
+.mat-search:focus{outline:none;border-color:var(--amber);}
+.mat-search::placeholder{color:rgba(148,163,184,.4);}
+.mat-creds-btn{background:var(--steel-light);border:1px solid var(--iron);color:var(--muted);padding:6px 10px;border-radius:6px;font-size:11px;cursor:pointer;white-space:nowrap;}
+.mat-creds-btn.connected{border-color:var(--green);color:var(--green);}
+.mat-body{display:flex;flex:1;overflow:hidden;}
+.mat-results{flex:1;overflow-y:auto;padding:10px 14px 80px;display:flex;flex-direction:column;gap:6px;}
+.mat-cart{width:280px;flex-shrink:0;background:var(--steel-mid);border-left:1px solid var(--iron);display:flex;flex-direction:column;overflow:hidden;}
+.mat-cart-hdr{padding:10px 14px;border-bottom:1px solid var(--iron);display:flex;align-items:center;justify-content:space-between;flex-shrink:0;}
+.mat-cart-title{font-family:'Bebas Neue',sans-serif;font-size:12px;letter-spacing:2px;color:var(--amber);}
+.mat-cart-list{flex:1;overflow-y:auto;padding:8px 12px;display:flex;flex-direction:column;gap:6px;}
+.mat-cart-item{background:var(--steel-light);border-radius:7px;padding:8px 10px;}
+.mat-cart-item-name{font-size:11px;font-weight:600;color:var(--white);margin-bottom:2px;}
+.mat-cart-item-row{display:flex;align-items:center;justify-content:space-between;gap:4px;}
+.mat-cart-item-qty{display:flex;align-items:center;gap:4px;}
+.mat-qty-btn{background:var(--iron);border:none;color:var(--white);width:22px;height:22px;border-radius:4px;cursor:pointer;font-size:14px;display:flex;align-items:center;justify-content:center;}
+.mat-qty-val{font-size:12px;font-weight:600;min-width:24px;text-align:center;}
+.mat-cart-item-price{font-family:'Bebas Neue',sans-serif;font-size:13px;color:var(--amber);}
+.mat-cart-item-del{background:none;border:none;color:var(--muted);cursor:pointer;font-size:13px;padding:0;}
+.mat-cart-footer{padding:10px 12px;border-top:1px solid var(--iron);flex-shrink:0;}
+.mat-cart-total{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;}
+.mat-cart-total-lbl{font-size:11px;color:var(--muted);}
+.mat-cart-total-val{font-family:'Bebas Neue',sans-serif;font-size:18px;color:var(--amber);}
+.mat-item{background:var(--steel-light);border-radius:8px;padding:10px 12px;display:flex;gap:10px;align-items:flex-start;}
+.mat-item-info{flex:1;}
+.mat-item-num{font-size:9px;color:var(--teal);font-weight:600;margin-bottom:2px;}
+.mat-item-name{font-size:12px;font-weight:600;color:var(--white);margin-bottom:2px;}
+.mat-item-brand{font-size:10px;color:var(--muted);}
+.mat-item-price{font-family:'Bebas Neue',sans-serif;font-size:15px;color:var(--amber);white-space:nowrap;}
+.mat-item-uom{font-size:9px;color:var(--muted);}
+.mat-item-add{background:var(--amber);color:var(--steel);border:none;border-radius:6px;padding:5px 10px;font-weight:700;font-size:11px;cursor:pointer;white-space:nowrap;flex-shrink:0;}
+.mat-item-add:hover{background:var(--amber-bright);}
+.mat-badge-avail{display:inline-block;font-size:8px;padding:1px 5px;border-radius:3px;font-weight:700;margin-left:4px;}
+.mat-badge-avail.yes{background:rgba(34,197,94,.15);color:var(--green);}
+.mat-badge-avail.no{background:rgba(239,68,68,.15);color:var(--danger);}
+.mat-loading{display:flex;align-items:center;justify-content:center;padding:40px;color:var(--muted);font-size:13px;gap:10px;}
+.mat-creds-panel{background:var(--steel-mid);border-radius:10px;padding:20px;margin:16px;border:1px solid var(--iron);}
+.mat-creds-panel h3{font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:2px;color:var(--amber);margin-bottom:12px;}
+.mat-cat-tabs{display:flex;overflow-x:auto;flex-shrink:0;border-bottom:1px solid var(--iron);scrollbar-width:none;padding:0 14px;}
+.mat-cat-tabs::-webkit-scrollbar{display:none;}
+.mat-cat-tab{flex-shrink:0;padding:7px 12px;font-family:'Bebas Neue',sans-serif;font-size:10px;letter-spacing:1.5px;color:var(--muted);background:transparent;border:none;cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;}
+.mat-cat-tab.active{color:var(--amber);border-bottom-color:var(--amber);}
+.mat-export-btn{background:var(--steel-light);border:1px solid var(--iron);color:var(--white);padding:6px 10px;border-radius:6px;font-size:11px;cursor:pointer;display:flex;align-items:center;gap:4px;}
+.mat-export-btn:hover{border-color:var(--amber);color:var(--amber);}
+
 /* ── ESTIMATE→LEAD LINKAGE ── */
 .est-badge{display:inline-flex;align-items:center;gap:4px;background:rgba(245,158,11,.12);border:1px solid rgba(245,158,11,.3);border-radius:5px;padding:2px 7px;font-size:9px;font-weight:700;color:var(--amber);cursor:pointer;margin-top:5px;letter-spacing:.5px;}
 .est-badge:hover{background:rgba(245,158,11,.22);}
@@ -851,6 +900,10 @@ select.doc-finput option{background:var(--steel-mid);}
 .matlist-cat-row::-webkit-scrollbar{display:none;}
 .matlist-cat-btn{flex-shrink:0;padding:3px 10px;border-radius:12px;border:1px solid var(--iron);background:transparent;color:var(--muted);font-size:10px;font-family:'Bebas Neue',sans-serif;letter-spacing:1px;cursor:pointer;}
 .matlist-cat-btn.active{background:var(--amber);color:var(--steel);border-color:var(--amber);}
+
+/* ── ATTACH BUTTON ON LEAD CARD ── */
+.lcard-mat-badge{display:inline-flex;align-items:center;gap:4px;background:rgba(20,184,166,.12);border:1px solid rgba(20,184,166,.3);border-radius:5px;padding:2px 7px;font-size:9px;font-weight:700;color:var(--teal);cursor:pointer;letter-spacing:.5px;}
+.lcard-mat-badge:hover{background:rgba(20,184,166,.22);}
 
 /* ── CUSTOMER SEARCH IN JOB MODAL ── */
 .cust-result{display:flex;flex-direction:column;padding:8px 12px;cursor:pointer;border-bottom:1px solid var(--iron);transition:background .1s;}
@@ -1306,6 +1359,7 @@ body:not(.role-owner):not(.role-manager) .role-financial-only{display:none!impor
       <button class="dtab" id="dtCRM" onclick="switchMain('crm')">👥 CUSTOMERS <span class="dbadge" id="dtCrmBadge">0</span></button>
       <button class="dtab" id="dtEst" onclick="switchMain('est')">📄 ESTIMATES</button>
       <button class="dtab" id="dtTasks" onclick="switchMain('tasks')">✓ TASKS <span class="dbadge" id="dtTasksBadge">0</span></button>
+      <button class="dtab" id="dtMat" onclick="switchMain('mat')">🏗 MATERIALS</button>
     </div>
     <button class="dadd btn-amber" id="daddBtn" style="border-radius:6px;font-size:12px;padding:6px 12px;">
       <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -1329,6 +1383,9 @@ body:not(.role-owner):not(.role-manager) .role-financial-only{display:none!impor
   <button class="bnbtn" id="bnTasks" onclick="switchMain('tasks')">
     <div class="bnicon">✓</div><div class="bnlbl">TASKS</div>
     <div class="bnbadge" id="bnTasksBadge"></div>
+  </button>
+  <button class="bnbtn" id="bnMat" onclick="switchMain('mat')">
+    <div class="bnicon">🏗</div><div class="bnlbl">MATERIALS</div>
   </button>
 </div>
 
@@ -1482,6 +1539,49 @@ body:not(.role-owner):not(.role-manager) .role-financial-only{display:none!impor
     </div>
   </div>
 
+  <!-- ═══ MATERIALS / ABC SUPPLY ═══ -->
+  <div class="view" id="vMat">
+    <div class="mat-view" style="height:100%">
+      <div class="mat-toolbar">
+        <span style="font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:2px;color:var(--amber);flex-shrink:0;">🏗 MATERIALS</span>
+        <div class="mat-search-wrap">
+          <input class="mat-search" id="matSearch" type="text" placeholder="Search ABC Supply catalog…" oninput="debouncedMatSearch()"/>
+          <button class="btn btn-amber btn-sm" onclick="doMatSearch()">Search</button>
+        </div>
+        <button class="mat-creds-btn" id="abcCredsBtn" onclick="toggleAbcCreds()">🔑 ABC API</button>
+        <button class="mat-export-btn" onclick="exportMatList()">⬇ Export List</button>
+      </div>
+      <div class="mat-cat-tabs" id="matCatTabs">
+        <button class="mat-cat-tab active" onclick="setMatCat('all')">ALL</button>
+        <button class="mat-cat-tab" onclick="setMatCat('Roofing')">ROOFING</button>
+        <button class="mat-cat-tab" onclick="setMatCat('Siding')">SIDING</button>
+        <button class="mat-cat-tab" onclick="setMatCat('Gutters')">GUTTERS</button>
+        <button class="mat-cat-tab" onclick="setMatCat('Soffit')">SOFFIT & FASCIA</button>
+        <button class="mat-cat-tab" onclick="setMatCat('Underlayment')">UNDERLAYMENT</button>
+        <button class="mat-cat-tab" onclick="setMatCat('Flashing')">FLASHING</button>
+        <button class="mat-cat-tab" onclick="setMatCat('Fasteners')">FASTENERS</button>
+      </div>
+      <div class="mat-body">
+        <div class="mat-results" id="matResults"></div>
+        <div class="mat-cart" id="matCart">
+          <div class="mat-cart-hdr">
+            <span class="mat-cart-title">MATERIAL LIST</span>
+            <span style="font-size:10px;color:var(--muted)" id="matCartCount">0 items</span>
+          </div>
+          <div class="mat-cart-list" id="matCartList"></div>
+          <div class="mat-cart-footer">
+            <div class="mat-cart-total">
+              <span class="mat-cart-total-lbl">Subtotal</span>
+              <span class="mat-cart-total-val" id="matCartTotal">$0.00</span>
+            </div>
+            <button class="btn btn-amber" style="width:100%;justify-content:center;font-size:12px;" onclick="addMatListToEstimate()">+ Add to Estimate</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+
   <!-- ═══ CRM ═══ -->
   <div class="view" id="vCRM">
     <div class="crmstats">
@@ -1572,6 +1672,8 @@ body:not(.role-owner):not(.role-manager) .role-financial-only{display:none!impor
     <button class="btn btn-ghost btn-sm" onclick="generateCustomerLink()">🔗 Customer Link</button>
     <button class="btn btn-ghost btn-sm" onclick="openWorkOrder()">🔧 Work Order</button>
     <button class="btn btn-ghost btn-sm" onclick="openMaterialOrder()">📦 Material Order</button>
+    <button class="btn btn-ghost btn-sm" onclick="markDocOutcome('won')" id="docWonBtn" title="Mark this estimate as Won (closed/approved)">🏆 Won</button>
+    <button class="btn btn-ghost btn-sm" onclick="markDocOutcome('lost')" id="docLostBtn" title="Mark this estimate as Lost (didn't close)">✗ Lost</button>
     <button class="btn btn-danger btn-sm" onclick="deleteDoc()" title="Delete this document">🗑 Delete</button>
     <button class="btn btn-ghost btn-sm" id="docQbSyncBtn" onclick="syncDocWithQb()" title="Check QuickBooks for this invoice's payment status" style="display:none">🔄 Check QuickBooks</button>
     <button class="btn btn-ghost btn-sm" id="docQbPushBtn" onclick="pushDocToQb()" title="Create this invoice in QuickBooks" style="display:none">📤 Push to QB</button>
@@ -1961,15 +2063,15 @@ function canSeeAllLeads(){return isOwnerOrManager();}
 function canManageTeam(){return isOwner();}
 function canManageTemplates(){return isOwnerOrManager();}
 function canSeeTab(tab){
-  // Tasks tab visible to all roles
+  // Tasks tab visible to all roles; Materials view visible to all roles too
   if(!currentRole) return true; // pre-auth or no profile yet — show everything
   if(isLaborer()){
-    // Laborers only see schedule + their assigned tasks
-    return ['sched','tasks'].includes(tab);
+    // Laborers only see schedule + their assigned tasks + materials
+    return ['sched','tasks','mat'].includes(tab);
   }
   if(isSalesman()){
     // Salesmen see most things except templates management
-    return ['sched','crm','est','tasks'].includes(tab);
+    return ['sched','crm','est','tasks','mat'].includes(tab);
   }
   return true; // owner & manager see everything
 }
@@ -4907,21 +5009,22 @@ function switchMain(v){
   }
   mainView=v;
   document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));
-  const viewMap={sched:'vSched',crm:'vCRM',est:'vEst',tasks:'vTasks'};
+  const viewMap={sched:'vSched',crm:'vCRM',est:'vEst',mat:'vMat',tasks:'vTasks'};
   document.getElementById(viewMap[v]||'vSched').classList.add('active');
-  ['bnSched','bnCRM','bnEst','bnTasks'].forEach(id=>{const el=document.getElementById(id);if(el)el.classList.toggle('active',id==='bn'+v.charAt(0).toUpperCase()+v.slice(1));});
-  ['dtSched','dtCRM','dtEst','dtTasks'].forEach(id=>{const el=document.getElementById(id);if(el)el.classList.toggle('active',id==='dt'+v.charAt(0).toUpperCase()+v.slice(1));});
-  const lblMap={sched:'New Job',crm:'New Customer',est:'New Estimate',tasks:'New Task'};
+  ['bnSched','bnCRM','bnEst','bnMat','bnTasks'].forEach(id=>{const el=document.getElementById(id);if(el)el.classList.toggle('active',id==='bn'+v.charAt(0).toUpperCase()+v.slice(1));});
+  ['dtSched','dtCRM','dtEst','dtMat','dtTasks'].forEach(id=>{const el=document.getElementById(id);if(el)el.classList.toggle('active',id==='dt'+v.charAt(0).toUpperCase()+v.slice(1));});
+  const lblMap={sched:'New Job',crm:'New Customer',est:'New Estimate',mat:'Search Materials',tasks:'New Task'};
   document.getElementById('daddLbl').textContent=lblMap[v]||'New';
   document.getElementById('daddBtn').onclick=
     v==='sched'?()=>openJobMov('backlog'):
     v==='crm'?()=>openCustomerMov():
     v==='est'?()=>openDocEditor():
     v==='tasks'?()=>openTaskMov():
-    ()=>{};
+    ()=>document.getElementById('matSearch')?.focus();
   if(v==='crm')renderCustomers();
   else if(v==='sched')renderSched();
   else if(v==='est')renderDocList();
+  else if(v==='mat')renderMatView();
   else if(v==='tasks'){renderTaskList();filterTasks(taskFilter);}
 }
 function handleFab(){
@@ -6442,6 +6545,7 @@ function leadCard(l){
         ${on?'<div class="abanner">✅ On Scheduler</div>':''}
         <div class="lcard-est-row">
           ${linkedDoc?`<span class="est-badge" onclick="event.stopPropagation();openDocEditor('${l.estId}')">📄 EST #${esc(linkedDoc.num||'—')}</span>`:''}
+          ${(l.matList&&l.matList.length)?`<span class="lcard-mat-badge" onclick="event.stopPropagation();openMatListOverlay('lead','${l.id}')">📋 ${l.matList.length} materials</span>`:''}
         </div>
         ${(l.activity&&l.activity.length)?`<div class="lcact">⏱ ${esc(l.activity[l.activity.length-1].msg)} · ${fmtActivityTime(l.activity[l.activity.length-1].ts)}</div>`:''}
         <div class="lcacts">
@@ -7580,11 +7684,97 @@ function _promptOutcomeDate(defaultDate){
   return d.toISOString();
 }
 
+async function markDocOutcome(outcome){
+  if(!editDocId){alert('No document open.');return;}
+  const d=docs.find(x=>x.id===editDocId);
+  if(!d){alert('Document not found.');return;}
+  // Won/Lost only applies to revenue-eligible doc types (estimates + contracts).
+  // Change orders and lien waivers can be signed but they're not deals.
+  if(!getDocTypeConfig(d.type).countsAsWon){
+    alert('Only estimates and contracts can be marked Won or Lost.');
+    return;
+  }
+  const label=outcome==='won'?'Won':'Lost';
+  // Default to existing closed_date if previously set, else signature date, else today
+  const defaultDate=(d.closedDate||d.signatureDate||'').slice(0,10);
+  const iso=_promptOutcomeDate(defaultDate);
+  if(!iso) return;
+  d.outcome=outcome;
+  d.closedDate=iso;
+  // If marking won, also push status to 'signed' for backward compat with
+  // any code path that reads status. Don't undo signature — just status.
+  if(outcome==='won'&&d.status!=='signed') d.status='signed';
+  // Activity log
+  d.activity=d.activity||[];
+  d.activity.push({ts:new Date().toISOString(),msg:'Marked '+label+' on '+iso.slice(0,10)});
+  saveDocs();
+  saveDocSync(d);
+  setSS('syncing','Saving…');
+  try{
+    await sb.upsert('docs',docToDb(d));
+    setSS('synced',label+' ✓');setTimeout(()=>document.getElementById('syncLbl').textContent='',2000);
+    if(typeof renderDocList==='function') renderDocList();
+    // Re-render the editor so the visible status badge updates if it's there
+    if(typeof openDocEditor==='function'&&editDocId===d.id){
+      // Refresh the displayed status without reopening the whole editor
+      updateDocStatusUI();
+    }
+  }catch(e){
+    console.error('mark outcome failed:',e);
+    setSS('error','Save failed');
+    alert('Failed to save. '+(e.message||e));
+  }
+}
+
+// Best-effort UI refresh after marking — finds the status pill if any
 function updateDocStatusUI(){
   const d=docs.find(x=>x.id===editDocId);if(!d)return;
   const pill=document.querySelector('#docEditor .doc-status-pill,#docEditor [data-status-pill]');
   if(pill) pill.textContent=(d.outcome||d.status||'draft').toUpperCase();
 }
+
+async function bulkMarkOutcome(outcome){
+  if(!bulkMode||bulkMode!=='docs'||!bulkSelected.size) return;
+  const ids=Array.from(bulkSelected);
+  // Filter to deal-eligible doc types (estimates + contracts; not WO/MO/CO/LW)
+  const targets=docs.filter(d=>ids.includes(d.id)&&getDocTypeConfig(d.type).countsAsWon);
+  if(!targets.length){
+    alert('No estimates or contracts selected. Work orders, material orders, change orders, and lien waivers can\'t be marked Won/Lost.');
+    return;
+  }
+  const label=outcome==='won'?'Won':'Lost';
+  const iso=_promptOutcomeDate();
+  if(!iso) return;
+  if(!confirm(`Mark ${targets.length} estimate${targets.length===1?'':'s'} as ${label} on ${iso.slice(0,10)}?\n\nThis updates Reports immediately.`)) return;
+  setSS('syncing','Saving…');
+  let okCount=0,failCount=0;
+  for(const d of targets){
+    d.outcome=outcome;
+    d.closedDate=iso;
+    if(outcome==='won'&&d.status!=='signed') d.status='signed';
+    d.activity=d.activity||[];
+    d.activity.push({ts:new Date().toISOString(),msg:'Bulk marked '+label+' on '+iso.slice(0,10)});
+    try{
+      await sb.upsert('docs',docToDb(d));
+      okCount++;
+    }catch(e){
+      console.error('bulk outcome',d.id,e);
+      failCount++;
+    }
+  }
+  saveDocs();
+  if(failCount){setSS('error',`Updated ${okCount}, ${failCount} failed`);}
+  else{setSS('synced',`Updated ${okCount} ✓`);setTimeout(()=>document.getElementById('syncLbl').textContent='',2500);}
+  exitBulkMode();
+  if(typeof renderDocList==='function') renderDocList();
+}
+
+// ── BULK DELETE MODE ────────────────────────────────────────
+// Generic system shared by leads list and docs list.
+// When `bulkMode` is set, cards become selectable and the floating
+// action bar appears with Delete Selected / Cancel / Select All.
+let bulkMode=null;             // null | 'docs' | 'leads'
+let bulkSelected=new Set();    // ids selected in current bulk mode
 
 function toggleDocBulkMode(){
   if(bulkMode==='docs') exitBulkMode();
@@ -7603,6 +7793,11 @@ function enterBulkMode(which){
   const btnId=which==='docs'?'docBulkBtn':'leadBulkBtn';
   const btn=document.getElementById(btnId);
   if(btn){btn.textContent='✓ Done';btn.classList.add('active');}
+  // Outcome buttons only make sense for estimates (docs mode)
+  const wonBtn=document.getElementById('bulkWonBtn');
+  const lostBtn=document.getElementById('bulkLostBtn');
+  if(wonBtn)  wonBtn.style.display =(which==='docs')?'':'none';
+  if(lostBtn) lostBtn.style.display=(which==='docs')?'':'none';
   showBulkBar();
   rerenderForBulk();
 }
@@ -10137,6 +10332,246 @@ function emailMaterialOrder(){
   window.open(mailto,'_blank');
 }
 
+let matCatFilter='all';
+let matSearchTimer=null;
+let abcCredsVisible=false;
+let abcToken=null,abcTokenExp=0;
+
+function getAbcCreds(){
+  try{return JSON.parse(localStorage.getItem('abc_creds')||'{}');}catch{return {};}
+}
+function setAbcCreds(c){localStorage.setItem('abc_creds',JSON.stringify(c));}
+function isAbcConnected(){const c=getAbcCreds();return!!(c.clientId&&c.clientSecret);}
+
+async function getAbcToken(){
+  if(abcToken&&Date.now()<abcTokenExp-60000)return abcToken;
+  const c=getAbcCreds();
+  if(!c.clientId||!c.clientSecret)return null;
+  try{
+    const r=await fetch('https://api.abcsupply.com/oauth/token',{
+      method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},
+      body:new URLSearchParams({grant_type:'client_credentials',client_id:c.clientId,client_secret:c.clientSecret,scope:'api'})
+    });
+    if(!r.ok)throw new Error('Auth failed');
+    const d=await r.json();
+    abcToken=d.access_token;
+    abcTokenExp=Date.now()+(d.expires_in||3600)*1000;
+    return abcToken;
+  }catch(e){console.error('ABC token error:',e);return null;}
+}
+
+async function abcSearchItems(query,category){
+  const token=await getAbcToken();
+  if(!token)return null; // will fall back to demo data
+  try{
+    const body={searchText:query||(category&&category!=='all'?category:'roofing'),pageSize:20};
+    const r=await fetch('https://api.abcsupply.com/product/v1/items/search',{
+      method:'POST',headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify(body)
+    });
+    if(!r.ok)throw new Error('Search failed');
+    const d=await r.json();
+    return(d.items||[]).map(item=>({
+      id:item.itemId,num:item.itemNumber,name:item.description,brand:item.brandName||'',
+      uom:item.unitOfMeasure||'EA',price:item.listPrice||0,avail:true,cat:category||'other',src:'abc'
+    }));
+  }catch(e){console.error('ABC search error:',e);return null;}
+}
+
+// Demo catalog — real ABC Supply product families with realistic pricing
+const DEMO_CATALOG=[
+  // Roofing
+  {id:'r001',num:'GAF-THD-30',name:'GAF Timberline HDZ Architectural Shingles — Charcoal',brand:'GAF',uom:'SQ',price:98.50,avail:true,cat:'Roofing'},
+  {id:'r002',num:'GAF-THD-30-BK',name:'GAF Timberline HDZ Architectural Shingles — Barkwood',brand:'GAF',uom:'SQ',price:98.50,avail:true,cat:'Roofing'},
+  {id:'r003',num:'OC-DURATION-CH',name:'Owens Corning Duration Shingles — Charcoal',brand:'Owens Corning',uom:'SQ',price:94.75,avail:true,cat:'Roofing'},
+  {id:'r004',num:'CL-LANDMARK-GR',name:'CertainTeed Landmark Shingles — Georgetown Gray',brand:'CertainTeed',uom:'SQ',price:96.20,avail:true,cat:'Roofing'},
+  {id:'r005',num:'GAF-STRT-STRP',name:'GAF Starter Strip Plus Shingles',brand:'GAF',uom:'SQ',price:47.00,avail:true,cat:'Roofing'},
+  {id:'r006',num:'GAF-RGE-CAP',name:'GAF Seal-A-Ridge Hip & Ridge Cap Shingles',brand:'GAF',uom:'BDLL',price:52.50,avail:true,cat:'Roofing'},
+  // Underlayment
+  {id:'u001',num:'GAF-FELTBUSTER',name:'GAF FeltBuster Synthetic Roofing Felt 10 SQ Roll',brand:'GAF',uom:'ROLL',price:38.90,avail:true,cat:'Underlayment'},
+  {id:'u002',num:'TRI-HW-BARR',name:'Tri-Built Hi-Walk Synthetic Underlayment 10 SQ',brand:'Tri-Built',uom:'ROLL',price:32.00,avail:true,cat:'Underlayment'},
+  {id:'u003',num:'GAF-STRMGRD-SA',name:'GAF StormGuard Film-Surfaced Ice & Water Barrier 2SQ',brand:'GAF',uom:'ROLL',price:58.40,avail:true,cat:'Underlayment'},
+  {id:'u004',num:'GRACE-ICE-WTR',name:'Grace Ice & Water Shield Peel-&-Stick 2SQ',brand:'Grace',uom:'ROLL',price:63.75,avail:true,cat:'Underlayment'},
+  // Siding
+  {id:'s001',num:'JHW-PLNK-7IN',name:'James Hardie HardiePlank 7" Exposure Lap Siding — Smooth',brand:'James Hardie',uom:'SQ',price:187.00,avail:true,cat:'Siding'},
+  {id:'s002',num:'JHW-PLNK-6.25',name:'James Hardie HardiePlank 6.25" Cedarmill Lap Siding',brand:'James Hardie',uom:'SQ',price:192.50,avail:true,cat:'Siding'},
+  {id:'s003',num:'MNSD-CARRIAGE-7',name:'Mastic Home Exteriors Carriage House 7" D4 Vinyl Siding',brand:'Mastic',uom:'SQ',price:89.00,avail:true,cat:'Siding'},
+  {id:'s004',num:'CL-MONOGRAM-4',name:'CertainTeed Monogram Vinyl Siding 4" D5 Double',brand:'CertainTeed',uom:'SQ',price:95.25,avail:true,cat:'Siding'},
+  // Gutters
+  {id:'g001',num:'ABC-5K-WH-10',name:'5" K-Style Seamless Aluminum Gutter — White 10ft',brand:'ABC Supply',uom:'LF',price:2.85,avail:true,cat:'Gutters'},
+  {id:'g002',num:'ABC-6K-WH-10',name:'6" K-Style Seamless Aluminum Gutter — White 10ft',brand:'ABC Supply',uom:'LF',price:3.45,avail:true,cat:'Gutters'},
+  {id:'g003',num:'ABC-5K-BRZ-10',name:'5" K-Style Seamless Aluminum Gutter — Brown 10ft',brand:'ABC Supply',uom:'LF',price:2.85,avail:true,cat:'Gutters'},
+  {id:'g004',num:'ABC-5K-DWN-10',name:'3" Round Aluminum Downspout 10ft — White',brand:'ABC Supply',uom:'LF',price:2.15,avail:true,cat:'Gutters'},
+  {id:'g005',num:'ABC-ELB-A',name:'Aluminum Elbow Type A — White',brand:'ABC Supply',uom:'EA',price:3.20,avail:true,cat:'Gutters'},
+  {id:'g006',num:'ABC-ELB-B',name:'Aluminum Elbow Type B — White',brand:'ABC Supply',uom:'EA',price:3.20,avail:true,cat:'Gutters'},
+  // Soffit & Fascia
+  {id:'f001',num:'MNSD-SFF-12-WH',name:'Mastic Solid Vinyl Soffit 12" — White 12ft',brand:'Mastic',uom:'EA',price:14.50,avail:true,cat:'Soffit'},
+  {id:'f002',num:'MNSD-SFF-16-WH',name:'Mastic Vented Vinyl Soffit 16" — White 12ft',brand:'Mastic',uom:'EA',price:16.75,avail:true,cat:'Soffit'},
+  {id:'f003',num:'AL-FSC-WH-12',name:'Aluminum Pre-Painted Fascia Coil 12" — White',brand:'ABC Supply',uom:'LF',price:3.60,avail:true,cat:'Soffit'},
+  {id:'f004',num:'AL-FSC-BR-12',name:'Aluminum Pre-Painted Fascia Coil 12" — Brown',brand:'ABC Supply',uom:'LF',price:3.60,avail:true,cat:'Soffit'},
+  // Flashing
+  {id:'fl001',num:'OATEY-PIPE-FL',name:'Oatey No-Calk 3" Pipe Flashing',brand:'Oatey',uom:'EA',price:18.90,avail:true,cat:'Flashing'},
+  {id:'fl002',num:'AL-STEP-FL',name:'Aluminum Step Flashing 4x4x8 — Galvanized',brand:'ABC Supply',uom:'BDL',price:28.50,avail:true,cat:'Flashing'},
+  {id:'fl003',num:'AL-DRP-EDGE-10',name:'Aluminum Drip Edge 3" x 10ft — White',brand:'ABC Supply',uom:'EA',price:4.75,avail:true,cat:'Flashing'},
+  // Fasteners
+  {id:'fn001',num:'BLD-NAIL-1.75',name:'Bostitch Coil Roofing Nails 1-3/4" 7200ct',brand:'Bostitch',uom:'BX',price:46.80,avail:true,cat:'Fasteners'},
+  {id:'fn002',num:'ITW-SIDNG-NAIL',name:'ITW Paslode Siding Nails 2.5" Coil 3600ct',brand:'ITW Paslode',uom:'BX',price:52.40,avail:true,cat:'Fasteners'},
+  {id:'fn003',num:'ZIP-SCR-1.25',name:'Zip System Tape 3-3/4" x 90ft',brand:'Huber Engineered',uom:'ROLL',price:34.20,avail:true,cat:'Fasteners'},
+];
+
+function setMatCat(cat){
+  matCatFilter=cat;
+  document.querySelectorAll('.mat-cat-tab').forEach(t=>t.classList.toggle('active',t.textContent.toLowerCase().includes(cat==='all'?'all':cat.toLowerCase())));
+  renderMatResults(getFilteredCatalog(document.getElementById('matSearch')?.value||''));
+}
+
+function getFilteredCatalog(q){
+  let items=DEMO_CATALOG;
+  if(matCatFilter!=='all') items=items.filter(i=>i.cat.toLowerCase().includes(matCatFilter.toLowerCase()));
+  if(q) items=items.filter(i=>i.name.toLowerCase().includes(q.toLowerCase())||i.num.toLowerCase().includes(q.toLowerCase())||i.brand.toLowerCase().includes(q.toLowerCase()));
+  return items;
+}
+
+function debouncedMatSearch(){
+  clearTimeout(matSearchTimer);
+  matSearchTimer=setTimeout(doMatSearch,400);
+}
+
+async function doMatSearch(){
+  const q=document.getElementById('matSearch')?.value||'';
+  const resultsEl=document.getElementById('matResults');
+  if(!resultsEl)return;
+
+  // Try live ABC API first, fall back to demo
+  if(isAbcConnected()){
+    resultsEl.innerHTML='<div class="mat-loading"><div class="spinner" style="width:18px;height:18px;border-width:2px"></div> Searching ABC Supply…</div>';
+    const liveItems=await abcSearchItems(q,matCatFilter==='all'?'':matCatFilter);
+    if(liveItems){renderMatResults(liveItems);return;}
+    // fall through to demo on error
+  }
+  renderMatResults(getFilteredCatalog(q));
+}
+
+function renderMatView(){
+  // Small defer to ensure the view is visible before rendering
+  requestAnimationFrame(()=>{
+    const resultsEl=document.getElementById('matResults');
+    if(!resultsEl)return;
+    renderMatResults(getFilteredCatalog(document.getElementById('matSearch')?.value||''));
+    renderMatCart();
+    const btn=document.getElementById('abcCredsBtn');
+    if(btn){btn.className='mat-creds-btn'+(isAbcConnected()?' connected':'');btn.textContent=isAbcConnected()?'✓ ABC Connected':'🔑 ABC API';}
+  });
+}
+
+function renderMatResults(items){
+  const el=document.getElementById('matResults');
+  if(!el)return;
+  if(!items.length){el.innerHTML='<div class="mat-loading">No products found</div>';return;}
+  el.innerHTML=items.map(item=>`<div class="mat-item">
+    <div class="mat-item-info">
+      <div class="mat-item-num">${esc(item.num)} <span class="mat-badge-avail ${item.avail?'yes':'no'}">${item.avail?'IN STOCK':'UNAVAIL'}</span></div>
+      <div class="mat-item-name">${esc(item.name)}</div>
+      <div class="mat-item-brand">${esc(item.brand)}</div>
+    </div>
+    <div style="display:flex;flex-direction:column;align-items:flex-end;gap:4px;flex-shrink:0">
+      <div class="mat-item-price">$${parseFloat(item.price||0).toFixed(2)}</div>
+      <div class="mat-item-uom">per ${esc(item.uom||'EA')}</div>
+      <button class="mat-item-add" onclick="addToMatCart(${JSON.stringify(JSON.stringify(item))})">+ Add</button>
+    </div>
+  </div>`).join('');
+}
+
+function addToMatCart(itemJson){
+  const item=JSON.parse(itemJson);
+  const existing=matCart.find(c=>c.id===item.id);
+  if(existing)existing.qty++;
+  else matCart.push({...item,qty:1});
+  renderMatCart();
+}
+
+function renderMatCart(){
+  const list=document.getElementById('matCartList');
+  const total=document.getElementById('matCartTotal');
+  const count=document.getElementById('matCartCount');
+  if(!list)return;
+  if(!matCart.length){list.innerHTML='<div style="font-size:11px;color:rgba(148,163,184,.3);text-align:center;padding:20px;font-style:italic">No items added yet</div>';
+    if(total)total.textContent='$0.00';if(count)count.textContent='0 items';return;}
+  list.innerHTML=matCart.map((item,i)=>`<div class="mat-cart-item">
+    <div class="mat-cart-item-name">${esc(item.name)}</div>
+    <div class="mat-cart-item-row">
+      <div class="mat-cart-item-qty">
+        <button class="mat-qty-btn" onclick="changeCartQty(${i},-1)">−</button>
+        <span class="mat-qty-val">${item.qty}</span>
+        <button class="mat-qty-btn" onclick="changeCartQty(${i},1)">+</button>
+      </div>
+      <span class="mat-cart-item-price">$${(item.price*item.qty).toFixed(2)}</span>
+      <button class="mat-cart-item-del" onclick="removeFromCart(${i})">×</button>
+    </div>
+  </div>`).join('');
+  const sub=matCart.reduce((s,i)=>s+i.price*i.qty,0);
+  if(total)total.textContent='$'+sub.toFixed(2);
+  if(count)count.textContent=matCart.reduce((s,i)=>s+i.qty,0)+' items';
+}
+
+function changeCartQty(i,delta){
+  matCart[i].qty=Math.max(1,matCart[i].qty+delta);
+  renderMatCart();
+}
+function removeFromCart(i){matCart.splice(i,1);renderMatCart();}
+
+function addMatListToEstimate(){
+  if(!matCart.length)return;
+  openDocEditor();
+  matCart.forEach(item=>addLI('material',{desc:item.name+' ('+item.num+') — '+item.qty+' '+item.uom,qty:item.qty,price:item.price}));
+  updateDocTotals();
+  updateDocPreview(collectDoc({}));
+  switchMain('est');
+}
+
+function exportMatList(){
+  if(!matCart.length)return;
+  const rows=['Item #,Description,Brand,Qty,UOM,Unit Price,Total'];
+  matCart.forEach(i=>rows.push([i.num,'"'+i.name+'"',i.brand,i.qty,i.uom,i.price.toFixed(2),(i.price*i.qty).toFixed(2)].join(',')));
+  const blob=new Blob([rows.join('\n')],{type:'text/csv'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='material_list.csv';a.click();
+}
+
+function toggleAbcCreds(){
+  abcCredsVisible=!abcCredsVisible;
+  const el=document.getElementById('matResults');
+  if(!el)return;
+  if(abcCredsVisible){
+    const c=getAbcCreds();
+    el.innerHTML=`<div class="mat-creds-panel">
+      <h3>🔑 ABC SUPPLY API CREDENTIALS</h3>
+      <p style="font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.5">Enter your ABC Supply API credentials from the <a href="https://developer.abcsupply.com" target="_blank" style="color:var(--amber)">ABC Developer Portal</a>. You need an approved ABC Supply customer account to access the live API. Without credentials, the app uses a demo product catalog.</p>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div class="doc-field"><label class="doc-flbl">Client ID</label><input class="doc-finput" id="abcClientId" value="${esc(c.clientId||'')}" placeholder="Your Okta client_id" autocomplete="off"/></div>
+        <div class="doc-field"><label class="doc-flbl">Client Secret</label><input class="doc-finput" id="abcClientSecret" type="password" value="${esc(c.clientSecret||'')}" placeholder="Your Okta client_secret" autocomplete="off"/></div>
+        <div class="doc-field"><label class="doc-flbl">Sold-To Account # (optional)</label><input class="doc-finput" id="abcSoldTo" value="${esc(c.soldTo||'')}" placeholder="Your ABC Supply account number" autocomplete="off"/></div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:14px;">
+        <button class="btn btn-amber btn-sm" onclick="saveAbcCreds()">Save & Connect</button>
+        ${c.clientId?'<button class="btn btn-danger btn-sm" onclick="clearAbcCreds()">Disconnect</button>':''}
+        <button class="btn btn-ghost btn-sm" onclick="toggleAbcCreds()">Cancel</button>
+      </div>
+    </div>`;
+  } else {
+    renderMatView();
+  }
+}
+
+function saveAbcCreds(){
+  const c={clientId:document.getElementById('abcClientId').value.trim(),clientSecret:document.getElementById('abcClientSecret').value.trim(),soldTo:document.getElementById('abcSoldTo').value.trim()};
+  setAbcCreds(c);abcCredsVisible=false;abcToken=null;abcTokenExp=0;
+  document.getElementById('abcCredsBtn').className='mat-creds-btn connected';
+  document.getElementById('abcCredsBtn').textContent='✓ ABC Connected';
+  renderMatView();
+}
+function clearAbcCreds(){localStorage.removeItem('abc_creds');abcToken=null;abcTokenExp=0;abcCredsVisible=false;renderMatView();
+  document.getElementById('abcCredsBtn').className='mat-creds-btn';document.getElementById('abcCredsBtn').textContent='🔑 ABC API';}
+
+
 // ── ESTIMATE ↔ LEAD SYNC ─────────────────────────────────────
 function syncEstToLead(doc){
   // Find existing lead linked to this estimate, or match by client name
@@ -10168,6 +10603,238 @@ function syncEstToLead(doc){
     renderCRM();
   }
 }
+
+// ── MATERIAL LIST OVERLAY ─────────────────────────────────────
+let matlistContext=null; // {type:'doc'|'lead'|'job', id:string}
+let matlistItems=[]; // current list items
+let matlistCat='all';
+let matlistTimer=null;
+const MATLIST_CATS=['all','Roofing','Siding','Gutters','Soffit','Underlayment','Flashing','Fasteners'];
+
+function openMatListOverlay(contextType, contextId){
+  matlistContext={type:contextType, id:contextId||editDocId};
+  // Pre-load existing list if context has one
+  matlistItems=[];
+  if(contextType==='lead'&&contextId){
+    const l=leads.find(x=>x.id===contextId);
+    if(l&&l.matList) matlistItems=[...l.matList];
+  } else if(contextType==='doc'&&(contextId||editDocId)){
+    const did=contextId||editDocId;
+    loadDocs();
+    const d=docs.find(x=>x.id===did);
+    if(d&&d.matList) matlistItems=[...d.matList];
+  } else if(contextType==='job'&&contextId){
+    const j=jobs.find(x=>x.id===contextId);
+    if(j&&j.matList) matlistItems=[...j.matList];
+  }
+  // Update context label
+  const lbl=document.getElementById('matlistContextLabel');
+  if(lbl){
+    if(contextType==='doc') lbl.textContent='→ Estimate/Invoice';
+    else if(contextType==='lead'){const l=leads.find(x=>x.id===contextId);lbl.textContent='→ '+esc(l?.name||'Lead');}
+    else if(contextType==='job'){const j=jobs.find(x=>x.id===contextId);lbl.textContent='→ '+esc(j?.title||'Job');}
+  }
+  matlistCat='all';
+  document.querySelectorAll('.matlist-cat-btn').forEach(b=>b.classList.toggle('active',b.textContent.trim()==='ALL'));
+  renderMatlistCatalog('');
+  renderMatlistAdded();
+  document.getElementById('matlistOverlay').classList.add('open');
+  setTimeout(()=>document.getElementById('matlistSearch')?.focus(),150);
+}
+
+function closeMatListOverlay(){
+  document.getElementById('matlistOverlay').classList.remove('open');
+}
+
+function setMatlistCat(cat){
+  matlistCat=cat;
+  document.querySelectorAll('.matlist-cat-btn').forEach(b=>b.classList.toggle('active',
+    cat==='all'?b.textContent.trim()==='ALL':b.textContent.trim().toLowerCase().includes(cat.toLowerCase())
+  ));
+  renderMatlistCatalog(document.getElementById('matlistSearch')?.value||'');
+}
+
+function matlistDebouncedSearch(){
+  clearTimeout(matlistTimer);
+  matlistTimer=setTimeout(()=>matlistDoSearch(),350);
+}
+
+async function matlistDoSearch(){
+  const q=document.getElementById('matlistSearch')?.value||'';
+  const catalog=document.getElementById('matlistCatalog');
+  if(!catalog)return;
+  if(isAbcConnected()){
+    catalog.innerHTML='<div class="mat-loading"><div class="spinner" style="width:16px;height:16px;border-width:2px"></div> Searching ABC Supply…</div>';
+    const live=await abcSearchItems(q,matlistCat==='all'?'':matlistCat);
+    if(live){renderMatlistCatalog(q,live);return;}
+  }
+  renderMatlistCatalog(q);
+}
+
+function renderMatlistCatalog(q, items){
+  const catalog=document.getElementById('matlistCatalog');
+  if(!catalog)return;
+  const list=items||getFilteredCatalog(q); // reuse existing catalog filter
+  if(!list.length){catalog.innerHTML='<div style="padding:20px;text-align:center;color:var(--muted);font-size:12px">No products found</div>';return;}
+  catalog.innerHTML=list.map(item=>`
+    <div class="mat-item" style="padding:7px 10px;">
+      <div class="mat-item-info">
+        <div class="mat-item-num">${esc(item.num)}</div>
+        <div class="mat-item-name" style="font-size:11px">${esc(item.name)}</div>
+        <div class="mat-item-brand" style="font-size:9px">${esc(item.brand)} · ${esc(item.uom)}</div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px">
+        <div class="mat-item-price" style="font-size:13px">$${parseFloat(item.price||0).toFixed(2)}</div>
+        <button class="mat-item-add" style="font-size:10px;padding:4px 8px;" onclick='addToMatlist(${JSON.stringify(JSON.stringify(item))})'>+ Add</button>
+      </div>
+    </div>`).join('');
+}
+
+function addToMatlist(itemJson){
+  const item=JSON.parse(itemJson);
+  const ex=matlistItems.find(x=>x.id===item.id);
+  if(ex) ex.qty=(ex.qty||1)+1;
+  else matlistItems.push({...item,qty:1});
+  renderMatlistAdded();
+}
+
+function renderMatlistAdded(){
+  const el=document.getElementById('matlistAddedList');
+  const cnt=document.getElementById('matlistAddedCount');
+  const tot=document.getElementById('matlistTotal');
+  if(!el)return;
+  if(!matlistItems.length){
+    el.innerHTML='<div style="padding:16px;text-align:center;color:rgba(148,163,184,.3);font-size:11px;font-style:italic">No items added</div>';
+    if(cnt)cnt.textContent='0 items';
+    if(tot)tot.textContent='$0.00';
+    return;
+  }
+  el.innerHTML=matlistItems.map((item,i)=>`
+    <div class="matlist-added-item">
+      <div class="matlist-added-name">${esc(item.name)}</div>
+      <div class="matlist-added-row">
+        <button class="mat-qty-btn" onclick="matlistQtyChange(${i},-1)">−</button>
+        <span class="mat-qty-val" style="font-size:11px">${item.qty||1}</span>
+        <button class="mat-qty-btn" onclick="matlistQtyChange(${i},1)">+</button>
+        <span style="flex:1;font-size:10px;color:var(--muted);text-align:right">$${((item.price||0)*(item.qty||1)).toFixed(2)}</span>
+        <button class="mat-cart-item-del" onclick="matlistItems.splice(${i},1);renderMatlistAdded()">×</button>
+      </div>
+    </div>`).join('');
+  const total=matlistItems.reduce((s,i)=>s+(i.price||0)*(i.qty||1),0);
+  if(cnt)cnt.textContent=matlistItems.reduce((s,i)=>s+(i.qty||1),0)+' items';
+  if(tot)tot.textContent='$'+total.toFixed(2);
+}
+
+function matlistQtyChange(i,delta){
+  matlistItems[i].qty=Math.max(1,(matlistItems[i].qty||1)+delta);
+  renderMatlistAdded();
+}
+
+function matlistClear(){matlistItems=[];renderMatlistAdded();}
+
+function matlistAttach(){
+  if(!matlistItems.length)return;
+  const ctx=matlistContext;
+  if(!ctx)return;
+  if(ctx.type==='lead'){
+    const l=leads.find(x=>x.id===ctx.id);
+    if(l){l.matList=[...matlistItems];saveLead(l);lsSet('leads_cache',leads.map(leadToDb));if(mainView==='crm')renderCRM();}
+  } else if(ctx.type==='doc'){
+    loadDocs();
+    const d=docs.find(x=>x.id===ctx.id);
+    if(d){d.matList=[...matlistItems];saveDocs();saveDocSync(d);}
+    // Also add as line items to estimate
+    matlistSendToEstimate();
+    return;
+  } else if(ctx.type==='job'){
+    const j=jobs.find(x=>x.id===ctx.id);
+    if(j){j.matList=[...matlistItems];
+      j.checklist=(j.checklist||[]).concat(matlistItems.map(m=>({text:m.name+' x'+(m.qty||1)+' ('+m.num+')',done:false})));
+      saveJob(j);renderSched();}
+  }
+  closeMatListOverlay();
+}
+
+function matlistSendToEstimate(){
+  if(!matlistItems.length)return;
+  // Ensure doc editor is open
+  if(!editDocId) openDocEditor();
+  matlistItems.forEach(item=>{
+    addLI('material',{
+      desc:item.name+' ('+item.num+') — '+item.uom,
+      qty:item.qty||1,
+      price:item.price||0
+    });
+  });
+  updateDocTotals();
+  loadDocs();
+  updateDocPreview(collectDoc(docs.find(x=>x.id===editDocId)||{}));
+  closeMatListOverlay();
+  // Open doc editor if not already open
+  document.getElementById('docEditor').classList.add('open');
+}
+
+function matlistExportCsv(){
+  if(!matlistItems.length)return;
+  const rows=['Item #,Description,Brand,Qty,UOM,Unit Price,Total'];
+  matlistItems.forEach(i=>rows.push([i.num,'"'+i.name.replace(/"/g,"'")+'"',i.brand||'',i.qty||1,i.uom||'EA',(i.price||0).toFixed(2),((i.price||0)*(i.qty||1)).toFixed(2)].join(',')));
+  const blob=new Blob([rows.join('\n')],{type:'text/csv'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='material_list.csv';a.click();
+}
+
+function matlistPrintPdf(){
+  if(!matlistItems.length)return;
+  const co=getCompany();
+  const total=matlistItems.reduce((s,i)=>s+(i.price||0)*(i.qty||1),0);
+  const rows=matlistItems.map(i=>`<tr>
+    <td>${i.num||''}</td>
+    <td>${i.name||''}</td>
+    <td>${i.brand||''}</td>
+    <td style="text-align:center">${i.qty||1}</td>
+    <td style="text-align:center">${i.uom||'EA'}</td>
+    <td style="text-align:right">$${(i.price||0).toFixed(2)}</td>
+    <td style="text-align:right">$${((i.price||0)*(i.qty||1)).toFixed(2)}</td>
+  </tr>`).join('');
+  const w=window.open('','_blank');
+  w.document.write(`<!DOCTYPE html><html><head><title>Material List</title>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0;}
+    body{font-family:'DM Sans',sans-serif;background:#f8fafc;padding:24px;color:#1a1e2e;}
+    .page{background:#fff;max-width:820px;margin:0 auto;padding:28px 32px;border-radius:8px;box-shadow:0 2px 12px rgba(0,0,0,.08);}
+    .head{display:flex;align-items:flex-start;justify-content:space-between;padding-bottom:14px;border-bottom:3px solid #f59e0b;margin-bottom:18px;}
+    .co-name{font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:3px;color:#1a1e2e;}
+    .co-tag{font-size:10px;color:#64748b;letter-spacing:2px;text-transform:uppercase;margin-top:2px;}
+    .doc-type{font-family:'Bebas Neue',sans-serif;font-size:20px;letter-spacing:3px;color:#f59e0b;text-align:right;}
+    .doc-date{font-size:11px;color:#64748b;text-align:right;}
+    table{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:16px;}
+    th{background:#f1f5f9;padding:6px 8px;text-align:left;font-size:9px;font-weight:700;letter-spacing:1px;text-transform:uppercase;color:#64748b;border-bottom:1px solid #e2e8f0;}
+    th:last-child,td:last-child{text-align:right;}
+    td{padding:7px 8px;border-bottom:1px solid #f1f5f9;color:#334155;}
+    .total-row{display:flex;justify-content:flex-end;gap:20px;padding-top:10px;border-top:2px solid #1a1e2e;font-weight:700;font-size:14px;}
+    @media print{body{background:white;padding:0;}.page{box-shadow:none;border-radius:0;}}
+  </style></head><body>
+  <div class="page">
+    <div class="head">
+      <div><div class="co-name">${co.name}</div><div class="co-tag">${co.tagline}</div><div style="font-size:10px;color:#94a3b8;margin-top:2px">${co.phone} · ${co.email}</div></div>
+      <div><div class="doc-type">MATERIAL LIST</div><div class="doc-date">${new Date().toLocaleDateString()}</div></div>
+    </div>
+    <table>
+      <thead><tr><th>Item #</th><th>Description</th><th>Brand</th><th style="text-align:center">Qty</th><th style="text-align:center">UOM</th><th style="text-align:right">Unit Price</th><th style="text-align:right">Total</th></tr></thead>
+      <tbody>${rows}</tbody>
+    </table>
+    <div class="total-row"><span>TOTAL</span><span>$${total.toFixed(2)}</span></div>
+  </div>
+</body></html>`);
+  w.document.close();setTimeout(()=>w.print(),400);
+}
+
+// close overlay on bg click
+document.getElementById('matlistOverlay')?.addEventListener('click',e=>{
+  if(e.target===document.getElementById('matlistOverlay')) closeMatListOverlay();
+});
+
+
 
 // ── TIME HELPERS ─────────────────────────────────────────────
 function fmtTime(t){
@@ -11061,6 +11728,59 @@ init();
 </script>
 
 
+<!-- ═══ MATERIAL LIST OVERLAY ═══ -->
+<div class="matlist-overlay" id="matlistOverlay">
+  <div class="matlist-panel" onclick="event.stopPropagation()">
+    <div class="matlist-hdr">
+      <span class="matlist-title">📋 MATERIAL LIST</span>
+      <span id="matlistContextLabel" style="font-size:10px;color:var(--muted);font-family:'DM Sans',sans-serif;letter-spacing:0;flex:1;padding:0 8px;"></span>
+      <button class="btn btn-ghost btn-sm" onclick="closeMatListOverlay()">✕</button>
+    </div>
+    <div class="matlist-search-row">
+      <input class="matlist-search" id="matlistSearch" placeholder="Search products…" oninput="matlistDebouncedSearch()" autocomplete="off">
+    </div>
+    <div class="matlist-cat-row">
+      <button class="matlist-cat-btn active" onclick="setMatlistCat('all')">ALL</button>
+      <button class="matlist-cat-btn" onclick="setMatlistCat('Roofing')">ROOFING</button>
+      <button class="matlist-cat-btn" onclick="setMatlistCat('Siding')">SIDING</button>
+      <button class="matlist-cat-btn" onclick="setMatlistCat('Gutters')">GUTTERS</button>
+      <button class="matlist-cat-btn" onclick="setMatlistCat('Soffit')">SOFFIT</button>
+      <button class="matlist-cat-btn" onclick="setMatlistCat('Underlayment')">UNDERLAYMENT</button>
+      <button class="matlist-cat-btn" onclick="setMatlistCat('Flashing')">FLASHING</button>
+      <button class="matlist-cat-btn" onclick="setMatlistCat('Fasteners')">FASTENERS</button>
+    </div>
+    <div class="matlist-body">
+      <div class="matlist-catalog" id="matlistCatalog"></div>
+      <div class="matlist-added">
+        <div class="matlist-added-hdr">
+          <span>MY LIST</span>
+          <span id="matlistAddedCount" style="font-family:'DM Sans',sans-serif;font-size:10px;color:var(--muted);font-weight:400;letter-spacing:0;">0 items</span>
+        </div>
+        <div class="matlist-added-list" id="matlistAddedList">
+          <div style="padding:16px;text-align:center;color:rgba(148,163,184,.3);font-size:11px;font-style:italic">No items added</div>
+        </div>
+        <div class="matlist-added-footer">
+          <div class="matlist-total">
+            <span style="color:var(--muted);font-size:11px;">TOTAL</span>
+            <span class="matlist-total-val" id="matlistTotal">$0.00</span>
+          </div>
+          <div class="matlist-actions">
+            <button class="btn btn-amber btn-sm" style="width:100%;font-size:11px;" onclick="matlistAttach()">✓ Save &amp; Attach</button>
+            <button class="btn btn-ghost btn-sm" style="width:100%;font-size:10px;" onclick="matlistExportCsv()">⬇ Export CSV</button>
+            <button class="btn btn-ghost btn-sm" style="width:100%;font-size:10px;" onclick="matlistPrintPdf()">🖨 Print / PDF</button>
+            <button class="btn btn-danger btn-sm" style="width:100%;font-size:10px;" onclick="matlistClear()">✕ Clear All</button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="matlist-footer">
+      <button class="btn btn-ghost btn-sm" onclick="closeMatListOverlay()">Cancel</button>
+    </div>
+  </div>
+</div>
+
+
+<!-- ═══ TEAM MANAGER MODAL ═══ -->
 <div class="matlist-overlay" id="teamOverlay">
   <div class="team-modal" onclick="event.stopPropagation()">
     <div class="team-modal-hdr">
@@ -11336,6 +12056,8 @@ init();
   <span class="bulk-action-count" id="bulkActionCount">0 selected</span>
   <button class="btn btn-ghost btn-sm" onclick="bulkSelectAll()">Select All</button>
   <button class="btn btn-ghost btn-sm" onclick="bulkClear()">Clear</button>
+  <button class="btn btn-ghost btn-sm" onclick="bulkMarkOutcome('won')" id="bulkWonBtn" style="display:none">🏆 Mark Won</button>
+  <button class="btn btn-ghost btn-sm" onclick="bulkMarkOutcome('lost')" id="bulkLostBtn" style="display:none">✗ Mark Lost</button>
   <button class="btn btn-danger btn-sm" onclick="bulkDelete()">🗑 Delete Selected</button>
   <button class="btn btn-ghost btn-sm" onclick="exitBulkMode()">Cancel</button>
 </div>
