@@ -1789,7 +1789,7 @@ body:not(.role-owner):not(.role-manager) .role-financial-only{display:none!impor
         </div>
       </div>
     </div>
-    <input type="hidden" id="docTax" value="0"/><input type="hidden" id="docDiscount" value="0"/>
+    <input type="hidden" id="REMOVED_docTax" value="0"/><input type="hidden" id="REMOVED_docDiscount" value="0"/>
     </div><!-- end docFieldsPanel -->
     </div><!-- end doc-fields-col -->
     <!-- Resize handle -->
@@ -4671,8 +4671,7 @@ const leadToDb=l=>({id:l.id,name:l.name,contact:l.contact,phone:l.phone,email:l.
 const _parseMoData=v=>{try{return typeof v==='string'?JSON.parse(v||'{}'):(v||{});}catch{return {};}};
 const dbToDoc=r=>{
   const mo=_parseMoData(r.mat_order_data);
-  return {id:r.id,type:r.type||'estimate',status:r.status||'draft',num:r.num||'',clientName:r.client_name||'',clientContact:r.client_contact||'',clientAddr:r.client_addr||'',date:r.date||'',dueDate:r.due_date||'',scope:r.scope||'',lineItems:safeParseArr(r.line_items),tax:r.tax||0,discount:r.discount||0,notes:r.notes||'',manualTotal:r.manual_total||'',created:r.created||Date.now(),signature:r.signature||'',signatureName:r.signature_name||'',signatureDate:r.signature_date||'',leadSource:r.lead_source||'',activity:safeParseArr(r.activity),checklist:safeParseArr(r.checklist),extras:safeParseArr(r.extras),pmId:r.pm_id||'',arrival:r.arrival||'',sourceEstId:r.source_est_id||null,sourceEstNum:r.source_est_num||'',matCost:r.mat_cost!=null?r.mat_cost:'',laborCost:r.labor_cost!=null?r.labor_cost:'',otherCost:r.other_cost!=null?r.other_cost:'',outcome:r.outcome||null,closedDate:r.closed_date||null,linkedJobId:r.linked_job_id||null,qbInvoiceId:r.qb_invoice_id||null,qbPushedAt:r.qb_pushed_at||null,
-  // Material order fields (stored as JSON)
+  return {id:r.id,type:r.type||'estimate',status:r.status||'draft',num:r.num||'',clientName:r.client_name||'',clientContact:r.client_contact||'',clientAddr:r.client_addr||'',date:r.date||'',dueDate:r.due_date||'',scope:r.scope||'',lineItems:safeParseArr(r.line_items),  // Material order fields (stored as JSON)
   moJobName:mo.moJobName||'',moPhone:mo.moPhone||'',moEmail:mo.moEmail||'',
   moLayers:mo.moLayers||'',moStories:mo.moStories||'',moCedar:mo.moCedar||'',moRedeck:mo.moRedeck||'',
   moHouse:mo.moHouse||'',moGarage:mo.moGarage||'',moPitch:mo.moPitch||'',
@@ -6002,8 +6001,7 @@ function createEstimateForCustomer(customerId){
     dueDate:'',
     scope:'',
     lineItems:[],
-    tax:0,discount:0,
-    notes:'',
+        notes:'',
     created:Date.now(),
   };
   docs.push(newDoc);
@@ -8125,7 +8123,7 @@ const DEFAULT_COMPANY={
   address:'W141N5974 Kaul Ave, Menomonee Falls, WI 53051',
   phone:'(414) 234-3700',
   email:'info@betterview.homes',
-  license:'License #: 082200823-DC',
+  license:'082200823-DC',
   website:'www.betterview.homes',
 };
 function getCompany(){
@@ -8757,9 +8755,7 @@ function collectDoc(base){
     date:document.getElementById('docDate').value,
     dueDate:document.getElementById('docDueDate').value,
     scope:document.getElementById('docScope').value,
-    tax:parseFloat(document.getElementById('docTax').value)||0,
-    discount:parseFloat(document.getElementById('docDiscount').value)||0,
-    notes:document.getElementById('docNotes').value,
+            notes:document.getElementById('docNotes').value,
     manualTotal:(()=>{const v=document.getElementById('docManualTotal')?.value;return(v!==''&&v!=null)?parseFloat(v):''})(),
     lineItems:items,
     num:bareNum,
@@ -10589,7 +10585,7 @@ function syncEstToLead(doc){
     lsSet('leads_cache',leads.map(leadToDb));
   } else if(doc.clientName){
     const newLead={
-      id:uid(),name:doc.clientName,contact:doc.clientContact||'',phone:'',email:'',
+      id:uid(),name:doc.clientName,contact:doc.clientContact||'',phone:'(414) 234-3700',email:'info@betterview.homes',
       types:[],value:total.grand.toFixed(2),stage:'quote',
       address:doc.clientAddr||'',notes:doc.scope||'',color:'blue',
       estId:doc.id,matList:[],
@@ -11471,9 +11467,7 @@ function saveAsTemplate(){
     name,
     scope:document.getElementById('docScope')?.value||'',
     lineItems:items,
-    tax:0,
-    discount:0,
-    notes:document.getElementById('docNotes')?.value||'',
+            notes:document.getElementById('docNotes')?.value||'',
     created:Date.now(),
   };
   loadTemplates();
