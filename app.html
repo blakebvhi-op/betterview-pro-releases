@@ -17,8 +17,8 @@
 <title>Better View Pro</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;600;700&display=swap" onload="this.onload=null;this.rel='stylesheet'">
-<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600&family=JetBrains+Mono:wght@400;600;700&display=swap"></noscript>
+<link rel="preload" as="style" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600&display=swap" onload="this.onload=null;this.rel='stylesheet'">
+<noscript><link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;600&display=swap"></noscript>
 <style>
 :root{
   --steel:#1a1e2e;--steel-mid:#252b3d;--steel-light:#2f3650;--iron:#3b4466;
@@ -27,87 +27,10 @@
   --green:#22c55e;--blue:#3b82f6;--purple:#a855f7;
   --pink:#ec4899;--teal:#14b8a6;--orange:#f97316;
   --hh:56px;--bnh:60px;
-  --app-font:'DM Sans',sans-serif;
-  --display-font:'Bebas Neue',sans-serif;
-}
-
-/* ──────────────────────────────────────────────────────────────
-   CLIPBOARD THEME — Foreman's Clipboard
-   Manila paper, mono fonts, iron + burnt orange.
-   Activated by setting <html data-theme="clipboard"> via the
-   theme picker. Owner-only access (gated in JS).
-   ──────────────────────────────────────────────────────────── */
-:root[data-theme="clipboard"]{
-  /* Base palette — manila paper + iron-gall ink + burnt orange */
-  --steel:#1e1a14;          /* deep ink (dark mode equivalent of canvas) */
-  --steel-mid:#2a241b;      /* card / surface */
-  --steel-light:#3a3225;    /* hover surface */
-  --iron:#5a4f3d;           /* warm tan border */
-  --amber:#c2410c;          /* burnt orange — primary accent */
-  --amber-bright:#ea580c;
-  --amber-dim:#9a3412;
-  --white:#e8e1d2;          /* parchment text — softer than pure white */
-  --muted:#a89e88;          /* aged tan for muted */
-  --danger:#a83232;         /* wax-seal red */
-  --green:#3d7d3f;          /* moss for paid/done */
-  --blue:#4a6b8a;           /* slate blue */
-  --purple:#8a5e74;          /* dusty purple */
-  --pink:#b95a73;
-  --teal:#4c8a7e;
-  --orange:#c2410c;
-  --app-font:'JetBrains Mono','Courier New',monospace;
-  --display-font:'JetBrains Mono','Courier New',monospace;
-}
-/* Same theme, light mode — manila paper instead of dark ink */
-:root[data-theme="clipboard-light"]{
-  --steel:#ece6d8;          /* manila paper */
-  --steel-mid:#f5f0e3;      /* card */
-  --steel-light:#e0d8c2;    /* hover */
-  --iron:#1c1a17;           /* iron-gall ink lines */
-  --amber:#c2410c;
-  --amber-bright:#9a3412;
-  --amber-dim:#b45309;
-  --white:#181613;          /* dark ink text */
-  --muted:#6c625a;
-  --danger:#7a2828;
-  --green:#156e44;
-  --blue:#3a5878;
-  --purple:#7a4860;
-  --pink:#a04a64;
-  --teal:#3a6b62;
-  --orange:#b45309;
-  --app-font:'JetBrains Mono','Courier New',monospace;
-  --display-font:'JetBrains Mono','Courier New',monospace;
-}
-/* Bright primary text on clipboard should NOT be the inverted brand color.
-   The brand mark in the header uses --amber for the logo. Override here
-   so it doesn't fight the dark-on-paper aesthetic. */
-:root[data-theme="clipboard"] body,
-:root[data-theme="clipboard-light"] body{
-  font-family: var(--app-font);
-  letter-spacing: .01em;
-}
-:root[data-theme="clipboard"] .logo,
-:root[data-theme="clipboard-light"] .logo,
-:root[data-theme="clipboard"] .dtab,
-:root[data-theme="clipboard-light"] .dtab,
-:root[data-theme="clipboard"] .bnlbl,
-:root[data-theme="clipboard-light"] .bnlbl{
-  font-family: var(--display-font);
-  letter-spacing: .15em;
-}
-/* Subtle paper-grain texture on the clipboard-light theme */
-:root[data-theme="clipboard-light"] body::before{
-  content: ''; position: fixed; inset: 0; pointer-events: none;
-  background-image: repeating-linear-gradient(
-    0deg, transparent 0, transparent 23px,
-    rgba(28,26,23,.04) 23px, rgba(28,26,23,.04) 24px
-  );
-  opacity: .35; z-index: 0;
 }
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent;}
 html,body{height:100%;overscroll-behavior:none;}
-body{font-family:var(--app-font);background:var(--steel);color:var(--white);overflow:hidden;}
+body{font-family:'DM Sans',sans-serif;background:var(--steel);color:var(--white);overflow:hidden;}
 
 /* ── HEADER ── */
 header{position:fixed;top:0;left:0;right:0;z-index:50;height:var(--hh);display:flex;align-items:center;justify-content:space-between;padding:0 14px;background:var(--steel-mid);border-bottom:2px solid var(--amber);box-shadow:0 2px 16px rgba(0,0,0,.4);}
@@ -350,8 +273,7 @@ header{position:fixed;top:0;left:0;right:0;z-index:50;height:var(--hh);display:f
 .lcacts{display:flex;gap:4px;margin-top:8px;flex-wrap:wrap;}
 .abanner{background:linear-gradient(135deg,rgba(34,197,94,.15),rgba(34,197,94,.05));border:1px solid rgba(34,197,94,.3);border-radius:5px;padding:5px 9px;margin-top:6px;font-size:10px;color:var(--green);display:flex;align-items:center;gap:5px;}
 .lempty{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:48px 24px;gap:12px;text-align:center;}
-
-/* ── CUSTOMER CARDS (Phase 3 — replaces lead cards on CRM tab) ── */
+/* ── CUSTOMER CARDS + DETAIL ── (ported from June 15) */
 .cust-card{padding:14px 16px;border:1px solid var(--iron);border-radius:10px;background:var(--bg-card,#1a1c20);margin-bottom:8px;cursor:pointer;transition:border-color .12s,transform .12s;}
 .cust-card:hover{border-color:var(--amber);transform:translateY(-1px);}
 .cust-name-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px;}
@@ -364,12 +286,27 @@ header{position:fixed;top:0;left:0;right:0;z-index:50;height:var(--hh);display:f
 .cust-meta-row{display:flex;gap:14px;align-items:center;font-size:11px;color:var(--muted);margin-top:6px;padding-top:6px;border-top:1px solid var(--iron);}
 .cust-est-count{font-weight:600;color:var(--ink,#d8d4c4);}
 .cust-pipe-val{color:var(--amber);font-weight:600;font-variant-numeric:tabular-nums;}
-/* Customer detail modal */
 .cust-sec-label{font-size:10px;font-weight:700;letter-spacing:.18em;color:var(--muted);text-transform:uppercase;margin-bottom:8px;}
 .cust-stat-box{background:var(--bg-soft,#13151a);border:1px solid var(--iron);border-radius:8px;padding:10px 12px;text-align:center;}
 .cust-stat-label{font-size:9px;font-weight:700;letter-spacing:.18em;color:var(--muted);text-transform:uppercase;margin-bottom:2px;}
 .cust-stat-num{font-size:18px;font-weight:700;color:var(--ink-bright,#fff);font-variant-numeric:tabular-nums;}
 .cust-tag-x:hover{opacity:.6;}
+/* Standalone .modal.show — for customer detail, tag picker, tag library, new customer */
+.modal.show{
+  position:fixed; inset:0; z-index:9000;
+  background:rgba(0,0,0,.7);
+  display:flex; align-items:center; justify-content:center;
+  padding:20px; border-radius:0; border-top:0;
+  transform:none; max-height:none; overflow:hidden;
+}
+.modal.show .modal-content{
+  background:var(--steel-mid);
+  border:1px solid var(--iron);
+  border-top:2px solid var(--amber);
+  border-radius:12px;
+  width:100%; max-width:560px; max-height:92vh;
+  overflow-y:auto;
+}
 .stage-new{--sc:#3b82f6;}.stage-contact{--sc:#a855f7;}.stage-quote{--sc:#f59e0b;}.stage-accepted{--sc:#22c55e;}.stage-invoiced{--sc:#0ea5e9;}.stage-paid{--sc:#10b981;}.stage-declined{--sc:#ef4444;}.stage-done{--sc:#14b8a6;}
 /* Invoiced/Paid badges — independent of stage so a card can show both */
 .invoiced-badge{background:rgba(14,165,233,.12)!important;color:#0ea5e9!important;border:1px solid rgba(14,165,233,.4)!important;font-weight:700;}
@@ -393,23 +330,6 @@ header{position:fixed;top:0;left:0;right:0;z-index:50;height:var(--hh);display:f
 .mov.open{opacity:1;pointer-events:all;}
 .modal{background:var(--steel-mid);border-radius:18px 18px 0 0;border-top:2px solid var(--amber);width:100%;max-height:92vh;overflow-y:auto;padding:16px 16px calc(16px + env(safe-area-inset-bottom,0));transform:translateY(100%);transition:transform .3s cubic-bezier(.32,0,.67,0);}
 .mov.open .modal{transform:translateY(0);transition:transform .3s cubic-bezier(.33,1,.68,1);}
-/* Standalone .modal.show — used by customer detail, tag picker, tag library, new customer.
-   These modals are NOT inside a .mov wrapper, so we make .modal.show its own overlay. */
-.modal.show{
-  position:fixed; inset:0; z-index:9000;
-  background:rgba(0,0,0,.7);
-  display:flex; align-items:center; justify-content:center;
-  padding:20px; border-radius:0; border-top:0;
-  transform:none; max-height:none; overflow:hidden;
-}
-.modal.show .modal-content{
-  background:var(--steel-mid);
-  border:1px solid var(--iron);
-  border-top:2px solid var(--amber);
-  border-radius:12px;
-  width:100%; max-width:560px; max-height:92vh;
-  overflow-y:auto;
-}
 .mhandle{width:34px;height:4px;background:var(--iron);border-radius:2px;margin:0 auto 12px;}
 .mtitle{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;color:var(--amber);margin-bottom:13px;}
 .fg{margin-bottom:12px;}
@@ -1349,7 +1269,6 @@ body:not(.role-owner):not(.role-manager) .role-financial-only{display:none!impor
       <div class="user-menu-item role-owner-only" id="qbConnectMenuItem" onclick="openQbConnect()"><span id="qbConnectIcon">🟢</span><span id="qbConnectLabel">Connect QuickBooks</span></div>
       <div class="user-menu-item role-financial-only" id="reportsMenuItem" onclick="openReports()"><span>📊</span><span>Reports</span></div>
       <div class="user-menu-item" id="resyncMenuItem" onclick="manualResync()"><span>🔄</span><span>Resync</span></div>
-      <div class="user-menu-item" id="themePickerMenuItem" onclick="openThemePicker()" style="display:none"><span>🎨</span><span>Theme</span></div>
       <div class="user-menu-item danger" onclick="doSignOut()"><span>⏏</span><span>Sign Out</span></div>
     </div>
     <div class="sync-dot" id="syncDot"></div>
@@ -1593,7 +1512,7 @@ body:not(.role-owner):not(.role-manager) .role-financial-only{display:none!impor
     </div>
     <div class="lead-search-bar">
       <span class="lead-search-icon">🔍</span>
-      <input type="search" id="leadSearch" class="lead-search-input" placeholder="Search customer name, phone, email, or address…" autocomplete="off"/>
+      <input type="search" id="leadSearch" class="lead-search-input" placeholder="Search by name, phone, email, or address…" autocomplete="off"/>
       <button type="button" class="lead-search-clear" id="leadSearchClear" title="Clear">×</button>
       <select id="leadSortSelect" class="lead-sort-select" onchange="setLeadSort(this.value)" title="Sort">
         <option value="default">↕ Default order</option>
@@ -1789,7 +1708,7 @@ body:not(.role-owner):not(.role-manager) .role-financial-only{display:none!impor
         </div>
       </div>
     </div>
-    <input type="hidden" id="REMOVED_docTax" value="0"/><input type="hidden" id="REMOVED_docDiscount" value="0"/>
+    <input type="hidden" id="docTax" value="0"/><input type="hidden" id="docDiscount" value="0"/>
     </div><!-- end docFieldsPanel -->
     </div><!-- end doc-fields-col -->
     <!-- Resize handle -->
@@ -1904,7 +1823,7 @@ body:not(.role-owner):not(.role-manager) .role-financial-only{display:none!impor
       </div>
     </div>
     <div class="macts">
-      <button class="btn btn-ghost" onclick="dropUnsavedAutoLeads();closeMov('jMov')">Cancel</button>
+      <button class="btn btn-ghost" onclick="closeMov('jMov')">Cancel</button>
       <button class="btn btn-ghost" id="jCrewLink" onclick="copyCrewLink()" style="display:none">📋 Crew Link</button>
       <button class="btn btn-amber" id="jSave">Add Job</button>
     </div>
@@ -2609,55 +2528,17 @@ async function onClockMainBtn(){
   return clockDoClockIn();
 }
 
-// ── GPS helper (shared by clock-in and clock-out paths) ──────────────
-// Promise wrapper around navigator.geolocation. Same policy as the crew
-// page: required on every clock action, 10s timeout, accept a recent
-// cached fix (under 30s) to avoid forcing a fresh GPS lock when the
-// user just opened the page.
-function clockGetLocation(){
-  return new Promise((resolve,reject)=>{
-    if(!navigator.geolocation){
-      reject(new Error('This device does not support location services.'));
-      return;
-    }
-    navigator.geolocation.getCurrentPosition(
-      pos=>resolve({lat:pos.coords.latitude,lng:pos.coords.longitude}),
-      err=>{
-        if(err.code===1) reject(new Error('Location permission denied.\n\nTap the lock icon in your address bar → Permissions → Location → Allow. Then try again.'));
-        else if(err.code===2) reject(new Error('Could not determine location. Move outside or near a window for better GPS signal.'));
-        else if(err.code===3) reject(new Error('Location request timed out. Check that GPS is on and try again.'));
-        else reject(new Error('Location error: '+(err.message||'unknown')));
-      },
-      {enableHighAccuracy:true,timeout:10000,maximumAge:30000}
-    );
-  });
-}
-
 async function clockDoClockIn(){
   if(!currentUser?.id||!currentCompanyId){alert('Not signed in.');return;}
   const jobId=document.getElementById('clockJobPicker')?.value||null;
   const btn=document.getElementById('clockMainBtn');
-  btn.disabled=true;btn.textContent='Getting location…';
-
-  // GPS is required to clock in. If denied, block the clock-in entirely.
-  let coords;
-  try{
-    coords=await clockGetLocation();
-  }catch(e){
-    alert('Cannot clock in — '+e.message);
-    btn.disabled=false;btn.textContent='Clock In';
-    return;
-  }
-
-  btn.textContent='Clocking in…';
+  btn.disabled=true;btn.textContent='Clocking in…';
   const row={
     company_id:currentCompanyId,
     user_id:currentUser.id,
     job_id:jobId||null,
     clock_in:new Date().toISOString(),
     clock_out:null,
-    clock_in_lat:coords.lat,
-    clock_in_lng:coords.lng,
   };
   try{
     const r=await fetch(SB_URL+'/rest/v1/time_entries',{
@@ -2700,24 +2581,9 @@ async function clockDoClockOut(){
   // are optional per the spec anyway; if we want them back, we'll add
   // an in-modal text field rather than a popup dialog.
   const btn=document.getElementById('clockMainBtn');
-  btn.disabled=true;btn.textContent='Getting location…';
-
-  // GPS required on clock-out too. Without it we get asymmetric data
-  // (clock-in location captured, clock-out null), defeating the audit story.
-  let coords;
-  try{
-    coords=await clockGetLocation();
-  }catch(e){
-    alert('Cannot clock out — '+e.message);
-    btn.disabled=false;btn.textContent='Clock Out';
-    return;
-  }
-
-  btn.textContent='Clocking out…';
+  btn.disabled=true;btn.textContent='Clocking out…';
   const patch={
     clock_out:new Date().toISOString(),
-    clock_out_lat:coords.lat,
-    clock_out_lng:coords.lng,
   };
   try{
     const r=await fetch(SB_URL+'/rest/v1/time_entries?id=eq.'+encodeURIComponent(clockActiveEntry.id),{
@@ -3035,7 +2901,7 @@ function trRenderList(entries){
   const sorted=entries.slice().sort((a,b)=>new Date(b.clock_in)-new Date(a.clock_in));
   let html='<div style="overflow-x:auto;"><table style="width:100%;border-collapse:collapse;font-size:12px;">';
   html+='<thead><tr style="border-bottom:1px solid var(--steel-mid);">';
-  ['Employee','Day','Clock In','Clock Out','Duration','Job','Location'].forEach(h=>{
+  ['Employee','Day','Clock In','Clock Out','Duration','Job'].forEach(h=>{
     html+=`<th style="text-align:left;padding:8px 6px;color:var(--muted);font-weight:600;letter-spacing:.04em;font-size:11px;text-transform:uppercase;">${h}</th>`;
   });
   html+='</tr></thead><tbody>';
@@ -3043,21 +2909,6 @@ function trRenderList(entries){
     const inD=new Date(e.clock_in);
     const dur=e._durMs!=null?trFmtDur(e._durMs):'<span style="color:var(--amber)">(open)</span>';
     const outStr=e.clock_out?trCentralHM(new Date(e.clock_out)):'<span style="color:var(--amber)">—</span>';
-    // Build the Location cell — shows IN and OUT map links if coords were captured.
-    // Entries from before the geotag feature have null coords; show a dash.
-    const inLat=e.clock_in_lat, inLng=e.clock_in_lng;
-    const outLat=e.clock_out_lat, outLng=e.clock_out_lng;
-    let locHtml='';
-    if(inLat!=null && inLng!=null){
-      const inUrl='https://www.google.com/maps?q='+inLat+','+inLng;
-      locHtml+='<a href="'+esc(inUrl)+'" target="_blank" rel="noopener" style="color:var(--amber);text-decoration:none;" title="Clock-in location: '+esc(inLat)+', '+esc(inLng)+'">📍 In</a>';
-    }
-    if(outLat!=null && outLng!=null){
-      if(locHtml) locHtml+=' <span style="color:var(--muted);">·</span> ';
-      const outUrl='https://www.google.com/maps?q='+outLat+','+outLng;
-      locHtml+='<a href="'+esc(outUrl)+'" target="_blank" rel="noopener" style="color:var(--amber);text-decoration:none;" title="Clock-out location: '+esc(outLat)+', '+esc(outLng)+'">📍 Out</a>';
-    }
-    if(!locHtml) locHtml='<span style="color:var(--muted);">—</span>';
     html+=`<tr style="border-bottom:1px solid rgba(255,255,255,.05);">
       <td style="padding:8px 6px;font-weight:600;">${esc(trUserName(e.user_id))}</td>
       <td style="padding:8px 6px;">${esc(trCentralMD(inD))}</td>
@@ -3065,11 +2916,10 @@ function trRenderList(entries){
       <td style="padding:8px 6px;font-variant-numeric:tabular-nums;">${outStr}</td>
       <td style="padding:8px 6px;font-variant-numeric:tabular-nums;font-weight:600;">${dur}</td>
       <td style="padding:8px 6px;color:var(--muted);">${esc(trJobName(e.job_id))}</td>
-      <td style="padding:8px 6px;font-size:11px;">${locHtml}</td>
     </tr>`;
   });
   html+='</tbody></table></div>';
-  html+='<div style="margin-top:12px;font-size:10px;color:var(--muted);letter-spacing:.04em;">Times shown in Central (America/Chicago) · 📍 = GPS captured at clock-in/out</div>';
+  html+='<div style="margin-top:12px;font-size:10px;color:var(--muted);letter-spacing:.04em;">Times shown in Central (America/Chicago)</div>';
   return html;
 }
 
@@ -3769,8 +3619,6 @@ function updateUserUI(){
   }else{
     badge.style.display='none';
   }
-  // Reveal the theme picker menu item if this user is Blake (owner-only beta)
-  if(typeof refreshThemePickerVisibility==='function') refreshThemePickerVisibility();
 }
 function showAuthScreen(){
   document.getElementById('authScreen').classList.remove('hidden');
@@ -4135,101 +3983,6 @@ const DNF=['Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday
 const MO=['January','February','March','April','May','June','July','August','September','October','November','December'];
 const MOS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
-// ── THEME SYSTEM ─────────────────────────────────────────────
-// Three themes available:
-//   - 'default'         — the existing dark steel + amber look (no override)
-//   - 'clipboard'       — Foreman's Clipboard, dark variant (manila/iron/burnt orange)
-//   - 'clipboard-light' — Foreman's Clipboard, light variant
-// 
-// Persisted in localStorage. Owner-only access enforced in the picker UI.
-// Apply IMMEDIATELY on load (before render) to avoid a flash of wrong theme.
-const BLAKE_USER_ID='2c3b667d-c0e8-4aff-843f-9b724b638496';
-function canUseClipboardTheme(){
-  // Owner-only theme. The currentUser check happens after auth, so for the
-  // initial pre-auth load we trust localStorage; we revert if needed once
-  // auth completes.
-  return (currentUser && currentUser.id===BLAKE_USER_ID) || !currentUser;
-}
-function applyTheme(name){
-  const valid=['default','clipboard','clipboard-light'];
-  if(!valid.includes(name)) name='default';
-  if(name==='default'){
-    document.documentElement.removeAttribute('data-theme');
-  } else {
-    document.documentElement.setAttribute('data-theme',name);
-  }
-}
-function setTheme(name){
-  applyTheme(name);
-  try{localStorage.setItem('bvTheme',name);}catch{}
-}
-// Apply persisted theme RIGHT NOW (before any rendering)
-(function(){
-  try{
-    const saved=localStorage.getItem('bvTheme');
-    if(saved) applyTheme(saved);
-  }catch{}
-})();
-
-// Reveal the Theme menu item only for the owner (Blake) user.
-// Called after auth completes (from updateUserUI or similar).
-function refreshThemePickerVisibility(){
-  const el=document.getElementById('themePickerMenuItem');
-  if(!el) return;
-  el.style.display=(currentUser && currentUser.id===BLAKE_USER_ID) ? 'flex' : 'none';
-  // If a non-Blake user somehow has a clipboard theme set, revert
-  if(currentUser && currentUser.id!==BLAKE_USER_ID){
-    const cur=document.documentElement.getAttribute('data-theme');
-    if(cur && cur!=='default'){
-      setTheme('default');
-    }
-  }
-}
-
-// Theme picker modal — small dialog with 3 options
-function openThemePicker(){
-  if(currentUser && currentUser.id!==BLAKE_USER_ID){
-    alert('Theme picker is currently in beta and limited to the owner.');
-    return;
-  }
-  const cur=localStorage.getItem('bvTheme')||'default';
-  // Close user menu first
-  document.getElementById('userMenu')?.classList.remove('open');
-  const html=`<div class="modal show" id="themePicker" onclick="if(event.target.id==='themePicker')closeThemePicker()" style="z-index:9200">
-    <div class="modal-content" style="max-width:420px;padding:20px">
-      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px">
-        <strong style="font-size:16px">🎨 Theme</strong>
-        <button class="btn btn-ghost" onclick="closeThemePicker()" style="padding:4px 12px">Close</button>
-      </div>
-      <div style="font-size:12px;color:var(--muted);margin-bottom:14px;font-style:italic">Beta — owner only. The clipboard theme is in active testing; you may see styling stragglers. Send screenshots of any visual oddities.</div>
-      <div style="display:flex;flex-direction:column;gap:8px">
-        ${themeChoice('default','Default','Dark steel + amber (the look you know)',cur)}
-        ${themeChoice('clipboard',"Foreman's Clipboard — Dark",'Mono fonts, iron + burnt orange',cur)}
-        ${themeChoice('clipboard-light',"Foreman's Clipboard — Light",'Manila paper, dark ink',cur)}
-      </div>
-    </div>
-  </div>`;
-  const existing=document.getElementById('themePicker');
-  if(existing) existing.remove();
-  document.body.insertAdjacentHTML('beforeend',html);
-}
-function themeChoice(id,label,desc,current){
-  const active=(current===id || (id==='default' && !current));
-  return `<button onclick="pickTheme('${id}')" class="theme-choice ${active?'active':''}" style="text-align:left;padding:12px 14px;border:1px solid ${active?'var(--amber)':'var(--iron)'};border-radius:8px;background:${active?'rgba(245,158,11,.08)':'transparent'};cursor:pointer;color:var(--white);font-family:inherit;display:flex;flex-direction:column;gap:2px">
-    <span style="font-weight:600;font-size:14px">${label} ${active?'✓':''}</span>
-    <span style="font-size:11px;color:var(--muted)">${desc}</span>
-  </button>`;
-}
-function pickTheme(name){
-  setTheme(name);
-  // Re-render the picker so the active state updates without closing
-  openThemePicker();
-}
-function closeThemePicker(){
-  const m=document.getElementById('themePicker');
-  if(m) m.remove();
-}
-
 // ── STATE ────────────────────────────────────────────────────
 let jobs=[],leads=[];
 // Customer entity (added in Phase 3 refactor) — leads still exist but
@@ -4581,11 +4334,12 @@ async function fetchWeather(){
   const strip=document.getElementById('wxStrip');
   strip.innerHTML='<span class="wx-loading">Loading forecast…</span>';
   try{
-    // Default to Menomonee Falls, WI (Better View HQ). We used to call ipapi.co
-    // for IP-based geolocation, but they now reject CORS from this origin and
-    // spam the console with errors. The fallback was always Menomonee anyway,
-    // so we skip the lookup entirely.
-    const lat=43.1789, lon=-88.1170;
+    // Use IP geolocation first, fall back to a US default (Chicago)
+    let lat=41.85,lon=-87.65;
+    try{
+      const geo=await fetch('https://ipapi.co/json/');
+      if(geo.ok){const g=await geo.json();if(g.latitude){lat=g.latitude;lon=g.longitude;}}
+    }catch{}
     const url=`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_probability_max&temperature_unit=fahrenheit&timezone=auto&forecast_days=7`;
     const r=await fetch(url);
     if(!r.ok)throw new Error('wx failed');
@@ -4671,7 +4425,8 @@ const leadToDb=l=>({id:l.id,name:l.name,contact:l.contact,phone:l.phone,email:l.
 const _parseMoData=v=>{try{return typeof v==='string'?JSON.parse(v||'{}'):(v||{});}catch{return {};}};
 const dbToDoc=r=>{
   const mo=_parseMoData(r.mat_order_data);
-  return {id:r.id,type:r.type||'estimate',status:r.status||'draft',num:r.num||'',clientName:r.client_name||'',clientContact:r.client_contact||'',clientAddr:r.client_addr||'',date:r.date||'',dueDate:r.due_date||'',scope:r.scope||'',lineItems:safeParseArr(r.line_items),  // Material order fields (stored as JSON)
+  return {id:r.id,type:r.type||'estimate',status:r.status||'draft',num:r.num||'',clientName:r.client_name||'',clientContact:r.client_contact||'',clientAddr:r.client_addr||'',date:r.date||'',dueDate:r.due_date||'',scope:r.scope||'',lineItems:safeParseArr(r.line_items),tax:r.tax||0,discount:r.discount||0,notes:r.notes||'',manualTotal:r.manual_total||'',created:r.created||Date.now(),signature:r.signature||'',signatureName:r.signature_name||'',signatureDate:r.signature_date||'',leadSource:r.lead_source||'',activity:safeParseArr(r.activity),checklist:safeParseArr(r.checklist),extras:safeParseArr(r.extras),pmId:r.pm_id||'',arrival:r.arrival||'',sourceEstId:r.source_est_id||null,sourceEstNum:r.source_est_num||'',matCost:r.mat_cost!=null?r.mat_cost:'',laborCost:r.labor_cost!=null?r.labor_cost:'',otherCost:r.other_cost!=null?r.other_cost:'',outcome:r.outcome||null,closedDate:r.closed_date||null,linkedJobId:r.linked_job_id||null,qbInvoiceId:r.qb_invoice_id||null,qbPushedAt:r.qb_pushed_at||null,
+  // Material order fields (stored as JSON)
   moJobName:mo.moJobName||'',moPhone:mo.moPhone||'',moEmail:mo.moEmail||'',
   moLayers:mo.moLayers||'',moStories:mo.moStories||'',moCedar:mo.moCedar||'',moRedeck:mo.moRedeck||'',
   moHouse:mo.moHouse||'',moGarage:mo.moGarage||'',moPitch:mo.moPitch||'',
@@ -4814,13 +4569,7 @@ let _pendingJobLinkType=null; // 'wo' or 'mo'
 // the link, enters their PIN, and sees the job's scope/materials.
 async function copyCrewLink(){
   if(!editJobId){alert('Save the job first to get a crew link.');return;}
-  // Append a timestamp query param so each generated link has a unique URL.
-  // Browsers treat URLs with different query strings as different resources,
-  // forcing a fresh fetch instead of serving a stale cached job.html. This
-  // ensures crew members ALWAYS get the latest version when you re-send a
-  // link, even if their phone has the old job.html cached.
-  const v=Math.floor(Date.now()/1000);
-  const link='https://sign.betterview.homes/job.html?id='+encodeURIComponent(editJobId)+'&v='+v;
+  const link='https://sign.betterview.homes/job.html?id='+encodeURIComponent(editJobId);
   let copied=false;
   if(navigator.clipboard && navigator.clipboard.writeText){
     try{await navigator.clipboard.writeText(link);copied=true;}catch{}
@@ -4852,17 +4601,12 @@ async function delJob(id){setSS('syncing','Deleting…');delete saveQueue.jobs[i
 async function delLead(id){setSS('syncing','Deleting…');delete saveQueue.leads[id];lsSet('leads_cache',leads.map(leadToDb));try{await sb.del('leads',id);setSS('synced','Done ✓');setTimeout(()=>document.getElementById('syncLbl').textContent='',2000);}catch(e){setSS('error','Delete failed');}}
 
 // ── CUSTOMER / TAG DATA HELPERS (Phase 3) ────────────────────
-// Save helpers — same pattern as the existing queueSave-based saves.
-// These tables don't have the dbToX/xToDb conversion layer; their column
-// shape is already what the JS uses, so we save objects directly.
 function saveCustomer(c){setSS('syncing','Saving…');queueSave('customers',c);}
 function saveCustomerAddress(a){setSS('syncing','Saving…');queueSave('customer_addresses',a);}
 function saveTag(t){setSS('syncing','Saving…');queueSave('tags',t);}
 function saveCustomerTag(ct){setSS('syncing','Saving…');queueSave('customer_tags',ct);}
 function saveEstimateTag(et){setSS('syncing','Saving…');queueSave('estimate_tags',et);}
 
-// Delete helpers — straight remote deletes (no in-memory queue lookup needed
-// since we re-fetch on next render for the entities the user can edit)
 async function delCustomerTag(id){
   customerTags=customerTags.filter(ct=>ct.id!==id);
   try{await sb.del('customer_tags',id);}catch(e){console.error('delCustomerTag:',e);}
@@ -4872,46 +4616,79 @@ async function delEstimateTag(id){
   try{await sb.del('estimate_tags',id);}catch(e){console.error('delEstimateTag:',e);}
 }
 async function delTagRemote(id){
-  // Tag deletion cascades to customer_tags / estimate_tags via FK ON DELETE CASCADE.
   tags=tags.filter(t=>t.id!==id);
   customerTags=customerTags.filter(ct=>ct.tag_id!==id);
   estimateTags=estimateTags.filter(et=>et.tag_id!==id);
   try{await sb.del('tags',id);}catch(e){console.error('delTagRemote:',e);}
 }
 
-// Fetch from remote — called from loadAppData() during init.
-// Returns true on success, false on error (so caller can decide UI behavior).
 async function loadCustomersRemote(){
-  try{
-    customers=await sb.get('customers');
-    return true;
-  }catch(e){console.error('loadCustomersRemote:',e);return false;}
+  try{customers=await sb.get('customers');return true;}
+  catch(e){console.error('loadCustomersRemote:',e);return false;}
 }
 async function loadCustomerAddressesRemote(){
-  try{
-    customerAddresses=await sb.get('customer_addresses');
-    return true;
-  }catch(e){console.error('loadCustomerAddressesRemote:',e);return false;}
+  try{customerAddresses=await sb.get('customer_addresses');return true;}
+  catch(e){console.error('loadCustomerAddressesRemote:',e);return false;}
 }
 async function loadTagsRemote(){
-  try{
-    tags=await sb.get('tags');
-    return true;
-  }catch(e){console.error('loadTagsRemote:',e);return false;}
+  try{tags=await sb.get('tags');return true;}
+  catch(e){console.error('loadTagsRemote:',e);return false;}
 }
 async function loadCustomerTagsRemote(){
   try{
-    // customer_tags has no updated_at column — use sb.req directly with created_at ordering
+    // customer_tags has no updated_at column — use created_at ordering
     customerTags=await sb.req('GET','customer_tags?order=created_at.asc');
     return true;
   }catch(e){console.error('loadCustomerTagsRemote:',e);return false;}
 }
 async function loadEstimateTagsRemote(){
   try{
-    // estimate_tags has no updated_at column — use sb.req directly
     estimateTags=await sb.req('GET','estimate_tags?order=created_at.asc');
     return true;
   }catch(e){console.error('loadEstimateTagsRemote:',e);return false;}
+}
+
+// Helpers used by render functions
+function leadsForCustomer(customerId){
+  return leads.filter(l=>l.customer_id===customerId);
+}
+function addressesForCustomer(customerId){
+  return customerAddresses.filter(a=>a.customer_id===customerId);
+}
+function tagsForCustomer(customerId){
+  const ids=customerTags.filter(ct=>ct.customer_id===customerId).map(ct=>ct.tag_id);
+  return tags.filter(t=>!t.archived_at && ids.includes(t.id));
+}
+function tagsForEstimate(leadId){
+  const ids=estimateTags.filter(et=>et.lead_id===leadId).map(et=>et.tag_id);
+  return tags.filter(t=>!t.archived_at && ids.includes(t.id));
+}
+function customerPipelineValue(c){
+  return leadsForCustomer(c.id)
+    .filter(l=>l.stage!=='declined' && l.stage!=='paid' && l.stage!=='done')
+    .reduce((sum,l)=>sum+Number(l.value||0),0);
+}
+// Customer-level stage rollup
+function customerRollupStage(c){
+  const customerLeads=leadsForCustomer(c.id);
+  if(customerLeads.length===0) return null;
+  const stages=new Set(customerLeads.map(l=>l.stage));
+  if(stages.has('accepted')) return STAGES.find(s=>s.id==='accepted');
+  if(stages.has('invoiced')) return STAGES.find(s=>s.id==='invoiced');
+  if(stages.has('quote'))    return STAGES.find(s=>s.id==='quote');
+  if(stages.has('contact'))  return STAGES.find(s=>s.id==='contact');
+  if(stages.has('new'))      return STAGES.find(s=>s.id==='new');
+  if(stages.has('paid'))     return STAGES.find(s=>s.id==='paid');
+  if(stages.has('done'))     return STAGES.find(s=>s.id==='done');
+  if(stages.has('declined')) return STAGES.find(s=>s.id==='declined');
+  return null;
+}
+function formatPhone(p){
+  if(!p) return '';
+  const d=String(p).replace(/[^0-9]/g,'');
+  if(d.length===10) return `(${d.slice(0,3)}) ${d.slice(3,6)}-${d.slice(6)}`;
+  if(d.length===11 && d[0]==='1') return `(${d.slice(1,4)}) ${d.slice(4,7)}-${d.slice(7)}`;
+  return p;
 }
 
 // ── INIT ─────────────────────────────────────────────────────
@@ -5179,7 +4956,7 @@ function desktopContCard(j,dayKey){
   const isLast=dayKey===j.endDay;
   return `<div class="job-card-cont" data-id="${j.id}"
     style="border-left:3px solid ${c.hex};background:linear-gradient(90deg,rgba(${hexRgb(c.hex)},.18) 0%,var(--steel-light) 100%)"
-    onclick="openJobQuickView('${j.id}')">
+    onclick="openJobMov(null,'${j.id}')">
     <div class="job-card-cont-inner">
       <span style="font-size:9px;color:${c.hex};flex-shrink:0">${isLast?'⬛':'▶'}</span>
       <span class="job-card-cont-title">${esc(j.title)}</span>
@@ -5315,10 +5092,10 @@ function ddCard(j,d){
   const c=COLORS.find(x=>x.id===j.color)||COLORS[0];
   const lr=j.leadId?leads.find(l=>l.id===j.leadId):null;
   return `<div class="job-card" data-id="${j.id}" style="border-left-color:${c.hex};background:linear-gradient(135deg,rgba(${hexRgb(c.hex)},.1) 0%,var(--steel-light) 100%)">
-    <div class="jct" onclick="toggleCardCollapse('${j.id}',this)">
-      <div class="jtitle">${esc(j.title)}</div>
+    <div class="jct">
+      <div class="jtitle" onclick="openJobQuickView('${j.id}')" style="cursor:pointer">${esc(j.title)}</div>
       <div class="jacts" onclick="event.stopPropagation()"><button class="jbtn ebtn" data-id="${j.id}">✎</button><button class="jbtn dbtn dd-del" data-id="${j.id}" data-day="${dateKey(d)}">×</button></div>
-      <span class="jchev">▼</span>
+      <span class="jchev" onclick="toggleCardCollapse('${j.id}',this.parentElement)" style="cursor:pointer">▼</span>
     </div>
     <div class="jcard-summary">${[fmtTimeRange(j.startTime,j.endTime),j.note].filter(Boolean).map(p=>esc(p)).join(' · ')}</div>
     <div class="jcard-body">
@@ -5431,33 +5208,16 @@ function renderCRM(){
   updateBadges();bindLeadEvents();
 }
 
-// ════════════════════════════════════════════════════════════
-// CUSTOMERS VIEW (Phase 3 — customer entity as source of truth)
-// ════════════════════════════════════════════════════════════
-// Replaces the old leads-list rendering for the CRM tab.
-// Leads still exist underneath; they're now "estimates" attached to customers.
-
+// ══════════════════════════════════════════════════════════════
+// CUSTOMER / TAG UI BLOCK — ported from June 15 known-good
+// ══════════════════════════════════════════════════════════════
 let customerSearchQuery='';
 let customerSortMode='recent';  // 'recent' | 'name_asc' | 'value_desc'
 
 // Helper: get tags applied to a specific customer (returns array of tag objects)
-function tagsForCustomer(customerId){
-  const ids=customerTags.filter(ct=>ct.customer_id===customerId).map(ct=>ct.tag_id);
-  return tags.filter(t=>ids.includes(t.id) && !t.archived_at);
-}
 // Helper: get tags applied to a specific estimate (lead)
-function tagsForEstimate(leadId){
-  const ids=estimateTags.filter(et=>et.lead_id===leadId).map(et=>et.tag_id);
-  return tags.filter(t=>ids.includes(t.id) && !t.archived_at);
-}
 // Helper: get all leads (estimates) for a customer
-function leadsForCustomer(customerId){
-  return leads.filter(l=>l.customer_id===customerId);
-}
 // Helper: get all addresses for a customer
-function addressesForCustomer(customerId){
-  return customerAddresses.filter(a=>a.customer_id===customerId);
-}
 // Helper: most-recent activity timestamp for a customer
 // (uses the latest updated_at across their leads, or customer.updated_at as fallback)
 function customerLastActivity(c){
@@ -5471,46 +5231,13 @@ function customerLastActivity(c){
   return latest;
 }
 // Helper: total pipeline value across all the customer's non-declined estimates
-function customerPipelineValue(c){
-  return leadsForCustomer(c.id)
-    .filter(l=>l.stage!=='declined')
-    .reduce((sum,l)=>sum+Number(l.value||0),0);
-}
 
 // Customer-level stage rollup. Returns a STAGES entry that summarizes the
 // customer's most-important estimate stage. Priority order:
 //   active work (accepted/invoiced/paid for active flag) > quoting > contacted > new > declined-only/done > none
 // We compute it based on what the customer has across ALL their estimates.
 // Returns null if the customer has no estimates.
-function customerRollupStage(c){
-  const customerLeads=leadsForCustomer(c.id);
-  if(customerLeads.length===0) return null;
-  const stages=new Set(customerLeads.map(l=>l.stage));
-  // Active job (currently working on this customer) — anything accepted/invoiced means work is in progress
-  if(stages.has('accepted')) return STAGES.find(s=>s.id==='accepted');
-  if(stages.has('invoiced')) return STAGES.find(s=>s.id==='invoiced');
-  // Quoting — actively trying to win their business
-  if(stages.has('quote'))    return STAGES.find(s=>s.id==='quote');
-  // Contact — early-stage opportunity
-  if(stages.has('contact'))  return STAGES.find(s=>s.id==='contact');
-  // New — fresh lead, not yet contacted
-  if(stages.has('new'))      return STAGES.find(s=>s.id==='new');
-  // Paid — completed work, no active opportunity (treated as "past customer" but with the paid badge)
-  if(stages.has('paid'))     return STAGES.find(s=>s.id==='paid');
-  // Done — completed work (older completion marker)
-  if(stages.has('done'))     return STAGES.find(s=>s.id==='done');
-  // Only declined estimates left
-  if(stages.has('declined')) return STAGES.find(s=>s.id==='declined');
-  return null;
-}
 // Helper: format phone for display (basic — turns 10 digits into (XXX) XXX-XXXX)
-function formatPhone(p){
-  if(!p) return '';
-  const digits=String(p).replace(/[^0-9]/g,'');
-  if(digits.length===10) return `(${digits.slice(0,3)}) ${digits.slice(3,6)}-${digits.slice(6)}`;
-  if(digits.length===11&&digits.startsWith('1')) return `+1 (${digits.slice(1,4)}) ${digits.slice(4,7)}-${digits.slice(7)}`;
-  return p; // give up — show as-is
-}
 
 function renderCustomers(){
   // Top stats: customers + their active pipeline numbers
@@ -6482,6 +6209,11 @@ async function confirmDeleteTag(tagId){
   openTagLibrary();
   if(mainView==='crm') renderCustomers();
 }
+
+// ══════════════════════════════════════════════════════════════
+// END CUSTOMER / TAG UI BLOCK
+// ══════════════════════════════════════════════════════════════
+
 function leadCard(l){
   try{
   const st=STAGES.find(s=>s.id===l.stage)||STAGES[0];
@@ -6927,147 +6659,65 @@ document.addEventListener('click',e=>{
 });
 
 // ── CUSTOMER SEARCH IN JOB MODAL ─────────────────────────────
-// Searches the CUSTOMERS table (source of truth), not the leads table.
-// On select, links to the customer's most-recent lead — or creates a fresh
-// lead if they have none. This keeps backward compat (every job still has
-// a leadId pointer) while letting you search by customer.
 let jLinkedLeadId=null;
 
 function custSearchInput(q){
   const dropdown=document.getElementById('jCustDropdown');
   if(!q||q.length<2){dropdown.style.display='none';return;}
   const qlo=q.toLowerCase();
-  const qDigits=q.replace(/[^0-9]/g,'');
-  // Build address-lookup keyed by customer_id to enrich the dropdown
-  const primaryAddrFor=(cid)=>{
-    const list=customerAddresses.filter(a=>a.customer_id===cid);
-    return list.find(a=>a.is_primary)||list[0]||null;
-  };
-  const matches=customers.filter(c=>{
-    if(c.archived_at) return false;
-    if((c.name||'').toLowerCase().includes(qlo)) return true;
-    if((c.email||'').toLowerCase().includes(qlo)) return true;
-    if(qDigits.length>=3 && (c.phone_normalized||'').includes(qDigits)) return true;
-    // Also match on any of their addresses
-    const addrs=customerAddresses.filter(a=>a.customer_id===c.id);
-    if(addrs.some(a=>
-      (a.street&&a.street.toLowerCase().includes(qlo))||
-      (a.city&&a.city.toLowerCase().includes(qlo))
-    )) return true;
-    return false;
-  }).slice(0,8);
-  if(!matches.length){
-    dropdown.innerHTML=`<div class="cust-result" style="cursor:default;color:var(--muted);font-style:italic">No customers match "${esc(q)}". <a onclick="closeMov('jMov');openCustomerMov();setTimeout(()=>{const el=document.getElementById('ncName');if(el)el.value='${esc(q).replace(/'/g,"&#39;")}';},50)" style="color:var(--amber);cursor:pointer;text-decoration:underline">+ Create new customer</a></div>`;
-    dropdown.style.display='block';
-    return;
-  }
-  dropdown.innerHTML=matches.map(c=>{
-    const addr=primaryAddrFor(c.id);
-    const addrLine=addr?[addr.street,addr.city,addr.state].filter(Boolean).join(', '):'';
-    const detail=[c.phone||'',c.email||'',addrLine].filter(Boolean).join(' · ');
-    return `<div class="cust-result" tabindex="0" onclick="selectCust('${c.id}')">
-      <div class="cust-result-name">${esc(c.name||'(unnamed)')}</div>
-      <div class="cust-result-detail">${esc(detail)}</div>
-    </div>`;
-  }).join('');
+  const matches=leads.filter(l=>
+    l.name.toLowerCase().includes(qlo)||
+    (l.address&&l.address.toLowerCase().includes(qlo))||
+    (l.phone&&l.phone.includes(q))||
+    (l.contact&&l.contact.toLowerCase().includes(qlo))
+  ).slice(0,8);
+  if(!matches.length){dropdown.style.display='none';return;}
+  dropdown.innerHTML=matches.map(l=>`
+    <div class="cust-result" tabindex="0" onclick="selectCust('${l.id}')">
+      <div class="cust-result-name">${esc(l.name)}</div>
+      <div class="cust-result-detail">${[l.contact,l.phone,l.address].filter(Boolean).join(' · ')}</div>
+    </div>`).join('');
   dropdown.style.display='block';
 }
 
-// Select a customer for this job. Resolves to a lead (their most-recent,
-// or creates one if they have none) and sets jLinkedLeadId to it for
-// backward compat with all the code that reads job.leadId.
-function selectCust(customerId){
-  const c=customers.find(x=>x.id===customerId);
-  if(!c){alert('Customer not found.');return;}
-  // Find their most-recent lead
-  const customerLeads=leadsForCustomer(c.id);
-  let lead;
-  if(customerLeads.length>0){
-    // Most recently updated wins
-    lead=[...customerLeads].sort((a,b)=>(b.updated_at||'').localeCompare(a.updated_at||''))[0];
-  } else {
-    // No leads yet — create a fresh one for this customer.
-    // IMPORTANT: don't push to DB yet. We only persist if the user actually
-    // saves the job. Otherwise canceling out of the appointment modal would
-    // leave a phantom blank lead on the customer.
-    const primaryAddr=customerAddresses.filter(a=>a.customer_id===c.id).find(a=>a.is_primary)||customerAddresses.find(a=>a.customer_id===c.id);
-    const addrStr=primaryAddr?[primaryAddr.street,primaryAddr.city,primaryAddr.state].filter(Boolean).join(', '):'';
-    const newLeadId='l_'+Date.now().toString(36)+Math.random().toString(36).substring(2,7);
-    lead={
-      id:newLeadId,
-      name:c.name||'',
-      contact:c.name||'',
-      phone:c.phone||'',
-      email:c.email||'',
-      address:addrStr,
-      stage:'new',
-      customer_id:c.id,
-      company_id:c.company_id||currentCompanyId,
-      types:[],value:'',notes:'',color:'blue',source:c.source||'',matList:[],activity:[],
-      assignedTo:null,
-      createdAt:new Date().toISOString(),
-      updated_at:new Date().toISOString(),
-      _unsaved:true, // Marker — saveJob checks this and persists the lead first
-    };
-    // Push to in-memory ONLY so the job modal can reference it via jLinkedLeadId.
-    // Do NOT call saveLead() — that would queue a DB save. The lead becomes real
-    // only when the job is saved (see job save flow).
-    leads.push(lead);
-  }
-  jLinkedLeadId=lead.id;
+function selectCust(leadId){
+  const l=leads.find(x=>x.id===leadId);
+  if(!l)return;
+  jLinkedLeadId=leadId;
   // Hide search, show linked chip
   document.getElementById('jCustSearch').value='';
   document.getElementById('jCustDropdown').style.display='none';
   document.getElementById('jCustLinked').style.display='block';
-  const addr=customerAddresses.filter(a=>a.customer_id===c.id).find(a=>a.is_primary)||customerAddresses.find(a=>a.customer_id===c.id);
-  const addrLine=addr?[addr.street,addr.city,addr.state].filter(Boolean).join(', '):(lead.address||'');
   document.getElementById('jCustLinked').innerHTML=`
     <div class="cust-linked-chip">
       <div class="cust-linked-info">
-        <div class="cust-linked-name">✓ ${esc(c.name||'(unnamed)')}</div>
-        <div class="cust-linked-detail">${[c.phone,c.email,addrLine].filter(Boolean).join(' · ')}</div>
+        <div class="cust-linked-name">✓ ${esc(l.name)}</div>
+        <div class="cust-linked-detail">${[l.contact,l.phone,l.address].filter(Boolean).join(' · ')}</div>
       </div>
       <button class="cust-linked-clear" onclick="clearCust()" title="Remove link">×</button>
     </div>`;
   // Auto-fill job name if empty
   const nameEl=document.getElementById('jName');
   if(!nameEl.value){
-    nameEl.value=c.name||'';
+    const typeStr=(l.types&&l.types.length)?' – '+l.types.join(', '):'';
+    nameEl.value=l.name+typeStr;
   }
   // Auto-fill notes if empty
   const noteEl=document.getElementById('jNote');
   if(!noteEl.value){
-    noteEl.value=[addrLine,c.name,c.phone].filter(Boolean).join(' | ');
+    noteEl.value=[l.address,l.contact,l.phone].filter(Boolean).join(' | ');
   }
   // Hide the search input row since we have a selection
   document.getElementById('jCustSearch').style.display='none';
 }
 
 function clearCust(){
-  // If the linked lead was auto-created and not yet persisted, drop it
-  if(jLinkedLeadId){
-    const lk=leads.find(l=>l.id===jLinkedLeadId);
-    if(lk && lk._unsaved){
-      leads=leads.filter(l=>l.id!==jLinkedLeadId);
-    }
-  }
   jLinkedLeadId=null;
   document.getElementById('jCustLinked').style.display='none';
   document.getElementById('jCustLinked').innerHTML='';
   document.getElementById('jCustSearch').value='';
   document.getElementById('jCustSearch').style.display='';
   document.getElementById('jCustDropdown').style.display='none';
-}
-
-// Drop any in-memory unsaved leads. Called when the job modal closes without
-// saving (Cancel, X, or backdrop click) so phantom leads don't leak.
-function dropUnsavedAutoLeads(){
-  const before=leads.length;
-  leads=leads.filter(l=>!l._unsaved);
-  if(leads.length!==before){
-    // Reset the linked lead pointer in the job modal too
-    jLinkedLeadId=null;
-  }
 }
 
 // Close dropdown when clicking outside
@@ -7095,7 +6745,6 @@ function buildDaySelect(target){
   if(target&&target!=='backlog') buildEndDaySelect(target);
   document.getElementById('jDay')?.addEventListener('change',function(){buildEndDaySelect(this.value);},{once:true});
 }
-// ══════════════════════════════════════════════════════════════
 // JOB QUICK-VIEW MODAL
 // ══════════════════════════════════════════════════════════════
 // A read-only quick view of a scheduled job. Opens when you click a
@@ -7200,6 +6849,7 @@ function fmtDayLabel(dayKey){
   return date.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'});
 }
 
+
 function openJobMov(day,editId){
   editJobId=editId||null;modalDay=day||'backlog';
   document.getElementById('jMTitle').textContent=editId?'EDIT JOB':'NEW JOB';
@@ -7272,18 +6922,6 @@ document.getElementById('jSave').addEventListener('click',async()=>{
   const startTime=document.getElementById('jStartTime').value;
   const endTime=document.getElementById('jEndTime').value;
   const endDay=document.getElementById('jEndDay')?.value||'';
-
-  // If the selected customer caused an _unsaved lead to be created in memory,
-  // persist it NOW. This makes the lead real so the job's leadId FK resolves.
-  if(jLinkedLeadId){
-    const lk=leads.find(l=>l.id===jLinkedLeadId);
-    if(lk && lk._unsaved){
-      delete lk._unsaved;
-      try{ await sb.upsert('leads', leadToDb(lk)); }
-      catch(e){ console.error('Failed to persist auto-lead:', e); }
-    }
-  }
-
   let j;
   if(editJobId){j=jobs.find(x=>x.id===editJobId);if(j){j.title=name;j.note=note;j.color=selColor;j.day=td;j.endDay=endDay;j.apptType=selApptType||'sales';j.startTime=startTime;j.endTime=endTime;j.assigneeIds=jAssigneeIds.slice();j.assigneeId=jAssigneeIds[0]||null;if(jLinkedLeadId)j.leadId=jLinkedLeadId;}}
   else{j={id:uid(),title:name,note,color:selColor,day:td,endDay,leadId:jLinkedLeadId||null,apptType:selApptType||'sales',startTime,endTime,assigneeIds:jAssigneeIds.slice(),assigneeId:jAssigneeIds[0]||null};jobs.push(j);}
@@ -7920,43 +7558,33 @@ async function bulkDelete(){
       tt.dataset.wired='1';
       tt.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();saveTaskFromMov();}});
     }
-    // Lead search bar — handles BOTH the (now-legacy) leads view AND the
-    // new customers view. The right render function is picked based on
-    // mainView at fire-time, and only ONE search-query variable is updated
-    // per render context (leadSearchQuery for any old paths, customerSearchQuery for customer view).
+    // Lead/Customer search bar — handles BOTH the legacy lead view and the
+    // new customer view. The right renderer is picked based on mainView at
+    // fire time.
     const ls=document.getElementById('leadSearch');
     if(ls&&!ls.dataset.wired){
       ls.dataset.wired='1';
       const bar=document.querySelector('.lead-search-bar');
       let timer=null;
       ls.addEventListener('input',()=>{
-        // Mirror to BOTH state variables so whichever renderer reads its own
-        // gets the right value
         leadSearchQuery=ls.value;
         customerSearchQuery=ls.value;
         if(bar) bar.classList.toggle('has-query',!!ls.value);
         clearTimeout(timer);
         timer=setTimeout(()=>{
-          // Only call the renderer for the CURRENTLY-VISIBLE view.
-          // This is what was bugged before — typing in the search box would
-          // trigger renderCRM (the old leads renderer) and flip the UI.
           if(mainView==='crm' && typeof renderCustomers==='function') renderCustomers();
         },80);
       });
       ls.addEventListener('keydown',e=>{
         if(e.key==='Escape'){
-          ls.value='';
-          leadSearchQuery='';
-          customerSearchQuery='';
+          ls.value='';leadSearchQuery='';customerSearchQuery='';
           if(bar)bar.classList.remove('has-query');
           if(mainView==='crm' && typeof renderCustomers==='function') renderCustomers();
         }
       });
       const clr=document.getElementById('leadSearchClear');
       if(clr) clr.addEventListener('click',()=>{
-        ls.value='';
-        leadSearchQuery='';
-        customerSearchQuery='';
+        ls.value='';leadSearchQuery='';customerSearchQuery='';
         if(bar) bar.classList.remove('has-query');
         ls.focus();
         if(mainView==='crm' && typeof renderCustomers==='function') renderCustomers();
@@ -8080,13 +7708,7 @@ function buildCP(cid,sel,onChange){
   cp.querySelectorAll('.cpdot').forEach(d=>d.addEventListener('click',()=>{onChange(d.dataset.c);cp.querySelectorAll('.cpdot').forEach(x=>x.classList.remove('sel'));d.classList.add('sel');}));
 }
 function openMov(id){document.getElementById(id).classList.add('open');}
-function closeMov(id){
-  // If closing the job modal, drop any in-memory auto-leads that weren't saved.
-  // This handles cancel/backdrop click; the explicit save path persists them
-  // first BEFORE calling closeMov, so the drop is a no-op in that case.
-  if(id==='jMov' && typeof dropUnsavedAutoLeads==='function') dropUnsavedAutoLeads();
-  document.getElementById(id).classList.remove('open');
-}
+function closeMov(id){document.getElementById(id).classList.remove('open');}
 document.querySelectorAll('.mov').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('open');}));
 function showToast(title,msg,jump=false){ /* notifications removed */ }
 function updateBadges(){
@@ -8123,7 +7745,7 @@ const DEFAULT_COMPANY={
   address:'W141N5974 Kaul Ave, Menomonee Falls, WI 53051',
   phone:'(414) 234-3700',
   email:'info@betterview.homes',
-  license:'082200823-DC',
+  license:'License #: 082200823-DC',
   website:'www.betterview.homes',
 };
 function getCompany(){
@@ -8755,7 +8377,9 @@ function collectDoc(base){
     date:document.getElementById('docDate').value,
     dueDate:document.getElementById('docDueDate').value,
     scope:document.getElementById('docScope').value,
-            notes:document.getElementById('docNotes').value,
+    tax:parseFloat(document.getElementById('docTax').value)||0,
+    discount:parseFloat(document.getElementById('docDiscount').value)||0,
+    notes:document.getElementById('docNotes').value,
     manualTotal:(()=>{const v=document.getElementById('docManualTotal')?.value;return(v!==''&&v!=null)?parseFloat(v):''})(),
     lineItems:items,
     num:bareNum,
@@ -10585,7 +10209,7 @@ function syncEstToLead(doc){
     lsSet('leads_cache',leads.map(leadToDb));
   } else if(doc.clientName){
     const newLead={
-      id:uid(),name:doc.clientName,contact:doc.clientContact||'',phone:'(414) 234-3700',email:'info@betterview.homes',
+      id:uid(),name:doc.clientName,contact:doc.clientContact||'',phone:'',email:'',
       types:[],value:total.grand.toFixed(2),stage:'quote',
       address:doc.clientAddr||'',notes:doc.scope||'',color:'blue',
       estId:doc.id,matList:[],
@@ -11262,46 +10886,14 @@ function saveCollapsed(){localStorage.setItem('collapsed_cards',JSON.stringify([
 function toggleCardCollapse(id,el){
   const card=el.closest('.job-card');if(card&&card._dragging)return;
   if(!card)return;
-  const mobile=window.matchMedia('(max-width:760px)').matches;
-  // On mobile, default = collapsed. Tracking is INVERTED: presence in set = user expanded it.
-  // On desktop, default = expanded. Presence in set = user collapsed it.
-  // We use a single set for both with a 'mob:' prefix on mobile entries so they don't collide.
-  const key=mobile?('mob:'+id):id;
-  if(mobile){
-    // Toggle expanded-on-mobile
-    if(collapsedCards.has(key)){
-      collapsedCards.delete(key);
-      card.classList.add('collapsed');
-    } else {
-      collapsedCards.add(key);
-      card.classList.remove('collapsed');
-    }
-  } else {
-    // Desktop original behavior
-    if(collapsedCards.has(key)){
-      collapsedCards.delete(key);
-      card.classList.remove('collapsed');
-    } else {
-      collapsedCards.add(key);
-      card.classList.add('collapsed');
-    }
-  }
+  if(collapsedCards.has(id)){collapsedCards.delete(id);card.classList.remove('collapsed');}
+  else{collapsedCards.add(id);card.classList.add('collapsed');}
   saveCollapsed();
 }
 function applyCollapsed(containerSel){
-  const mobile=window.matchMedia('(max-width:760px)').matches;
   document.querySelectorAll(containerSel+' .job-card[data-id]').forEach(card=>{
-    const id=card.dataset.id;
-    if(mobile){
-      // Mobile: collapsed by default, expanded only if user toggled
-      const userExpanded=collapsedCards.has('mob:'+id);
-      if(userExpanded) card.classList.remove('collapsed');
-      else card.classList.add('collapsed');
-    } else {
-      // Desktop: expanded by default, collapsed only if user toggled
-      if(collapsedCards.has(id)) card.classList.add('collapsed');
-      else card.classList.remove('collapsed');
-    }
+    if(collapsedCards.has(card.dataset.id)) card.classList.add('collapsed');
+    else card.classList.remove('collapsed');
   });
 }
 
@@ -11467,7 +11059,9 @@ function saveAsTemplate(){
     name,
     scope:document.getElementById('docScope')?.value||'',
     lineItems:items,
-            notes:document.getElementById('docNotes')?.value||'',
+    tax:0,
+    discount:0,
+    notes:document.getElementById('docNotes')?.value||'',
     created:Date.now(),
   };
   loadTemplates();
