@@ -120,7 +120,7 @@ tr.row-zero td:nth-child(2),tr.row-zero td:nth-child(3),tr.row-zero td:nth-child
 const SB_URL='https://fryaksqvfknxdptrlppy.supabase.co';
 const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZyeWFrc3F2ZmtueGRwdHJscHB5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4OTczOTcsImV4cCI6MjA5MDQ3MzM5N30.azNBXDI3ySkvMRED9VjNYoSc6ct3NA32No5vybsahnk';
 
-const COMPANY={name:'Better View Home Improvements',tagline:'Roofing · Siding · Gutters',phone:'(414) 916-9450',email:'office@betterviewhi.com',address:'Menomonee Falls, Wisconsin',license:'WI Lic. #1452050',website:'betterviewhi.com'};
+const COMPANY={name:'Better View Home Improvements',tagline:'Roofing · Siding · Gutters',phone:'(414) 234-3700',email:'info@betterview.homes',address:'W141N5974 Kaul Ave, Menomonee Falls, WI 53051',license:'WI Lic. #082200823-DC',website:'betterview.homes'};
 
 const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 const fmt=v=>'$'+Number(v||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
@@ -351,7 +351,9 @@ function wireSignaturePad(d){
           signature:dataUrl,
           signature_name:name,
           signature_date:nowIso,
-          status:'accepted'
+          status:'signed',
+          outcome:'won',
+          closed_date:nowIso
         })
       });
       if(!r.ok){const txt=await r.text();throw new Error('HTTP '+r.status+': '+txt);}
