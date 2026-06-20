@@ -351,9 +351,7 @@ function wireSignaturePad(d){
           signature:dataUrl,
           signature_name:name,
           signature_date:nowIso,
-          status:'signed',
-          outcome:'won',
-          closed_date:nowIso
+          status:'signed'
         })
       });
       if(!r.ok){const txt=await r.text();throw new Error('HTTP '+r.status+': '+txt);}
