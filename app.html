@@ -309,6 +309,10 @@ header{position:fixed;top:0;left:0;right:0;z-index:50;height:var(--hh);display:f
 .pipe-col{flex:0 0 280px;background:var(--steel-mid);border:1px solid var(--iron);border-radius:6px;display:flex;flex-direction:column;max-height:calc(100vh - 220px);position:relative;}
 .pipe-col::before{content:'';position:absolute;top:0;left:0;right:0;height:2px;background:var(--col-color, var(--muted));border-radius:6px 6px 0 0;}
 .pipe-col-head{display:flex;align-items:center;justify-content:space-between;padding:11px 12px 10px;border-bottom:1px solid var(--iron);flex-shrink:0;}
+.pipe-col-draggable .pipe-col-head{cursor:grab;}
+.pipe-col-draggable .pipe-col-head:active{cursor:grabbing;}
+.pipe-col.dragging-col{opacity:.4;}
+.pipe-col.drop-target{outline:2px dashed var(--amber);outline-offset:-2px;}
 .pipe-col-name{font-size:11px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--white);background:transparent;border:none;outline:none;font-family:inherit;width:100%;cursor:text;padding:0;}
 .pipe-col-name:focus{color:var(--amber);}
 .pipe-col-meta{display:flex;align-items:center;gap:8px;font-size:10px;color:var(--muted);font-variant-numeric:tabular-nums;letter-spacing:.1em;flex-shrink:0;}
@@ -5371,6 +5375,7 @@ function renderCRM(){
 let activePipeBoardId=null;        // which board tab is currently visible
 let pipeDragCardId=null;           // card being dragged
 let pipeDragSourceColId=null;      // 'unassigned' or column id
+let pipeDragColId=null;            // column being dragged (for column reorder)
 let pipePendingCol={color:'#3b82f6'};  // for the add-column dialog
 
 const PIPE_COLORS=[
@@ -5449,6 +5454,14 @@ function buildPipeColumnEl(col, cardsInCol){
   const wrap=document.createElement('div');
   wrap.className='pipe-col';
   wrap.style.setProperty('--col-color', col.color||'#3b82f6');
+  // Mark which column this is so column-drag handlers can identify it.
+  // Skip drag wiring for the Unassigned system column.
+  if(!col.isUnassigned){
+    wrap.dataset.colId=col.id;
+    wrap.classList.add('pipe-col-draggable');
+  } else {
+    wrap.classList.add('pipe-col-unassigned');
+  }
   const totalVal=cardsInCol.reduce((s,c)=>{
     const doc=docs.find(d=>d.id===c.doc_id);
     const lead=leads.find(l=>l.id===c.lead_id);
@@ -5457,8 +5470,12 @@ function buildPipeColumnEl(col, cardsInCol){
   },0);
   const valStr=totalVal>0?` · $${(totalVal/1000).toFixed(1)}k`:'';
   const isUnassigned=!!col.isUnassigned;
+  // The header is the drag handle for the COLUMN itself (only when not unassigned).
+  // We make the header element draggable, NOT the whole column, so card drag
+  // from inside the column body still works without conflict.
+  const headerDragAttr=isUnassigned?'':' draggable="true" data-col-drag-handle="1"';
   wrap.innerHTML=`
-    <div class="pipe-col-head">
+    <div class="pipe-col-head"${headerDragAttr}>
       <div style="flex:1;min-width:0">
         ${isUnassigned
           ? `<div class="pipe-col-name">${esc(col.name)}</div>`
@@ -5521,15 +5538,66 @@ function openPipeCard(cardId){
 }
 
 function wirePipeDragDrop(){
-  // Make cards draggable
+  // ── COLUMN DRAG (reorder columns within a board) ───────────────
+  // The column header (with data-col-drag-handle) is the drag handle.
+  // We intentionally exclude the Unassigned column from column drag.
+  document.querySelectorAll('#pipeBoard [data-col-drag-handle]').forEach(headEl=>{
+    headEl.addEventListener('dragstart',e=>{
+      // Don't fire column-drag if the user is dragging the rename input itself
+      if(e.target.tagName==='INPUT') return;
+      const colEl=headEl.closest('.pipe-col');
+      pipeDragColId=colEl?.dataset.colId||null;
+      pipeDragCardId=null;
+      pipeDragSourceColId=null;
+      e.dataTransfer.effectAllowed='move';
+      try{e.dataTransfer.setData('text/plain','col:'+pipeDragColId);}catch(_){}
+      if(colEl) colEl.classList.add('dragging-col');
+    });
+    headEl.addEventListener('dragend',()=>{
+      document.querySelectorAll('#pipeBoard .pipe-col.dragging-col').forEach(c=>c.classList.remove('dragging-col'));
+      document.querySelectorAll('#pipeBoard .pipe-col.drop-target').forEach(c=>c.classList.remove('drop-target'));
+      pipeDragColId=null;
+    });
+  });
+  // Column drop zones — each draggable column itself accepts drops.
+  // The Unassigned column does NOT accept column drops (always stays leftmost).
+  document.querySelectorAll('#pipeBoard .pipe-col-draggable').forEach(colEl=>{
+    colEl.addEventListener('dragover',e=>{
+      if(!pipeDragColId) return;
+      // Skip if dragging a column over itself
+      if(colEl.dataset.colId===pipeDragColId) return;
+      e.preventDefault();
+      e.dataTransfer.dropEffect='move';
+      colEl.classList.add('drop-target');
+    });
+    colEl.addEventListener('dragleave',e=>{
+      if(e.target===colEl || !colEl.contains(e.relatedTarget)){
+        colEl.classList.remove('drop-target');
+      }
+    });
+    colEl.addEventListener('drop',e=>{
+      if(!pipeDragColId) return;
+      e.preventDefault();
+      e.stopPropagation();
+      colEl.classList.remove('drop-target');
+      const dstColId=colEl.dataset.colId;
+      if(dstColId===pipeDragColId) return;
+      reorderPipeColumns(pipeDragColId, dstColId);
+    });
+  });
+
+  // ── CARD DRAG (existing behavior — unchanged) ──────────────────
   document.querySelectorAll('#pipeBoard .pipe-card').forEach(el=>{
     el.addEventListener('dragstart',e=>{
       pipeDragCardId=el.dataset.cardId;
       const colEl=el.closest('.pipe-cards');
       pipeDragSourceColId=colEl?colEl.dataset.colId:null;
+      pipeDragColId=null; // ensure we're not in column-drag mode
       el.classList.add('dragging');
       e.dataTransfer.effectAllowed='move';
       try{e.dataTransfer.setData('text/plain',pipeDragCardId);}catch(_){}
+      // Important: stop the event from bubbling to the column header dragstart
+      e.stopPropagation();
     });
     el.addEventListener('dragend',()=>{
       el.classList.remove('dragging');
@@ -5537,9 +5605,11 @@ function wirePipeDragDrop(){
       pipeDragCardId=null;pipeDragSourceColId=null;
     });
   });
-  // Make columns drop zones
+  // Make columns drop zones for cards
   document.querySelectorAll('#pipeBoard .pipe-cards').forEach(zone=>{
     zone.addEventListener('dragover',e=>{
+      // Don't fire card-drop if we're in column-drag mode
+      if(pipeDragColId) return;
       e.preventDefault();
       e.dataTransfer.dropEffect='move';
       zone.classList.add('drag-over');
@@ -5548,10 +5618,11 @@ function wirePipeDragDrop(){
       if(e.target===zone) zone.classList.remove('drag-over');
     });
     zone.addEventListener('drop',e=>{
+      if(pipeDragColId) return; // skip; column drop handler owns this
       e.preventDefault();
       zone.classList.remove('drag-over');
       if(!pipeDragCardId) return;
-      const dstColId=zone.dataset.colId;  // 'unassigned' or real id
+      const dstColId=zone.dataset.colId;
       movePipeCard(pipeDragCardId, dstColId, e.clientY);
     });
   });
@@ -5561,6 +5632,8 @@ function wirePipeDragDrop(){
       const col=pipelineColumns.find(c=>c.id===inp.dataset.colId);
       if(col){col.name=inp.value.trim()||'Untitled';col.updated_at=new Date().toISOString();savePipelineColumn(col);}
     });
+    // Prevent input clicks from triggering column drag
+    inp.addEventListener('mousedown',e=>e.stopPropagation());
   });
   // Column delete
   document.querySelectorAll('.pipe-col-menu').forEach(btn=>{
@@ -5576,6 +5649,32 @@ function wirePipeDragDrop(){
       renderPipeline();
     });
   });
+}
+
+// Reorder columns within the active board.
+// Strategy: take dragged col out of its slot, insert before the drop target.
+function reorderPipeColumns(draggedId, targetId){
+  const boardCols=pipelineColumns
+    .filter(c=>c.board_id===activePipeBoardId)
+    .sort((a,b)=>(a.position||0)-(b.position||0));
+  const dragIdx=boardCols.findIndex(c=>c.id===draggedId);
+  const targetIdx=boardCols.findIndex(c=>c.id===targetId);
+  if(dragIdx<0||targetIdx<0) return;
+  // Remove dragged from list, then insert it BEFORE targetIdx
+  // (accounting for the removal index shift if dragIdx < targetIdx)
+  const [dragged]=boardCols.splice(dragIdx,1);
+  const adjustedTarget=dragIdx<targetIdx ? targetIdx-1 : targetIdx;
+  boardCols.splice(adjustedTarget,0,dragged);
+  // Persist new positions
+  boardCols.forEach((c,i)=>{
+    const newPos=i+1;
+    if(c.position!==newPos){
+      c.position=newPos;
+      c.updated_at=new Date().toISOString();
+      savePipelineColumn(c);
+    }
+  });
+  renderPipeline();
 }
 
 function movePipeCard(cardId, dstColId, dropY){
