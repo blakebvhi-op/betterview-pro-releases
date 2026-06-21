@@ -291,7 +291,7 @@ header{position:fixed;top:0;left:0;right:0;z-index:50;height:var(--hh);display:f
 .cust-stat-label{font-size:9px;font-weight:700;letter-spacing:.18em;color:var(--muted);text-transform:uppercase;margin-bottom:2px;}
 .cust-stat-num{font-size:18px;font-weight:700;color:var(--ink-bright,#fff);font-variant-numeric:tabular-nums;}
 /* ── PIPELINE KANBAN ── */
-.pipe-view{display:flex;flex-direction:column;height:100%;background:var(--steel);}
+.pipe-view{display:flex;flex-direction:column;height:100%;min-width:0;background:var(--steel);}
 .pipe-boards{display:flex;align-items:flex-end;padding:0 18px;border-bottom:1px solid var(--iron);background:var(--steel-mid);gap:0;flex-shrink:0;}
 .pipe-board-tab{background:transparent;border:none;color:var(--muted);font-family:inherit;font-size:11px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;padding:14px 22px 12px;cursor:pointer;border-bottom:2px solid transparent;transition:color .12s,border-color .12s;}
 .pipe-board-tab:hover{color:var(--white);}
@@ -302,7 +302,7 @@ header{position:fixed;top:0;left:0;right:0;z-index:50;height:var(--hh);display:f
 .pipe-board-title{font-size:18px;font-weight:700;letter-spacing:-.01em;color:var(--white);}
 .pipe-board-meta{font-size:10px;color:var(--muted);letter-spacing:.16em;text-transform:uppercase;margin-left:10px;font-weight:600;}
 .pipe-board-actions{display:flex;gap:8px;}
-.pipe-board{flex:1;overflow-x:auto;overflow-y:hidden;display:flex;gap:14px;padding:16px 18px 24px;align-items:flex-start;}
+.pipe-board{flex:1;min-width:0;min-height:0;overflow-x:auto;overflow-y:hidden;display:flex;gap:14px;padding:16px 18px 24px;align-items:flex-start;}
 .pipe-board::-webkit-scrollbar{height:10px;}
 .pipe-board::-webkit-scrollbar-track{background:var(--steel-mid);}
 .pipe-board::-webkit-scrollbar-thumb{background:var(--iron);border-radius:5px;}
