@@ -104,6 +104,18 @@ tr.row-zero td:nth-child(2),tr.row-zero td:nth-child(3),tr.row-zero td:nth-child
 
 .footer{text-align:center;font-size:10px;color:var(--mute);padding:16px 24px;border-top:1px solid #e2e8f0;}
 
+/* Your Project panel (Phase 1 customer portal) */
+.project{background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:14px 16px;margin-bottom:16px;}
+.project-lbl{font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#2563eb;margin-bottom:10px;}
+.proj-job{display:flex;align-items:flex-start;gap:12px;padding:10px 0;border-top:1px solid #dbeafe;}
+.proj-job:first-of-type{border-top:none;padding-top:0;}
+.proj-job-main{flex:1;min-width:0;}
+.proj-job-type{font-weight:700;font-size:14px;color:var(--ink);}
+.proj-job-when{font-size:12px;color:var(--steel);margin-top:3px;line-height:1.5;}
+.proj-badge{font-size:9px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;padding:4px 8px;border-radius:6px;white-space:nowrap;}
+.proj-badge.sched{background:#dcfce7;color:#15803d;}
+.proj-badge.pending{background:#fef3c7;color:#92400e;}
+
 @media print{
   body{background:#fff;padding:0;}
   .wrap{box-shadow:none;border-radius:0;}
@@ -120,7 +132,7 @@ tr.row-zero td:nth-child(2),tr.row-zero td:nth-child(3),tr.row-zero td:nth-child
 const SB_URL='https://fryaksqvfknxdptrlppy.supabase.co';
 const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZyeWFrc3F2ZmtueGRwdHJscHB5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4OTczOTcsImV4cCI6MjA5MDQ3MzM5N30.azNBXDI3ySkvMRED9VjNYoSc6ct3NA32No5vybsahnk';
 
-const COMPANY={name:'Better View Home Improvements',tagline:'Roofing · Siding · Gutters',phone:'(414) 234-3700',email:'info@betterview.homes',address:'W141N5974 Kaul Ave, Menomonee Falls, WI 53051',license:'WI Lic. #082200823-DC',website:'betterview.homes'};
+const COMPANY={name:'Better View Home Improvements',tagline:'Roofing · Siding · Gutters · Windows & Doors',phone:'(414) 234-3700',email:'info@betterview.homes',address:'W141N5974 Kaul Ave, Menomonee Falls, WI 53051',license:'License #: 082200823-DC',website:'www.betterview.homes'};
 
 const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 const fmt=v=>'$'+Number(v||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
@@ -253,6 +265,7 @@ function renderEstimate(d){
   </div>
   <div class="body">
     ${alreadySigned?`<div class="signed-banner"><div class="signed-banner-icon">✅</div><div class="signed-banner-msg"><div class="signed-banner-title">This estimate has been signed</div><div class="signed-banner-detail">Signed by ${esc(d.signatureName||'')} on ${d.signatureDate?new Date(d.signatureDate).toLocaleString():''}</div></div></div>`:''}
+    <div id="projectPanel"></div>
     <div class="parties">
       <div><div class="party-lbl">From</div><div class="party-name">${esc(COMPANY.name)}</div><div class="party-detail">${esc(COMPANY.address)}<br>${esc(COMPANY.phone)}<br>${esc(COMPANY.email)}</div></div>
       <div><div class="party-lbl">${isInv?'Bill To':'Prepared For'}</div><div class="party-name">${esc(d.clientName||'')}</div><div class="party-detail">${esc(d.clientContact||'')}<br>${esc(d.clientAddr||'')}</div></div>
@@ -281,7 +294,93 @@ function renderEstimate(d){
   </div>
   <div class="footer">${esc(COMPANY.name)} · ${esc(COMPANY.address)} · ${esc(COMPANY.website)}</div>`;
   document.getElementById('wrap').innerHTML=html;
+  loadProjectPanel(d.id);
   if(!isInv&&!alreadySigned) wireSignaturePad(d);
+}
+
+// ── YOUR PROJECT panel (Phase 1 customer portal) ───────────────
+// Resolves the scheduled job(s) for this estimate WITHOUT enumerating
+// any table. Path: estimate -> its work order (source_est_id) -> job
+// (linked_job_id). The estimate + WO live in the docs table; we read
+// the WO's linked_job_id, then fetch ONLY that job id with only the
+// customer-safe scheduling columns (RLS + column grant enforce this
+// server-side too).
+const APPT_LABELS={sales:'Consultation',inspection:'Inspection',followup:'Follow-Up',design:'Design Consultation',repair:'Repair',roof_replace:'Roof Replacement',gutter_replace:'Gutter Replacement',siding_replace:'Siding Replacement'};
+
+function fmtTime(t){
+  const m=String(t||'').match(/^(\d{1,2}):(\d{2})/);
+  if(!m) return String(t||'');
+  let h=+m[1];const ap=h>=12?'PM':'AM';h=h%12||12;
+  return h+':'+m[2]+' '+ap;
+}
+function fmtTimeRange(a,b){
+  const x=fmtTime(a),y=fmtTime(b);
+  if(x&&y) return x+' – '+y;
+  return x||y||'';
+}
+function fmtProjDay(day){
+  if(!day||day==='backlog') return '';
+  const dt=new Date(day+'T00:00:00');
+  if(isNaN(dt)) return String(day);
+  return dt.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
+}
+
+async function fetchProjectJobs(estId){
+  try{
+    // 1. This estimate's document family: itself + any WO/MO spawned from it.
+    const famR=await fetch(`${SB_URL}/rest/v1/docs?or=(id.eq.${encodeURIComponent(estId)},source_est_id.eq.${encodeURIComponent(estId)})&select=id,type,linked_job_id`,{
+      headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY}
+    });
+    if(!famR.ok) return [];
+    const fam=await famR.json();
+    const jobIds=[...new Set((fam||[]).map(x=>x.linked_job_id).filter(Boolean))];
+    if(!jobIds.length) return [];
+    // 2. Fetch ONLY those job ids, ONLY customer-safe columns.
+    const inList=jobIds.map(encodeURIComponent).join(',');
+    const jR=await fetch(`${SB_URL}/rest/v1/jobs?id=in.(${inList})&select=id,day,end_day,start_time,end_time,appt_type`,{
+      headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY}
+    });
+    if(!jR.ok) return [];
+    return await jR.json();
+  }catch(e){console.error('project fetch',e);return [];}
+}
+
+function renderProjectPanel(jobs){
+  // Scheduled jobs first, then anything still being scheduled.
+  const sorted=jobs.slice().sort((a,b)=>{
+    const ab=(!a.day||a.day==='backlog')?1:0, bb=(!b.day||b.day==='backlog')?1:0;
+    if(ab!==bb) return ab-bb;
+    return String(a.day||'').localeCompare(String(b.day||''));
+  });
+  const rows=sorted.map(j=>{
+    const label=APPT_LABELS[j.appt_type]||'Project Work';
+    const scheduled=j.day&&j.day!=='backlog';
+    const dayStr=fmtProjDay(j.day);
+    const timeStr=fmtTimeRange(j.start_time,j.end_time);
+    let when, badge, badgeCls;
+    if(scheduled){
+      badge='Scheduled';badgeCls='sched';
+      when=dayStr+(timeStr?' · '+timeStr:'');
+    }else{
+      badge='Scheduling';badgeCls='pending';
+      when='We\u2019re finalizing your schedule — we\u2019ll contact you to confirm a date.';
+    }
+    return `<div class="proj-job">
+      <div class="proj-job-main">
+        <div class="proj-job-type">${esc(label)}</div>
+        <div class="proj-job-when">${esc(when)}</div>
+      </div>
+      <span class="proj-badge ${badgeCls}">${badge}</span>
+    </div>`;
+  }).join('');
+  return `<div class="project"><div class="project-lbl">Your Project</div>${rows}</div>`;
+}
+
+async function loadProjectPanel(estId){
+  const slot=document.getElementById('projectPanel');
+  if(!slot) return;
+  const jobs=await fetchProjectJobs(estId);
+  slot.innerHTML=jobs.length?renderProjectPanel(jobs):'';
 }
 
 function wireSignaturePad(d){
@@ -351,7 +450,9 @@ function wireSignaturePad(d){
           signature:dataUrl,
           signature_name:name,
           signature_date:nowIso,
-          status:'signed'
+          status:'signed',
+          outcome:'won',
+          closed_date:nowIso
         })
       });
       if(!r.ok){const txt=await r.text();throw new Error('HTTP '+r.status+': '+txt);}
