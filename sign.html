@@ -326,23 +326,30 @@ function fmtProjDay(day){
 }
 
 async function fetchProjectJobs(estId){
+  const H={apikey:SB_KEY,Authorization:'Bearer '+SB_KEY};
+  const SAFE='id,day,end_day,start_time,end_time,appt_type';
+  const byId={};
   try{
-    // 1. This estimate's document family: itself + any WO/MO spawned from it.
-    const famR=await fetch(`${SB_URL}/rest/v1/docs?or=(id.eq.${encodeURIComponent(estId)},source_est_id.eq.${encodeURIComponent(estId)})&select=id,type,linked_job_id`,{
-      headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY}
-    });
-    if(!famR.ok) return [];
-    const fam=await famR.json();
-    const jobIds=[...new Set((fam||[]).map(x=>x.linked_job_id).filter(Boolean))];
-    if(!jobIds.length) return [];
-    // 2. Fetch ONLY those job ids, ONLY customer-safe columns.
-    const inList=jobIds.map(encodeURIComponent).join(',');
-    const jR=await fetch(`${SB_URL}/rest/v1/jobs?id=in.(${inList})&select=id,day,end_day,start_time,end_time,appt_type`,{
-      headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY}
-    });
-    if(!jR.ok) return [];
-    return await jR.json();
-  }catch(e){console.error('project fetch',e);return [];}
+    // Path A — canonical: estimate -> lead(s) -> jobs (calendar-scheduled work).
+    const leadR=await fetch(`${SB_URL}/rest/v1/leads?est_id=eq.${encodeURIComponent(estId)}&select=id`,{headers:H});
+    if(leadR.ok){
+      const leadIds=[...new Set((await leadR.json()||[]).map(x=>x.id).filter(Boolean))];
+      if(leadIds.length){
+        const jR=await fetch(`${SB_URL}/rest/v1/jobs?lead_id=in.(${leadIds.map(encodeURIComponent).join(',')})&select=${SAFE}`,{headers:H});
+        if(jR.ok)(await jR.json()||[]).forEach(j=>{byId[j.id]=j;});
+      }
+    }
+    // Path B — fallback: estimate -> work order -> job (WO-spawned work).
+    const famR=await fetch(`${SB_URL}/rest/v1/docs?or=(id.eq.${encodeURIComponent(estId)},source_est_id.eq.${encodeURIComponent(estId)})&select=id,linked_job_id`,{headers:H});
+    if(famR.ok){
+      const jobIds=[...new Set((await famR.json()||[]).map(x=>x.linked_job_id).filter(Boolean))].filter(id=>!byId[id]);
+      if(jobIds.length){
+        const jR=await fetch(`${SB_URL}/rest/v1/jobs?id=in.(${jobIds.map(encodeURIComponent).join(',')})&select=${SAFE}`,{headers:H});
+        if(jR.ok)(await jR.json()||[]).forEach(j=>{byId[j.id]=j;});
+      }
+    }
+  }catch(e){console.error('project fetch',e);}
+  return Object.values(byId);
 }
 
 function renderProjectPanel(jobs){
