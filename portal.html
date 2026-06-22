@@ -194,20 +194,20 @@ async function getJSON(url){try{const r=await fetch(url,{headers:H});if(!r.ok)re
 async function resolveLead(){
   const get=qp();
   let leadId=get('lead')||get('portal');
-  let estId='';
+  let estId='',customerId='';
   if(leadId){
-    const a=await getJSON(`${SB_URL}/rest/v1/leads?id=eq.${encodeURIComponent(leadId)}&select=id,est_id`);
-    if(a&&a.length)estId=a[0].est_id||'';
+    const a=await getJSON(`${SB_URL}/rest/v1/leads?id=eq.${encodeURIComponent(leadId)}&select=id,est_id,customer_id`);
+    if(a&&a.length){estId=a[0].est_id||'';customerId=a[0].customer_id||'';}
   } else {
     // Fallback: accept an estimate id and resolve its lead
     const e=get('est')||get('id');
     if(e){
       estId=e;
-      const a=await getJSON(`${SB_URL}/rest/v1/leads?est_id=eq.${encodeURIComponent(e)}&select=id,est_id`);
-      if(a&&a.length)leadId=a[0].id;
+      const a=await getJSON(`${SB_URL}/rest/v1/leads?est_id=eq.${encodeURIComponent(e)}&select=id,est_id,customer_id`);
+      if(a&&a.length){leadId=a[0].id;customerId=a[0].customer_id||'';}
     }
   }
-  return {leadId,estId};
+  return {leadId,estId,customerId};
 }
 async function fetchPrimary(estId){
   if(!estId)return null;
@@ -224,9 +224,20 @@ async function fetchInvoice(estId,primary){
   invs.sort((a,b)=>(b.created||0)-(a.created||0));
   return invs.length?invs[0]:null;
 }
-async function fetchLeadJobs(leadId){
-  if(!leadId)return [];
-  const a=await getJSON(`${SB_URL}/rest/v1/jobs?lead_id=eq.${encodeURIComponent(leadId)}&select=id,day,end_day,start_time,end_time,appt_type`);
+async function fetchJobs(leadId,customerId){
+  // Collect every lead belonging to this customer (an appointment may have
+  // attached to a different lead than the estimate). Then pull jobs for all
+  // of them. jobs.customer_id isn't populated by the app, so we bridge via
+  // the customer's lead set.
+  const leadIds=new Set();
+  if(leadId)leadIds.add(leadId);
+  if(customerId){
+    const sibs=await getJSON(`${SB_URL}/rest/v1/leads?customer_id=eq.${encodeURIComponent(customerId)}&select=id`);
+    if(sibs)sibs.forEach(l=>{if(l.id)leadIds.add(l.id);});
+  }
+  const ids=[...leadIds];
+  if(!ids.length)return [];
+  const a=await getJSON(`${SB_URL}/rest/v1/jobs?lead_id=in.(${ids.map(encodeURIComponent).join(',')})&select=id,day,end_day,start_time,end_time,appt_type`);
   return a||[];
 }
 
@@ -424,10 +435,10 @@ function buildPortal(state){
 
 /* ── bootstrap ─────────────────────────────────────── */
 (async()=>{
-  const {leadId,estId}=await resolveLead();
+  const {leadId,estId,customerId}=await resolveLead();
   if(!leadId&&!estId){showError('Link not recognized','This portal link looks incomplete. Please ask Better View to resend it.');return;}
   const primary=await fetchPrimary(estId);
-  const [invoice,jobs]=await Promise.all([fetchInvoice(estId,primary),fetchLeadJobs(leadId)]);
+  const [invoice,jobs]=await Promise.all([fetchInvoice(estId,primary),fetchJobs(leadId,customerId)]);
   const state={leadId,estId,primary,invoice,jobs};
   // Gate against the primary document when one exists.
   if(primary&&!sessionStorage.getItem('bvp_verified_'+primary.id)){
