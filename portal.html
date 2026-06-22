@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"/>
+<title>Your Project — Better View Home Improvements</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+:root{
+  --bg:#eef2f9;--card:#ffffff;--ink:#161a2b;--steel:#56607a;--mute:#98a1b5;
+  --amber:#f59e0b;--amber-deep:#d97706;--amber-tint:#fff7ea;
+  --green:#16a34a;--green-tint:#dcfce7;--danger:#ef4444;--line:#e7ecf4;--blue:#2563eb;
+}
+html,body{background:var(--bg);}
+body{color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",sans-serif;-webkit-font-smoothing:antialiased;line-height:1.45;padding:0 0 60px;}
+.shell{max-width:760px;margin:0 auto;}
+a{color:var(--amber-deep);}
+
+/* Loader / error */
+.loader{padding:90px 20px;text-align:center;color:var(--mute);}
+.loader-spin{display:inline-block;width:34px;height:34px;border:3px solid #dde3ee;border-top-color:var(--amber);border-radius:50%;animation:spin 1s linear infinite;}
+@keyframes spin{to{transform:rotate(360deg);}}
+.err{padding:80px 24px;text-align:center;}
+.err-emoji{font-size:50px;margin-bottom:14px;}
+.err-title{font-size:19px;font-weight:800;margin-bottom:6px;}
+.err-msg{color:var(--steel);font-size:14px;max-width:420px;margin:0 auto;}
+
+/* Verify gate */
+.gate{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:40px 24px;text-align:center;}
+.gate-logo{font-size:24px;font-weight:900;letter-spacing:2px;text-transform:uppercase;color:var(--ink);line-height:1.05;}
+.gate-logo span{color:var(--amber);}
+.gate-tag{font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--mute);margin-top:6px;margin-bottom:34px;}
+.gate-card{background:var(--card);border:1px solid var(--line);border-radius:18px;box-shadow:0 10px 40px rgba(20,30,60,.10);padding:30px 26px;width:100%;max-width:400px;}
+.gate-card h1{font-size:19px;font-weight:800;margin-bottom:6px;}
+.gate-card p{color:var(--steel);font-size:13.5px;margin-bottom:20px;}
+.gate-input{width:100%;padding:14px;font-size:16px;border:2px solid var(--line);border-radius:12px;background:#fff;color:var(--ink);outline:none;transition:border-color .15s;}
+.gate-input:focus{border-color:var(--amber);}
+.gate-input.bad{border-color:var(--danger);}
+.gate-btn{margin-top:12px;width:100%;padding:14px;font-size:15px;font-weight:800;letter-spacing:.04em;text-transform:uppercase;border:none;border-radius:12px;background:var(--ink);color:#fff;cursor:pointer;transition:background .15s;}
+.gate-btn:hover{background:#262c45;}
+.gate-err{margin-top:12px;color:var(--danger);font-size:13px;font-weight:600;min-height:16px;}
+
+/* Header */
+.head{background:var(--card);border-bottom:1px solid var(--line);padding:20px 22px 0;}
+.head-top{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;flex-wrap:wrap;}
+.brand-name{font-size:19px;font-weight:900;letter-spacing:1.5px;text-transform:uppercase;line-height:1.05;}
+.brand-name span{color:var(--amber);}
+.brand-tag{font-size:9.5px;letter-spacing:1.5px;text-transform:uppercase;color:var(--mute);margin-top:4px;}
+.brand-contact{font-size:11px;color:var(--steel);line-height:1.6;text-align:right;}
+.brand-contact a{color:var(--steel);text-decoration:none;}
+.welcome{margin-top:16px;font-size:13px;color:var(--steel);}
+.welcome b{color:var(--ink);font-weight:700;}
+
+/* Tabs */
+.tabs{position:sticky;top:0;z-index:20;display:flex;background:var(--card);border-bottom:1px solid var(--line);box-shadow:0 2px 8px rgba(20,30,60,.04);overflow-x:auto;-webkit-overflow-scrolling:touch;}
+.tab{flex:1;min-width:90px;padding:15px 8px 13px;text-align:center;background:transparent;border:0;border-bottom:3px solid transparent;color:var(--mute);font-family:inherit;font-size:11.5px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;cursor:pointer;transition:all .15s;white-space:nowrap;}
+.tab:hover{color:var(--steel);}
+.tab.active{color:var(--amber-deep);border-bottom-color:var(--amber);background:var(--amber-tint);}
+.tab-emoji{display:block;font-size:17px;margin-bottom:4px;line-height:1;}
+.tab-count{display:inline-block;margin-left:5px;font-size:10px;font-weight:800;padding:1px 6px;border-radius:9px;background:var(--line);color:var(--steel);}
+.tab.active .tab-count{background:var(--amber);color:#fff;}
+
+/* Panels */
+.panel{display:none;padding:18px 16px 8px;}
+.panel.active{display:block;}
+.shell-body{padding:0;}
+
+/* Card */
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;box-shadow:0 4px 18px rgba(20,30,60,.05);padding:18px 18px;margin-bottom:14px;}
+.card-hd{font-size:10px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--amber-deep);margin-bottom:14px;}
+
+/* Schedule rows */
+.sched{display:flex;align-items:flex-start;gap:13px;padding:13px 0;border-top:1px solid var(--line);}
+.sched:first-of-type{border-top:none;padding-top:2px;}
+.sched-ico{flex-shrink:0;width:42px;height:42px;border-radius:11px;background:var(--amber-tint);display:flex;align-items:center;justify-content:center;font-size:20px;}
+.sched-main{flex:1;min-width:0;}
+.sched-type{font-weight:800;font-size:15px;}
+.sched-when{font-size:12.5px;color:var(--steel);margin-top:3px;line-height:1.5;}
+.badge{flex-shrink:0;font-size:9px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;padding:5px 9px;border-radius:7px;white-space:nowrap;align-self:center;}
+.badge.green{background:var(--green-tint);color:#15803d;}
+.badge.amber{background:var(--amber-tint);color:var(--amber-deep);}
+.empty{text-align:center;color:var(--mute);font-size:13px;padding:24px 10px;line-height:1.6;}
+.empty-emoji{font-size:34px;display:block;margin-bottom:10px;opacity:.7;}
+
+/* Document (estimate / invoice) */
+.doc-bar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:14px;flex-wrap:wrap;}
+.doc-title{font-size:17px;font-weight:900;letter-spacing:1px;text-transform:uppercase;color:var(--ink);}
+.doc-sub{font-size:11px;color:var(--mute);margin-top:1px;}
+.signed-banner{background:var(--green-tint);border:1px solid #86efac;color:#15803d;padding:13px 15px;border-radius:12px;margin-bottom:14px;display:flex;align-items:center;gap:11px;}
+.signed-banner-ico{font-size:22px;}
+.signed-banner b{display:block;font-size:13.5px;}
+.signed-banner small{font-size:11.5px;}
+.scope{background:var(--amber-tint);border-left:3px solid var(--amber);padding:12px 14px;border-radius:0 8px 8px 0;margin-bottom:14px;}
+.scope-lbl{font-size:9px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;color:var(--mute);margin-bottom:5px;}
+.scope-text{font-size:12.5px;color:var(--steel);line-height:1.65;white-space:pre-wrap;}
+table{width:100%;border-collapse:collapse;margin-bottom:14px;font-size:13px;}
+th{background:#f6f8fc;padding:9px 10px;font-size:9px;font-weight:800;letter-spacing:.8px;text-transform:uppercase;color:#7a8499;text-align:left;}
+th:nth-child(2){text-align:center;}th:nth-child(3),th:nth-child(4){text-align:right;}
+td{padding:10px;border-bottom:1px solid #f1f4f9;color:var(--steel);}
+td:nth-child(2){text-align:center;}td:nth-child(3),td:nth-child(4){text-align:right;}
+tr.row-zero td{color:#aab2c2;font-style:italic;}
+tr.row-zero td:nth-child(2),tr.row-zero td:nth-child(3),tr.row-zero td:nth-child(4){font-style:normal;}
+.totals{display:flex;justify-content:flex-end;margin-bottom:8px;padding-top:12px;border-top:2px solid var(--ink);}
+.total-row{display:flex;gap:22px;font-size:19px;font-weight:900;align-items:baseline;}
+.total-lbl{color:var(--steel);font-size:13px;letter-spacing:1px;text-transform:uppercase;align-self:center;}
+.notes{background:#f7f9fc;border-radius:10px;padding:12px 14px;margin-bottom:8px;}
+.notes-lbl{font-size:9px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;color:var(--mute);margin-bottom:5px;}
+.notes-text{font-size:11.5px;color:var(--steel);line-height:1.6;white-space:pre-wrap;}
+.embedded-sig{margin-top:14px;padding-top:14px;border-top:1px solid var(--line);}
+.embedded-sig-lbl{font-size:9px;font-weight:800;letter-spacing:1.2px;text-transform:uppercase;color:var(--mute);margin-bottom:8px;}
+.embedded-sig-row{display:flex;align-items:flex-end;gap:14px;}
+.embedded-sig-img{max-height:66px;max-width:240px;border-bottom:1px solid var(--ink);padding:4px 6px;}
+.embedded-sig-name{font-size:13px;font-weight:700;}
+.embedded-sig-date{font-size:10px;color:var(--mute);margin-top:2px;}
+
+/* Signature pad */
+.sig{background:var(--amber-tint);border:2px solid var(--amber);border-radius:14px;padding:16px;margin-top:6px;}
+.sig h2{font-size:14px;font-weight:900;letter-spacing:.04em;text-transform:uppercase;margin-bottom:6px;}
+.sig p{font-size:12px;color:var(--steel);margin-bottom:11px;}
+.sig-canvas{width:100%;height:165px;background:#fff;border:1px solid var(--line);border-radius:10px;cursor:crosshair;touch-action:none;display:block;}
+.sig-canvas.inked{border-color:var(--green);}
+.sig-row{display:flex;gap:8px;margin-top:11px;flex-wrap:wrap;align-items:center;}
+.sig-name{flex:1;min-width:190px;padding:11px;font-size:15px;border:1px solid var(--line);border-radius:9px;background:#fff;color:var(--ink);outline:none;}
+.sig-name:focus{border-color:var(--amber);}
+.sig-btn{padding:11px 16px;border:none;border-radius:9px;font-size:13.5px;font-weight:700;cursor:pointer;}
+.sig-btn-clear{background:#fff;border:1px solid #cbd5e1;color:var(--steel);}
+.sig-btn-save{background:var(--green);color:#fff;}
+.sig-btn-save:disabled{opacity:.5;cursor:not-allowed;}
+.sig-status{margin-top:9px;font-size:12px;font-weight:600;min-height:15px;}
+.sig-status.ok{color:var(--green);}
+.sig-status.bad{color:var(--danger);}
+
+.print-btn{width:100%;padding:13px;border:none;border-radius:12px;font-size:13.5px;font-weight:800;letter-spacing:.04em;background:var(--ink);color:#fff;cursor:pointer;margin-top:4px;}
+.footer{text-align:center;font-size:10.5px;color:var(--mute);padding:22px 24px 0;line-height:1.7;}
+
+@media print{
+  body{background:#fff;}
+  .tabs,.print-btn,.sig{display:none!important;}
+  .panel{display:block!important;page-break-inside:avoid;}
+  .card{box-shadow:none;border:1px solid #ddd;}
+}
+</style>
+</head>
+<body>
+<div class="shell" id="shell">
+  <div class="loader"><div class="loader-spin"></div><div style="margin-top:14px;font-size:13px;">Loading your project…</div></div>
+</div>
+
+<script>
+const SB_URL='https://fryaksqvfknxdptrlppy.supabase.co';
+const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZyeWFrc3F2ZmtueGRwdHJscHB5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4OTczOTcsImV4cCI6MjA5MDQ3MzM5N30.azNBXDI3ySkvMRED9VjNYoSc6ct3NA32No5vybsahnk';
+const H={apikey:SB_KEY,Authorization:'Bearer '+SB_KEY};
+
+const COMPANY={name:'Better View',tagline:'Roofing · Siding · Gutters · Windows & Doors',phone:'(414) 234-3700',email:'info@betterview.homes',address:'W141N5974 Kaul Ave, Menomonee Falls, WI 53051',license:'License #: 082200823-DC',website:'www.betterview.homes'};
+
+const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+const fmt=v=>'$'+Number(v||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+
+const APPT_LABELS={sales:'Consultation',inspection:'Inspection',followup:'Follow-Up',design:'Design Consultation',repair:'Repair',roof_replace:'Roof Replacement',gutter_replace:'Gutter Replacement',siding_replace:'Siding Replacement'};
+const APPT_EMOJI={sales:'🤝',inspection:'🔍',followup:'📞',design:'✏️',repair:'🔧',roof_replace:'🏠',gutter_replace:'🌧️',siding_replace:'🪟'};
+const SALES_TYPES=['sales','inspection','followup','design'];
+
+/* ── helpers ───────────────────────────────────────── */
+function qp(){const u=new URL(location.href);return n=>u.searchParams.get(n)||'';}
+function calcTotal(d){
+  const items=d.lineItems||[];
+  const sub=items.reduce((s,li)=>s+(parseFloat(li.qty)||0)*(parseFloat(li.price)||0),0);
+  if(d.manualTotal!=null&&d.manualTotal!==''&&!isNaN(parseFloat(d.manualTotal)))return parseFloat(d.manualTotal);
+  return sub;
+}
+function mapDoc(r){
+  return {id:r.id,type:r.type||'estimate',num:r.num||'',status:r.status||'draft',
+    clientName:r.client_name||'',clientContact:r.client_contact||'',clientAddr:r.client_addr||'',
+    date:r.date||'',dueDate:r.due_date||'',scope:r.scope||'',sourceEstId:r.source_est_id||'',created:r.created||0,
+    lineItems:(()=>{try{return typeof r.line_items==='string'?JSON.parse(r.line_items):(r.line_items||[]);}catch{return[];}})(),
+    notes:r.notes||'',manualTotal:r.manual_total||'',
+    signature:r.signature||'',signatureName:r.signature_name||'',signatureDate:r.signature_date||''};
+}
+function fmtTime(t){const m=String(t||'').match(/^(\d{1,2}):(\d{2})/);if(!m)return String(t||'');let h=+m[1];const ap=h>=12?'PM':'AM';h=h%12||12;return h+':'+m[2]+' '+ap;}
+function fmtTimeRange(a,b){const x=fmtTime(a),y=fmtTime(b);return x&&y?x+' – '+y:(x||y||'');}
+function fmtDay(day){if(!day||day==='backlog')return '';const dt=new Date(day+'T00:00:00');if(isNaN(dt))return String(day);return dt.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});}
+function normPhone(s){return String(s||'').replace(/\D/g,'');}
+function normEmail(s){return String(s||'').trim().toLowerCase();}
+function extractPhone(d){const h=(d.clientContact||'')+' '+(d.clientAddr||'');const m=h.match(/[\d\s\-().+]{7,}/);return m?m[0]:'';}
+function extractEmail(d){const h=(d.clientContact||'')+' '+(d.clientAddr||'');const m=h.match(/[\w.+-]+@[\w-]+\.[\w.-]+/);return m?m[0]:'';}
+
+function showError(title,msg){
+  document.getElementById('shell').innerHTML=`<div class="err"><div class="err-emoji">📄</div><div class="err-title">${esc(title)}</div><div class="err-msg">${esc(msg)}</div></div>`;
+}
+
+/* ── data fetch ────────────────────────────────────── */
+async function getJSON(url){try{const r=await fetch(url,{headers:H});if(!r.ok)return null;return await r.json();}catch(e){console.error(e);return null;}}
+
+async function resolveLead(){
+  const get=qp();
+  let leadId=get('lead')||get('portal');
+  let estId='';
+  if(leadId){
+    const a=await getJSON(`${SB_URL}/rest/v1/leads?id=eq.${encodeURIComponent(leadId)}&select=id,est_id`);
+    if(a&&a.length)estId=a[0].est_id||'';
+  } else {
+    // Fallback: accept an estimate id and resolve its lead
+    const e=get('est')||get('id');
+    if(e){
+      estId=e;
+      const a=await getJSON(`${SB_URL}/rest/v1/leads?est_id=eq.${encodeURIComponent(e)}&select=id,est_id`);
+      if(a&&a.length)leadId=a[0].id;
+    }
+  }
+  return {leadId,estId};
+}
+async function fetchPrimary(estId){
+  if(!estId)return null;
+  const a=await getJSON(`${SB_URL}/rest/v1/docs?id=eq.${encodeURIComponent(estId)}&select=*`);
+  return a&&a.length?mapDoc(a[0]):null;
+}
+async function fetchInvoice(estId,primary){
+  let invs=[];
+  if(estId){
+    const a=await getJSON(`${SB_URL}/rest/v1/docs?or=(id.eq.${encodeURIComponent(estId)},source_est_id.eq.${encodeURIComponent(estId)})&select=*`);
+    if(a)invs=a.filter(d=>d.type==='invoice').map(mapDoc);
+  }
+  if(primary&&primary.type==='invoice')invs.push(primary);
+  invs.sort((a,b)=>(b.created||0)-(a.created||0));
+  return invs.length?invs[0]:null;
+}
+async function fetchLeadJobs(leadId){
+  if(!leadId)return [];
+  const a=await getJSON(`${SB_URL}/rest/v1/jobs?lead_id=eq.${encodeURIComponent(leadId)}&select=id,day,end_day,start_time,end_time,appt_type`);
+  return a||[];
+}
+
+/* ── verify gate ───────────────────────────────────── */
+function showGate(d,onOk){
+  const hasPhone=!!normPhone(d.clientContact).length||!!normPhone(extractPhone(d)).length;
+  const hasEmail=!!normEmail(extractEmail(d)).length;
+  let prompt='To view your project, please verify your identity.';
+  if(hasPhone&&hasEmail)prompt='Enter the phone number or email this was sent to.';
+  else if(hasPhone)prompt='Enter the phone number this was sent to.';
+  else if(hasEmail)prompt='Enter the email address this was sent to.';
+  else prompt='Please confirm your name to continue.';
+  document.getElementById('shell').innerHTML=`<div class="gate">
+    <div class="gate-logo">BETTER <span>VIEW</span></div>
+    <div class="gate-tag">Customer Project Portal</div>
+    <div class="gate-card">
+      <h1>Verify it's you</h1>
+      <p>${esc(prompt)}</p>
+      <input class="gate-input" id="gi" autocomplete="off" placeholder="${hasEmail&&!hasPhone?'name@example.com':hasPhone?'Phone or email':'Your full name'}" inputmode="${hasPhone&&!hasEmail?'tel':'text'}"/>
+      <button class="gate-btn" id="gb">Continue →</button>
+      <div class="gate-err" id="ge"></div>
+    </div>
+  </div>`;
+  const inp=document.getElementById('gi'),btn=document.getElementById('gb'),err=document.getElementById('ge');
+  inp.focus();
+  const submit=()=>{
+    const v=(inp.value||'').trim();
+    if(!v){err.textContent='Please enter your phone or email.';inp.classList.add('bad');return;}
+    const vd=normPhone(v),ve=normEmail(v);
+    const mPhone=hasPhone&&vd.length>=7&&(normPhone(d.clientContact).endsWith(vd.slice(-10))||normPhone(extractPhone(d)).endsWith(vd.slice(-10)));
+    const mEmail=hasEmail&&ve.length>3&&normEmail(extractEmail(d))===ve;
+    const mName=!hasPhone&&!hasEmail&&v.length>=3&&d.clientName&&d.clientName.toLowerCase().includes(v.toLowerCase().slice(0,Math.min(v.length,d.clientName.length)));
+    if(mPhone||mEmail||mName){sessionStorage.setItem('bvp_verified_'+d.id,'1');onOk();}
+    else{err.textContent="That doesn't match. Try again, or contact us.";inp.classList.add('bad');}
+  };
+  btn.addEventListener('click',submit);
+  inp.addEventListener('keydown',e=>{if(e.key==='Enter')submit();inp.classList.remove('bad');err.textContent='';});
+}
+
+/* ── schedule rendering (appointment + production) ── */
+function schedRows(jobs,emptyEmoji,emptyMsg){
+  if(!jobs.length)return `<div class="empty"><span class="empty-emoji">${emptyEmoji}</span>${esc(emptyMsg)}</div>`;
+  const sorted=jobs.slice().sort((a,b)=>{
+    const ab=(!a.day||a.day==='backlog')?1:0,bb=(!b.day||b.day==='backlog')?1:0;
+    if(ab!==bb)return ab-bb;return String(a.day||'').localeCompare(String(b.day||''));
+  });
+  return sorted.map(j=>{
+    const label=APPT_LABELS[j.appt_type]||'Project Work';
+    const emoji=APPT_EMOJI[j.appt_type]||'📌';
+    const scheduled=j.day&&j.day!=='backlog';
+    const time=fmtTimeRange(j.start_time,j.end_time);
+    let when,badge,bcls;
+    if(scheduled){badge='Scheduled';bcls='green';when=fmtDay(j.day)+(time?' · '+time:'');}
+    else{badge='Scheduling';bcls='amber';when="We're finalizing the date — we'll reach out to confirm.";}
+    return `<div class="sched">
+      <div class="sched-ico">${emoji}</div>
+      <div class="sched-main"><div class="sched-type">${esc(label)}</div><div class="sched-when">${esc(when)}</div></div>
+      <span class="badge ${bcls}">${badge}</span>
+    </div>`;
+  }).join('');
+}
+
+/* ── document rendering (estimate / invoice body) ──── */
+function docTable(d){
+  const items=(d.lineItems||[]).filter(li=>(li.desc||'').trim());
+  const rows=items.map(li=>{
+    const qty=parseFloat(li.qty)||0,price=parseFloat(li.price)||0;
+    if(qty===0)return `<tr class="row-zero"><td>${esc(li.desc)}</td><td>—</td><td>—</td><td>—</td></tr>`;
+    return `<tr><td>${esc(li.desc)}</td><td>${esc(li.qty)}</td><td>${fmt(price)}</td><td>${fmt(qty*price)}</td></tr>`;
+  }).join('');
+  return `<table><thead><tr><th>Description</th><th>Qty</th><th>Unit Price</th><th>Total</th></tr></thead>
+    <tbody>${rows||'<tr><td colspan="4" style="color:#aab2c2;text-align:center;padding:16px">No line items</td></tr>'}</tbody></table>`;
+}
+function docBody(d){
+  const isInv=d.type==='invoice';
+  const signed=!!d.signature;
+  return `${signed&&!isInv?`<div class="signed-banner"><div class="signed-banner-ico">✅</div><div><b>This estimate has been signed</b><small>Signed by ${esc(d.signatureName||'')}${d.signatureDate?' on '+new Date(d.signatureDate).toLocaleString():''}</small></div></div>`:''}
+    ${d.scope?`<div class="scope"><div class="scope-lbl">Scope of Work</div><div class="scope-text">${esc(d.scope)}</div></div>`:''}
+    ${docTable(d)}
+    <div class="totals"><div class="total-row"><span class="total-lbl">Total ${isInv?'Due':''}</span><span>${fmt(calcTotal(d))}</span></div></div>
+    ${d.notes?`<div class="notes"><div class="notes-lbl">Notes &amp; Terms</div><div class="notes-text">${esc(d.notes)}</div></div>`:''}
+    ${signed?`<div class="embedded-sig"><div class="embedded-sig-lbl">Accepted &amp; Authorized By</div><div class="embedded-sig-row"><img class="embedded-sig-img" src="${d.signature}" alt="signature"/><div><div class="embedded-sig-name">${esc(d.signatureName||'')}</div><div class="embedded-sig-date">${d.signatureDate?new Date(d.signatureDate).toLocaleString():''}</div></div></div></div>`:''}`;
+}
+
+function estimatePanelHtml(primary){
+  if(!primary)return `<div class="card"><div class="empty"><span class="empty-emoji">📝</span>Your estimate is being prepared. It'll appear here once it's ready.</div></div>`;
+  if(primary.type==='invoice')return `<div class="card"><div class="empty"><span class="empty-emoji">📑</span>This project has moved to invoicing.<br>See the <b>Invoice</b> tab for details.</div></div>`;
+  const signed=!!primary.signature;
+  return `<div class="card">
+    <div class="doc-bar"><div><div class="doc-title">Estimate</div><div class="doc-sub">#${esc(primary.num||'—')} · ${esc(primary.date||'')}</div></div>
+      <span class="badge ${signed?'green':'amber'}">${signed?'Signed':'Awaiting Signature'}</span></div>
+    ${docBody(primary)}
+    ${!signed?`<div class="sig">
+      <h2>✍️ Sign &amp; Accept</h2>
+      <p>Sign below with your finger or mouse to accept this estimate. We'll be notified right away.</p>
+      <canvas class="sig-canvas" id="sigCanvas"></canvas>
+      <div class="sig-row">
+        <input class="sig-name" id="sigName" placeholder="Your printed name" autocomplete="name"/>
+        <button class="sig-btn sig-btn-clear" id="sigClear">Clear</button>
+        <button class="sig-btn sig-btn-save" id="sigSave">✓ Sign &amp; Accept</button>
+      </div>
+      <div class="sig-status" id="sigStatus"></div>
+    </div>`:''}
+    <button class="print-btn" onclick="window.print()" style="margin-top:14px;">📄 Download / Print PDF</button>
+  </div>`;
+}
+function invoicePanelHtml(invoice){
+  if(!invoice)return `<div class="card"><div class="empty"><span class="empty-emoji">🧾</span>No invoice yet. Once your project wraps up, your invoice will show here.</div></div>`;
+  const paid=invoice.status==='paid';
+  return `<div class="card">
+    <div class="doc-bar"><div><div class="doc-title">Invoice</div><div class="doc-sub">#${esc(invoice.num||'—')} · ${esc(invoice.date||'')}${invoice.dueDate?' · Due '+esc(invoice.dueDate):''}</div></div>
+      <span class="badge ${paid?'green':'amber'}">${paid?'Paid':'Due'}</span></div>
+    ${docBody(invoice)}
+    <button class="print-btn" onclick="window.print()" style="margin-top:14px;">📄 Download / Print PDF</button>
+  </div>`;
+}
+
+/* ── signature pad ─────────────────────────────────── */
+function wireSig(primary,rerender){
+  const canvas=document.getElementById('sigCanvas');
+  if(!canvas)return;
+  const ctx=canvas.getContext('2d');
+  const fit=()=>{const r=canvas.getBoundingClientRect();if(r.width>0){const dpr=window.devicePixelRatio||1;canvas.width=Math.floor(r.width*dpr);canvas.height=Math.floor(r.height*dpr);ctx.setTransform(dpr,0,0,dpr,0,0);ctx.lineWidth=2.2;ctx.lineCap='round';ctx.lineJoin='round';ctx.strokeStyle='#111';}};
+  fit();window.addEventListener('resize',fit);
+  let drawing=false,lx=0,ly=0,ink=false;
+  const pos=e=>{const r=canvas.getBoundingClientRect();const t=(e.touches&&e.touches[0])||e;return{x:t.clientX-r.left,y:t.clientY-r.top};};
+  const start=e=>{e.preventDefault();drawing=true;const p=pos(e);lx=p.x;ly=p.y;};
+  const move=e=>{if(!drawing)return;e.preventDefault();const p=pos(e);ctx.beginPath();ctx.moveTo(lx,ly);ctx.lineTo(p.x,p.y);ctx.stroke();lx=p.x;ly=p.y;ink=true;canvas.classList.add('inked');};
+  const end=()=>{drawing=false;};
+  canvas.addEventListener('mousedown',start);canvas.addEventListener('mousemove',move);canvas.addEventListener('mouseup',end);canvas.addEventListener('mouseleave',end);
+  canvas.addEventListener('touchstart',start,{passive:false});canvas.addEventListener('touchmove',move,{passive:false});canvas.addEventListener('touchend',end);
+  document.getElementById('sigClear').addEventListener('click',()=>{ctx.save();ctx.setTransform(1,0,0,1,0,0);ctx.clearRect(0,0,canvas.width,canvas.height);ctx.restore();ink=false;canvas.classList.remove('inked');document.getElementById('sigStatus').textContent='';});
+  document.getElementById('sigSave').addEventListener('click',async()=>{
+    const st=document.getElementById('sigStatus');
+    if(!ink){st.textContent='Please draw your signature first.';st.className='sig-status bad';return;}
+    const name=document.getElementById('sigName').value.trim();
+    if(!name){st.textContent='Please enter your printed name.';st.className='sig-status bad';return;}
+    const btn=document.getElementById('sigSave');btn.disabled=true;btn.textContent='Saving…';st.textContent='';st.className='sig-status';
+    const dataUrl=canvas.toDataURL('image/png');const nowIso=new Date().toISOString();
+    try{
+      const r=await fetch(`${SB_URL}/rest/v1/docs?id=eq.${encodeURIComponent(primary.id)}`,{method:'PATCH',headers:{...H,'Content-Type':'application/json',Prefer:'return=minimal'},body:JSON.stringify({signature:dataUrl,signature_name:name,signature_date:nowIso,status:'signed',outcome:'won',closed_date:nowIso})});
+      if(!r.ok)throw new Error('HTTP '+r.status+': '+await r.text());
+      primary.signature=dataUrl;primary.signatureName=name;primary.signatureDate=nowIso;primary.status='signed';
+      rerender();
+      window.scrollTo({top:0,behavior:'smooth'});
+    }catch(e){console.error('sign',e);st.textContent='Could not save. Check your connection and try again.';st.className='sig-status bad';btn.disabled=false;btn.textContent='✓ Sign & Accept';}
+  });
+}
+
+/* ── portal shell ──────────────────────────────────── */
+function buildPortal(state){
+  const {primary,invoice,jobs}=state;
+  const appts=jobs.filter(j=>SALES_TYPES.includes(j.appt_type));
+  const prod=jobs.filter(j=>!SALES_TYPES.includes(j.appt_type));
+  const name=primary?primary.clientName:'';
+  const estReady=primary&&primary.type!=='invoice';
+  const estBadge=estReady&&!primary.signature?'<span class="tab-count">!</span>':'';
+
+  document.getElementById('shell').innerHTML=`
+    <div class="head">
+      <div class="head-top">
+        <div><div class="brand-name">BETTER <span>VIEW</span></div><div class="brand-tag">${esc(COMPANY.tagline)}</div></div>
+        <div class="brand-contact"><a href="tel:${esc(COMPANY.phone.replace(/\D/g,''))}">${esc(COMPANY.phone)}</a><br><a href="mailto:${esc(COMPANY.email)}">${esc(COMPANY.email)}</a></div>
+      </div>
+      <div class="welcome">${name?`Welcome, <b>${esc(name)}</b> — here's everything for your project.`:`Here's everything for your project.`}</div>
+    </div>
+    <div class="tabs">
+      <button class="tab active" data-tab="appt"><span class="tab-emoji">📅</span>Appointment<span class="tab-count">${appts.length}</span></button>
+      <button class="tab" data-tab="est"><span class="tab-emoji">📋</span>Estimate${estBadge}</button>
+      <button class="tab" data-tab="sched"><span class="tab-emoji">🔨</span>Schedule<span class="tab-count">${prod.length}</span></button>
+      <button class="tab" data-tab="inv"><span class="tab-emoji">🧾</span>Invoice</button>
+    </div>
+    <div class="shell-body">
+      <div class="panel active" data-tab="appt"><div class="card"><div class="card-hd">Your Appointment with Better View</div>${schedRows(appts,'📅',"No appointment is on the calendar yet. We'll be in touch to set one up.")}</div></div>
+      <div class="panel" data-tab="est" id="panelEst">${estimatePanelHtml(primary)}</div>
+      <div class="panel" data-tab="sched"><div class="card"><div class="card-hd">Production Schedule</div>${schedRows(prod,'🔨',"Your install hasn't been scheduled yet — we'll confirm a date soon.")}</div></div>
+      <div class="panel" data-tab="inv">${invoicePanelHtml(invoice)}</div>
+    </div>
+    <div class="footer">${esc(COMPANY.name)} Home Improvements · ${esc(COMPANY.address)}<br>${esc(COMPANY.license)} · ${esc(COMPANY.website)}</div>`;
+
+  document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>{
+    const n=t.dataset.tab;
+    document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x.dataset.tab===n));
+    document.querySelectorAll('.panel').forEach(p=>p.classList.toggle('active',p.dataset.tab===n));
+    window.scrollTo({top:0,behavior:'smooth'});
+  }));
+
+  if(estReady&&!primary.signature){
+    wireSig(primary,()=>{
+      document.getElementById('panelEst').innerHTML=estimatePanelHtml(primary);
+      document.querySelector('.tab[data-tab="est"]').innerHTML=`<span class="tab-emoji">📋</span>Estimate`;
+    });
+  }
+}
+
+/* ── bootstrap ─────────────────────────────────────── */
+(async()=>{
+  const {leadId,estId}=await resolveLead();
+  if(!leadId&&!estId){showError('Link not recognized','This portal link looks incomplete. Please ask Better View to resend it.');return;}
+  const primary=await fetchPrimary(estId);
+  const [invoice,jobs]=await Promise.all([fetchInvoice(estId,primary),fetchLeadJobs(leadId)]);
+  const state={leadId,estId,primary,invoice,jobs};
+  // Gate against the primary document when one exists.
+  if(primary&&!sessionStorage.getItem('bvp_verified_'+primary.id)){
+    showGate(primary,()=>buildPortal(state));
+  } else {
+    buildPortal(state);
+  }
+})();
+</script>
+</body>
+</html>
