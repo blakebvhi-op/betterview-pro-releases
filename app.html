@@ -1693,6 +1693,8 @@ body:not(.role-owner):not(.role-manager) .role-financial-only{display:none!impor
     <button class="btn btn-ghost btn-sm" onclick="openTmplOverlay()">📋 Templates</button>
     <button class="btn btn-ghost btn-sm" onclick="printDoc()">📄 Export PDF</button>
     <button class="btn btn-ghost btn-sm" onclick="generateCustomerLink()">🔗 Customer Link</button>
+    <button class="btn btn-ghost btn-sm" onclick="generatePortalLink()">🪟 Portal Link</button>
+    <button class="btn btn-ghost btn-sm" onclick="openEstMessages()">💬 Messages</button>
     <button class="btn btn-ghost btn-sm" onclick="openWorkOrder()">🔧 Work Order</button>
     <button class="btn btn-ghost btn-sm" onclick="openMaterialOrder()">📦 Material Order</button>
     <button class="btn btn-ghost btn-sm" onclick="markDocOutcome('won')" id="docWonBtn" title="Mark this estimate as Won (closed/approved)">🏆 Won</button>
@@ -1929,6 +1931,7 @@ body:not(.role-owner):not(.role-manager) .role-financial-only{display:none!impor
     <div class="macts">
       <button class="btn btn-ghost" onclick="closeMov('jMov')">Cancel</button>
       <button class="btn btn-ghost" id="jCrewLink" onclick="copyCrewLink()" style="display:none">📋 Crew Link</button>
+      <button class="btn btn-ghost" id="jPortalLink" onclick="textPortalLink()">📲 Text Portal Link</button>
       <button class="btn btn-amber" id="jSave">Add Job</button>
     </div>
   </div>
@@ -11949,6 +11952,275 @@ function initViewSliders(){
 }
 
 init();
+
+/* ════════════════════════════════════════════════════════════════════
+   PORTAL MESSAGING + ALERTS + LINK BUTTONS  (added)
+   ════════════════════════════════════════════════════════════════════ */
+/* ════════════════════════════════════════════════════════════════════
+   BETTER VIEW PRO — PORTAL MESSAGING (staff side)
+   Paste this whole block into app.html's main <script>.
+   Then open a thread from anywhere with:  openLeadMessages(leadId)
+   e.g. on the customer card:  <button onclick="openLeadMessages('${lead.id}')">💬 Messages</button>
+   Uses existing globals: SB_URL, SB_KEY, authAccessToken, currentUser, currentCompanyId
+   ════════════════════════════════════════════════════════════════════ */
+(function(){
+  let _pmPoll=null, _pmLeadId=null, _pmLastCount=-1;
+
+  function pmHeaders(json){
+    const h={apikey:SB_KEY, Authorization:'Bearer '+(typeof authAccessToken!=='undefined'?authAccessToken:SB_KEY)};
+    if(json) h['Content-Type']='application/json';
+    return h;
+  }
+  function pmEsc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+  async function pmFetchThread(leadId){
+    try{
+      const r=await fetch(`${SB_URL}/rest/v1/portal_messages?lead_id=eq.${encodeURIComponent(leadId)}&select=id,sender,sender_name,body,created_at,read_by_staff&order=created_at.asc`,{headers:pmHeaders()});
+      if(!r.ok)return [];
+      return await r.json();
+    }catch(e){console.error('pm thread',e);return [];}
+  }
+  async function pmMarkRead(leadId){
+    try{
+      await fetch(`${SB_URL}/rest/v1/portal_messages?lead_id=eq.${encodeURIComponent(leadId)}&sender=eq.customer&read_by_staff=eq.false`,
+        {method:'PATCH',headers:{...pmHeaders(true),Prefer:'return=minimal'},body:JSON.stringify({read_by_staff:true})});
+    }catch(e){console.error('pm read',e);}
+  }
+  async function pmSend(leadId,body){
+    const name=(typeof currentUser!=='undefined'&&currentUser&&(currentUser.display_name||currentUser.name||currentUser.email))||'Better View';
+    const company=(typeof currentCompanyId!=='undefined'&&currentCompanyId)||null;
+    const r=await fetch(`${SB_URL}/rest/v1/portal_messages`,{method:'POST',
+      headers:{...pmHeaders(true),Prefer:'return=minimal'},
+      body:JSON.stringify({lead_id:leadId,company_id:company,sender:'staff',sender_name:name,body:body,read_by_staff:true})});
+    if(!r.ok)throw new Error(await r.text());
+  }
+
+  function pmRender(list){
+    const thread=document.getElementById('pmThread');
+    if(!thread)return;
+    if(!list.length){thread.innerHTML='<div style="color:#9aa3b4;text-align:center;padding:30px;font-size:13px">No messages yet. Send the customer their portal link and start the conversation.</div>';return;}
+    thread.innerHTML=list.map(m=>{
+      const staff=m.sender==='staff';
+      const t=new Date(m.created_at);
+      const ts=isNaN(t)?'':t.toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});
+      return `<div style="display:flex;flex-direction:column;max-width:80%;${staff?'align-self:flex-end;align-items:flex-end':'align-self:flex-start;align-items:flex-start'}">
+        <div style="padding:9px 12px;border-radius:13px;font-size:13.5px;line-height:1.4;white-space:pre-wrap;word-break:break-word;${staff?'background:#f59e0b;color:#1a1206;border-bottom-right-radius:4px':'background:#2a313e;color:#e8ecf3;border-bottom-left-radius:4px'}">${pmEsc(m.body)}</div>
+        <div style="font-size:10px;color:#9aa3b4;margin-top:2px">${staff?pmEsc(m.sender_name||'You'):pmEsc(m.sender_name||'Customer')} · ${ts}</div>
+      </div>`;
+    }).join('');
+    thread.scrollTop=thread.scrollHeight;
+  }
+  async function pmLoad(leadId,force){
+    const list=await pmFetchThread(leadId);
+    if(force||list.length!==_pmLastCount){_pmLastCount=list.length;pmRender(list);}
+    if(list.some(m=>m.sender==='customer'&&!m.read_by_staff))pmMarkRead(leadId);
+  }
+
+  window.openLeadMessages=function(leadId,custName){
+    if(!leadId){alert('No lead linked.');return;}
+    _pmLeadId=leadId;_pmLastCount=-1;
+    let ov=document.getElementById('pmOverlay');
+    if(ov)ov.remove();
+    ov=document.createElement('div');
+    ov.id='pmOverlay';
+    ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.72);z-index:99999;display:flex;align-items:center;justify-content:center;padding:16px;';
+    ov.innerHTML=`<div style="background:#161a2b;border:1px solid #2a313e;border-radius:16px;width:100%;max-width:520px;max-height:88vh;display:flex;flex-direction:column;font-family:DM Sans,sans-serif;overflow:hidden;">
+      <div style="display:flex;align-items:center;justify-content:space-between;padding:15px 18px;border-bottom:1px solid #2a313e;">
+        <div><div style="color:#f59e0b;font-weight:800;letter-spacing:.5px;font-size:14px;">💬 MESSAGES</div>
+        <div style="color:#9aa3b4;font-size:11px;margin-top:2px;">${pmEsc(custName||'Customer portal thread')}</div></div>
+        <button id="pmClose" style="background:transparent;border:0;color:#9aa3b4;font-size:24px;cursor:pointer;line-height:1;">×</button>
+      </div>
+      <div id="pmThread" style="flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:9px;padding:16px 18px;min-height:240px;background:#0f1115;"></div>
+      <div style="display:flex;gap:8px;align-items:flex-end;padding:12px 16px;border-top:1px solid #2a313e;">
+        <textarea id="pmInput" rows="1" placeholder="Reply to the customer…" style="flex:1;resize:none;max-height:120px;padding:10px 12px;font-size:14px;font-family:inherit;border:1px solid #2a313e;border-radius:10px;background:#1e2530;color:#e8ecf3;outline:none;"></textarea>
+        <button id="pmSend" style="flex-shrink:0;padding:10px 16px;border:0;border-radius:10px;background:#f59e0b;color:#0a0c10;font-weight:800;font-size:14px;cursor:pointer;">Send</button>
+      </div>
+    </div>`;
+    document.body.appendChild(ov);
+    ov.addEventListener('click',e=>{if(e.target===ov)closePm();});
+    document.getElementById('pmClose').onclick=closePm;
+    const inp=document.getElementById('pmInput'),btn=document.getElementById('pmSend');
+    const doSend=async()=>{
+      const body=(inp.value||'').trim();if(!body)return;
+      btn.disabled=true;inp.disabled=true;
+      try{await pmSend(leadId,body);inp.value='';_pmLastCount=-1;await pmLoad(leadId,true);}
+      catch(e){console.error(e);alert('Could not send: '+e.message);}
+      finally{btn.disabled=false;inp.disabled=false;inp.focus();}
+    };
+    btn.onclick=doSend;
+    inp.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();doSend();}});
+    pmLoad(leadId,true);
+    if(_pmPoll)clearInterval(_pmPoll);
+    _pmPoll=setInterval(()=>{if(document.getElementById('pmOverlay'))pmLoad(leadId,false);else clearInterval(_pmPoll);},10000);
+    inp.focus();
+  };
+  function closePm(){const ov=document.getElementById('pmOverlay');if(ov)ov.remove();if(_pmPoll)clearInterval(_pmPoll);}
+
+  // Optional: unread count for a lead, for badges on cards.
+  // const n = await leadUnreadCount(leadId);
+  window.leadUnreadCount=async function(leadId){
+    try{
+      const r=await fetch(`${SB_URL}/rest/v1/portal_messages?lead_id=eq.${encodeURIComponent(leadId)}&sender=eq.customer&read_by_staff=eq.false&select=id`,{headers:{...pmHeaders(),Prefer:'count=exact'}});
+      const cr=r.headers.get('content-range');
+      if(cr&&cr.includes('/'))return parseInt(cr.split('/')[1])||0;
+      const a=await r.json();return Array.isArray(a)?a.length:0;
+    }catch(e){return 0;}
+  };
+})();
+
+/* ════════════════════════════════════════════════════════════════════
+   BETTER VIEW PRO — IN-APP MESSAGE ALERTS (staff side)
+   Paste into app.html's main <script>, then call once after login:
+       startMessageAlerts();
+   Optional badge: put an element with id="msgAlertBadge" in your nav;
+   it auto-shows the unread customer-message count.
+   Pairs with app-portal-messaging.js — clicking a notification opens
+   that lead's thread via openLeadMessages().
+   Uses globals: SB_URL, SB_KEY, authAccessToken
+   ════════════════════════════════════════════════════════════════════ */
+(function(){
+  let _seen=null;            // Set of message ids we've already accounted for
+  let _alertPoll=null;
+  let _origTitle=document.title;
+
+  function maHeaders(){
+    return {apikey:SB_KEY, Authorization:'Bearer '+(typeof authAccessToken!=='undefined'?authAccessToken:SB_KEY)};
+  }
+
+  function beep(){
+    try{
+      const Ctx=window.AudioContext||window.webkitAudioContext;
+      if(!Ctx)return;
+      const ctx=new Ctx();
+      const o=ctx.createOscillator(),g=ctx.createGain();
+      o.type='sine';o.frequency.value=880;
+      g.gain.setValueAtTime(0.0001,ctx.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.18,ctx.currentTime+0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001,ctx.currentTime+0.32);
+      o.connect(g);g.connect(ctx.destination);
+      o.start();o.stop(ctx.currentTime+0.34);
+      setTimeout(()=>{try{ctx.close();}catch(e){}},600);
+    }catch(e){}
+  }
+
+  function updateBadge(n){
+    const el=document.getElementById('msgAlertBadge');
+    if(el){
+      el.textContent=n>0?(n>99?'99+':String(n)):'';
+      el.style.display=n>0?'':'none';
+    }
+    document.title=n>0?`(${n}) ${_origTitle}`:_origTitle;
+  }
+
+  function notify(msg){
+    const title=`💬 ${msg.sender_name||'Customer'}`;
+    const opts={body:String(msg.body||'').slice(0,140),tag:'pm-'+msg.lead_id,renotify:true};
+    try{
+      if('Notification' in window && Notification.permission==='granted'){
+        const n=new Notification(title,opts);
+        n.onclick=()=>{window.focus();try{n.close();}catch(e){}
+          if(typeof openLeadMessages==='function')openLeadMessages(msg.lead_id,msg.sender_name);};
+      }
+    }catch(e){}
+    beep();
+  }
+
+  async function poll(){
+    try{
+      const r=await fetch(`${SB_URL}/rest/v1/portal_messages?sender=eq.customer&read_by_staff=eq.false&select=id,lead_id,sender_name,body,created_at&order=created_at.desc&limit=30`,{headers:maHeaders()});
+      if(!r.ok)return;
+      const list=await r.json();
+      if(!Array.isArray(list))return;
+      updateBadge(list.length);
+      if(_seen===null){
+        // First run after load: baseline only, don't alert for existing unread.
+        _seen=new Set(list.map(m=>m.id));
+        return;
+      }
+      // Newest-first; alert for any id we haven't seen, oldest of the new batch first.
+      const fresh=list.filter(m=>!_seen.has(m.id)).reverse();
+      fresh.forEach(m=>{_seen.add(m.id);notify(m);});
+      // Keep _seen from growing unbounded
+      if(_seen.size>500)_seen=new Set(list.map(m=>m.id));
+    }catch(e){/* silent — alerts are best-effort */}
+  }
+
+  window.startMessageAlerts=function(){
+    if(_alertPoll)return;
+    try{
+      if('Notification' in window && Notification.permission==='default'){
+        Notification.requestPermission();
+      }
+    }catch(e){}
+    poll();
+    _alertPoll=setInterval(poll,20000);
+    // Re-check promptly when the tab regains focus.
+    document.addEventListener('visibilitychange',()=>{if(!document.hidden)poll();});
+  };
+
+  // Manually clear the badge (e.g. after opening a thread).
+  window.refreshMessageBadge=poll;
+})();
+
+function generatePortalLink(){
+  if(typeof saveDoc==='function') saveDoc();
+  const d=docs.find(x=>x.id===editDocId);
+  if(!d){alert('Open or save an estimate first.');return;}
+  const lead=leads.find(l=>l.estId===d.id);
+  if(!lead){alert('No lead is linked to this estimate yet — the portal needs a lead to pull the appointment and schedule.');return;}
+  const link='https://sign.betterview.homes/portal.html?lead='+encodeURIComponent(lead.id);
+  const ov=document.createElement('div');
+  ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:99999;display:flex;align-items:center;justify-content:center;padding:20px;';
+  ov.innerHTML='<div style="background:#1e2530;border:2px solid #f59e0b;border-radius:14px;padding:22px 24px;max-width:520px;width:100%;color:#fff;font-family:DM Sans,sans-serif;">'
+    +'<div style="font-size:16px;letter-spacing:1px;color:#f59e0b;margin-bottom:6px;font-weight:700;">🪟 CUSTOMER PORTAL LINK</div>'
+    +'<div style="font-size:12px;color:#9aa3b4;margin-bottom:14px;line-height:1.5;">One link: appointment, estimate (signable), schedule, and invoice.</div>'
+    +'<input id="bvPortalBox" readonly value="'+link.replace(/"/g,'&quot;')+'" style="width:100%;background:#0f1115;border:1px solid #2a313e;border-radius:8px;padding:10px 12px;color:#f59e0b;font-family:monospace;font-size:11px;margin-bottom:12px;"/>'
+    +'<div style="display:flex;gap:8px;justify-content:flex-end;flex-wrap:wrap;">'
+    +'<button id="bvPClose" style="background:transparent;border:1px solid #2a313e;color:#cbd5e1;border-radius:8px;padding:8px 14px;cursor:pointer;">Close</button>'
+    +'<button id="bvPCopy" style="background:#f59e0b;border:0;color:#0a0c10;border-radius:8px;padding:8px 14px;cursor:pointer;font-weight:700;">📋 Copy</button>'
+    +'<button id="bvPOpen" style="background:#f59e0b;border:0;color:#0a0c10;border-radius:8px;padding:8px 14px;cursor:pointer;font-weight:700;">🌐 Preview</button>'
+    +'</div></div>';
+  document.body.appendChild(ov);
+  ov.addEventListener('click',e=>{if(e.target===ov)ov.remove();});
+  bvPClose.onclick=()=>ov.remove();
+  bvPCopy.onclick=async()=>{try{await navigator.clipboard.writeText(link);bvPCopy.textContent='✓ Copied!';}catch{bvPortalBox.select();document.execCommand('copy');}};
+  bvPOpen.onclick=()=>window.open(link,'_blank');
+}
+
+function textPortalLink(){
+  if(typeof jLinkedLeadId==='undefined' || !jLinkedLeadId){
+    alert('Link the customer first — use the "Link Customer" search at the top of this appointment.');
+    return;
+  }
+  const lead=leads.find(l=>l.id===jLinkedLeadId);
+  if(!lead){alert('Linked customer not found.');return;}
+  if(lead._unsaved && typeof saveLead==='function'){
+    try{ saveLead(lead); lead._unsaved=false; }catch(e){ console.error(e); }
+  }
+  const phone=String(lead.phone||lead.contact||'').replace(/[^\d]/g,'');
+  const first=(String(lead.name||'').trim().split(/\s+/)[0])||'there';
+  const link='https://sign.betterview.homes/portal.html?lead='+encodeURIComponent(jLinkedLeadId);
+  const msg=`Hi ${first}, thanks for scheduling with Better View Home Improvements! Here's your project portal — your appointment, estimate, schedule, and invoice all in one place: ${link}`;
+  if(!phone){
+    if(navigator.clipboard) navigator.clipboard.writeText(link);
+    alert('No phone on file for this customer — the portal link was copied to your clipboard instead.');
+    return;
+  }
+  window.location.href='sms:'+phone+'?&body='+encodeURIComponent(msg);
+}
+
+/* Open the message thread for the estimate currently being edited */
+function openEstMessages(){
+  const d=(typeof docs!=='undefined')&&docs.find(x=>x.id===editDocId);
+  if(!d){alert('Open an estimate first.');return;}
+  const lead=leads.find(l=>l.estId===d.id);
+  if(!lead){alert('No customer is linked to this estimate yet.');return;}
+  openLeadMessages(lead.id, lead.name||d.clientName||'');
+}
+
+/* Start live message alerts (badge + notification) once the app is up */
+try{ startMessageAlerts(); }catch(e){ console.error('alerts init',e); }
+
 </script>
 
 
