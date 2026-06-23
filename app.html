@@ -13,7 +13,7 @@
 <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
 <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png">
 <meta name="referrer" content="no-referrer">
-<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src https://fryaksqvfknxdptrlppy.supabase.co https://ipapi.co https://api.open-meteo.com https://api.abcsupply.com; img-src 'self' data: blob:; media-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self';">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; connect-src https://fryaksqvfknxdptrlppy.supabase.co https://ipapi.co https://api.open-meteo.com; img-src 'self' data: blob:; media-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self';">
 <title>Better View Pro</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -799,15 +799,13 @@ select.doc-finput option{background:var(--steel-mid);}
 .doc-total-lbl{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:1px;}
 .doc-total-val{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;}
 
-/* ── MATERIALS / ABC SUPPLY ── */
+/* ── MATERIALS ── */
 .mat-view{display:flex;flex-direction:column;height:100%;overflow:hidden;}
 .mat-toolbar{display:flex;align-items:center;gap:8px;padding:8px 14px;background:var(--steel-mid);border-bottom:1px solid var(--iron);flex-shrink:0;flex-wrap:wrap;}
 .mat-search-wrap{display:flex;flex:1;min-width:180px;gap:6px;}
 .mat-search{flex:1;background:var(--steel-light);border:1px solid var(--iron);border-radius:7px;padding:7px 12px;color:var(--white);font-family:'DM Sans',sans-serif;font-size:13px;}
 .mat-search:focus{outline:none;border-color:var(--amber);}
 .mat-search::placeholder{color:rgba(148,163,184,.4);}
-.mat-creds-btn{background:var(--steel-light);border:1px solid var(--iron);color:var(--muted);padding:6px 10px;border-radius:6px;font-size:11px;cursor:pointer;white-space:nowrap;}
-.mat-creds-btn.connected{border-color:var(--green);color:var(--green);}
 .mat-body{display:flex;flex:1;overflow:hidden;}
 .mat-results{flex:1;overflow-y:auto;padding:10px 14px 80px;display:flex;flex-direction:column;gap:6px;}
 .mat-cart{width:280px;flex-shrink:0;background:var(--steel-mid);border-left:1px solid var(--iron);display:flex;flex-direction:column;overflow:hidden;}
@@ -1337,6 +1335,7 @@ body:not(.role-owner):not(.role-manager) .role-financial-only{display:none!impor
     <div class="dtabs" id="dtabs">
       <button class="dtab active" id="dtSched" onclick="switchMain('sched')">📅 SCHEDULE <span class="dbadge" id="dtBlBadge">0</span></button>
       <button class="dtab" id="dtCRM" onclick="switchMain('crm')">👥 CUSTOMERS <span class="dbadge" id="dtCrmBadge">0</span></button>
+      <button class="dtab" id="dtMsg" onclick="switchMain('msg')">💬 MESSAGES <span class="dbadge" id="dtMsgBadge">0</span></button>
       <button class="dtab" id="dtEst" onclick="switchMain('est')">📄 ESTIMATES</button>
       <button class="dtab" id="dtPipe" onclick="switchMain('pipe')">📋 PIPELINE</button>
       <button class="dtab" id="dtTasks" onclick="switchMain('tasks')">✓ TASKS <span class="dbadge" id="dtTasksBadge">0</span></button>
@@ -1357,6 +1356,10 @@ body:not(.role-owner):not(.role-manager) .role-financial-only{display:none!impor
   <button class="bnbtn" id="bnCRM" onclick="switchMain('crm')">
     <div class="bnicon">👥</div><div class="bnlbl">CUSTOMERS</div>
     <div class="bnbadge" id="bnCrmBadge"></div>
+  </button>
+  <button class="bnbtn" id="bnMsg" onclick="switchMain('msg')">
+    <div class="bnicon">💬</div><div class="bnlbl">MESSAGES</div>
+    <div class="bnbadge" id="bnMsgBadge"></div>
   </button>
   <button class="bnbtn" id="bnEst" onclick="switchMain('est')">
     <div class="bnicon">📄</div><div class="bnlbl">ESTIMATES</div>
@@ -1523,16 +1526,15 @@ body:not(.role-owner):not(.role-manager) .role-financial-only{display:none!impor
     </div>
   </div>
 
-  <!-- ═══ MATERIALS / ABC SUPPLY ═══ -->
+  <!-- ═══ MATERIALS ═══ -->
   <div class="view" id="vMat">
     <div class="mat-view" style="height:100%">
       <div class="mat-toolbar">
         <span style="font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:2px;color:var(--amber);flex-shrink:0;">🏗 MATERIALS</span>
         <div class="mat-search-wrap">
-          <input class="mat-search" id="matSearch" type="text" placeholder="Search ABC Supply catalog…" oninput="debouncedMatSearch()"/>
+          <input class="mat-search" id="matSearch" type="text" placeholder="Search materials catalog…" oninput="debouncedMatSearch()"/>
           <button class="btn btn-amber btn-sm" onclick="doMatSearch()">Search</button>
         </div>
-        <button class="mat-creds-btn" id="abcCredsBtn" onclick="toggleAbcCreds()">🔑 ABC API</button>
         <button class="mat-export-btn" onclick="exportMatList()">⬇ Export List</button>
       </div>
       <div class="mat-cat-tabs" id="matCatTabs">
@@ -1638,6 +1640,16 @@ body:not(.role-owner):not(.role-manager) .role-financial-only{display:none!impor
     <button class="btn btn-amber btn-sm" style="margin-top:12px;justify-content:center;" id="ddAddBtn">+ Add Job This Day</button>
   </div>
 </div>
+
+  <!-- ═══ MESSAGES INBOX ═══ -->
+  <style>#vMsg.active{display:flex;flex-direction:column;}</style>
+  <div class="view" id="vMsg">
+    <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--iron);flex-shrink:0;">
+      <div style="font-size:15px;font-weight:700;color:var(--white);letter-spacing:.02em;">💬 Messages</div>
+      <button class="btn btn-ghost btn-sm" onclick="renderMsgInbox()">↻ Refresh</button>
+    </div>
+    <div id="msgInboxList" style="flex:1;overflow-y:auto;"></div>
+  </div>
 
 <!-- ═══ PIPELINE ADD-COLUMN MODAL ═══ -->
 <div class="pipe-modal" id="pipeColModal" style="display:none;">
@@ -4946,11 +4958,11 @@ function switchMain(v){
   }
   mainView=v;
   document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));
-  const viewMap={sched:'vSched',crm:'vCRM',est:'vEst',mat:'vMat',tasks:'vTasks',pipe:'vPipe'};
+  const viewMap={sched:'vSched',crm:'vCRM',est:'vEst',mat:'vMat',tasks:'vTasks',pipe:'vPipe',msg:'vMsg'};
   document.getElementById(viewMap[v]||'vSched').classList.add('active');
-  ['bnSched','bnCRM','bnEst','bnMat','bnTasks','bnPipe'].forEach(id=>{const el=document.getElementById(id);if(el)el.classList.toggle('active',id==='bn'+v.charAt(0).toUpperCase()+v.slice(1));});
-  ['dtSched','dtCRM','dtEst','dtMat','dtTasks','dtPipe'].forEach(id=>{const el=document.getElementById(id);if(el)el.classList.toggle('active',id==='dt'+v.charAt(0).toUpperCase()+v.slice(1));});
-  const lblMap={sched:'New Job',crm:'New Customer',est:'New Estimate',mat:'Search Materials',tasks:'New Task',pipe:'New Column'};
+  ['bnSched','bnCRM','bnEst','bnMat','bnTasks','bnPipe','bnMsg'].forEach(id=>{const el=document.getElementById(id);if(el)el.classList.toggle('active',id==='bn'+v.charAt(0).toUpperCase()+v.slice(1));});
+  ['dtSched','dtCRM','dtEst','dtMat','dtTasks','dtPipe','dtMsg'].forEach(id=>{const el=document.getElementById(id);if(el)el.classList.toggle('active',id==='dt'+v.charAt(0).toUpperCase()+v.slice(1));});
+  const lblMap={sched:'New Job',crm:'New Customer',est:'New Estimate',mat:'Search Materials',tasks:'New Task',pipe:'New Column',msg:'↻ Refresh'};
   document.getElementById('daddLbl').textContent=lblMap[v]||'New';
   document.getElementById('daddBtn').onclick=
     v==='sched'?()=>openJobMov('backlog'):
@@ -4958,6 +4970,7 @@ function switchMain(v){
     v==='est'?()=>openDocEditor():
     v==='tasks'?()=>openTaskMov():
     v==='pipe'?()=>openPipeColDialog():
+    v==='msg'?()=>renderMsgInbox():
     ()=>document.getElementById('matSearch')?.focus();
   if(v==='crm')renderCustomers();
   else if(v==='sched')renderSched();
@@ -4965,6 +4978,7 @@ function switchMain(v){
   else if(v==='mat')renderMatView();
   else if(v==='tasks'){renderTaskList();filterTasks(taskFilter);}
   else if(v==='pipe')renderPipeline();
+  else if(v==='msg')renderMsgInbox();
 }
 function handleFab(){
   if(mainView==='sched')openJobMov('backlog');
@@ -6137,6 +6151,7 @@ function renderCustomerDetail(c){
           </div>
         </div>
         <div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0">
+          <button class="btn btn-ghost" onclick="openCustomerMessages('${c.id}')" title="View text messages" style="padding:6px 10px;font-size:13px">💬 Messages</button>
           <button class="btn btn-ghost" onclick="document.getElementById('cdName')?.focus()" title="Edit fields (or click any field directly)" style="padding:6px 10px;font-size:13px">✏️ Edit</button>
           <button class="btn btn-ghost" onclick="confirmDeleteCustomer('${c.id}')" title="Delete customer" style="padding:6px 10px;font-size:13px;color:var(--red,#ef4444)">🗑 Delete</button>
           <button class="btn btn-ghost" onclick="closeCustomerDetail()" style="padding:6px 10px;font-size:13px">Close</button>
@@ -10593,50 +10608,7 @@ function emailMaterialOrder(){
 
 let matCatFilter='all';
 let matSearchTimer=null;
-let abcCredsVisible=false;
-let abcToken=null,abcTokenExp=0;
 
-function getAbcCreds(){
-  try{return JSON.parse(localStorage.getItem('abc_creds')||'{}');}catch{return {};}
-}
-function setAbcCreds(c){localStorage.setItem('abc_creds',JSON.stringify(c));}
-function isAbcConnected(){const c=getAbcCreds();return!!(c.clientId&&c.clientSecret);}
-
-async function getAbcToken(){
-  if(abcToken&&Date.now()<abcTokenExp-60000)return abcToken;
-  const c=getAbcCreds();
-  if(!c.clientId||!c.clientSecret)return null;
-  try{
-    const r=await fetch('https://api.abcsupply.com/oauth/token',{
-      method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},
-      body:new URLSearchParams({grant_type:'client_credentials',client_id:c.clientId,client_secret:c.clientSecret,scope:'api'})
-    });
-    if(!r.ok)throw new Error('Auth failed');
-    const d=await r.json();
-    abcToken=d.access_token;
-    abcTokenExp=Date.now()+(d.expires_in||3600)*1000;
-    return abcToken;
-  }catch(e){console.error('ABC token error:',e);return null;}
-}
-
-async function abcSearchItems(query,category){
-  const token=await getAbcToken();
-  if(!token)return null; // will fall back to demo data
-  try{
-    const body={searchText:query||(category&&category!=='all'?category:'roofing'),pageSize:20};
-    const r=await fetch('https://api.abcsupply.com/product/v1/items/search',{
-      method:'POST',headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify(body)
-    });
-    if(!r.ok)throw new Error('Search failed');
-    const d=await r.json();
-    return(d.items||[]).map(item=>({
-      id:item.itemId,num:item.itemNumber,name:item.description,brand:item.brandName||'',
-      uom:item.unitOfMeasure||'EA',price:item.listPrice||0,avail:true,cat:category||'other',src:'abc'
-    }));
-  }catch(e){console.error('ABC search error:',e);return null;}
-}
-
-// Demo catalog — real ABC Supply product families with realistic pricing
 const DEMO_CATALOG=[
   // Roofing
   {id:'r001',num:'GAF-THD-30',name:'GAF Timberline HDZ Architectural Shingles — Charcoal',brand:'GAF',uom:'SQ',price:98.50,avail:true,cat:'Roofing'},
@@ -10700,13 +10672,6 @@ async function doMatSearch(){
   const resultsEl=document.getElementById('matResults');
   if(!resultsEl)return;
 
-  // Try live ABC API first, fall back to demo
-  if(isAbcConnected()){
-    resultsEl.innerHTML='<div class="mat-loading"><div class="spinner" style="width:18px;height:18px;border-width:2px"></div> Searching ABC Supply…</div>';
-    const liveItems=await abcSearchItems(q,matCatFilter==='all'?'':matCatFilter);
-    if(liveItems){renderMatResults(liveItems);return;}
-    // fall through to demo on error
-  }
   renderMatResults(getFilteredCatalog(q));
 }
 
@@ -10717,8 +10682,6 @@ function renderMatView(){
     if(!resultsEl)return;
     renderMatResults(getFilteredCatalog(document.getElementById('matSearch')?.value||''));
     renderMatCart();
-    const btn=document.getElementById('abcCredsBtn');
-    if(btn){btn.className='mat-creds-btn'+(isAbcConnected()?' connected':'');btn.textContent=isAbcConnected()?'✓ ABC Connected':'🔑 ABC API';}
   });
 }
 
@@ -10794,42 +10757,6 @@ function exportMatList(){
   const blob=new Blob([rows.join('\n')],{type:'text/csv'});
   const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='material_list.csv';a.click();
 }
-
-function toggleAbcCreds(){
-  abcCredsVisible=!abcCredsVisible;
-  const el=document.getElementById('matResults');
-  if(!el)return;
-  if(abcCredsVisible){
-    const c=getAbcCreds();
-    el.innerHTML=`<div class="mat-creds-panel">
-      <h3>🔑 ABC SUPPLY API CREDENTIALS</h3>
-      <p style="font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.5">Enter your ABC Supply API credentials from the <a href="https://developer.abcsupply.com" target="_blank" style="color:var(--amber)">ABC Developer Portal</a>. You need an approved ABC Supply customer account to access the live API. Without credentials, the app uses a demo product catalog.</p>
-      <div style="display:flex;flex-direction:column;gap:10px">
-        <div class="doc-field"><label class="doc-flbl">Client ID</label><input class="doc-finput" id="abcClientId" value="${esc(c.clientId||'')}" placeholder="Your Okta client_id" autocomplete="off"/></div>
-        <div class="doc-field"><label class="doc-flbl">Client Secret</label><input class="doc-finput" id="abcClientSecret" type="password" value="${esc(c.clientSecret||'')}" placeholder="Your Okta client_secret" autocomplete="off"/></div>
-        <div class="doc-field"><label class="doc-flbl">Sold-To Account # (optional)</label><input class="doc-finput" id="abcSoldTo" value="${esc(c.soldTo||'')}" placeholder="Your ABC Supply account number" autocomplete="off"/></div>
-      </div>
-      <div style="display:flex;gap:8px;margin-top:14px;">
-        <button class="btn btn-amber btn-sm" onclick="saveAbcCreds()">Save & Connect</button>
-        ${c.clientId?'<button class="btn btn-danger btn-sm" onclick="clearAbcCreds()">Disconnect</button>':''}
-        <button class="btn btn-ghost btn-sm" onclick="toggleAbcCreds()">Cancel</button>
-      </div>
-    </div>`;
-  } else {
-    renderMatView();
-  }
-}
-
-function saveAbcCreds(){
-  const c={clientId:document.getElementById('abcClientId').value.trim(),clientSecret:document.getElementById('abcClientSecret').value.trim(),soldTo:document.getElementById('abcSoldTo').value.trim()};
-  setAbcCreds(c);abcCredsVisible=false;abcToken=null;abcTokenExp=0;
-  document.getElementById('abcCredsBtn').className='mat-creds-btn connected';
-  document.getElementById('abcCredsBtn').textContent='✓ ABC Connected';
-  renderMatView();
-}
-function clearAbcCreds(){localStorage.removeItem('abc_creds');abcToken=null;abcTokenExp=0;abcCredsVisible=false;renderMatView();
-  document.getElementById('abcCredsBtn').className='mat-creds-btn';document.getElementById('abcCredsBtn').textContent='🔑 ABC API';}
-
 
 // ── ESTIMATE ↔ LEAD SYNC ─────────────────────────────────────
 function syncEstToLead(doc){
@@ -10922,11 +10849,6 @@ async function matlistDoSearch(){
   const q=document.getElementById('matlistSearch')?.value||'';
   const catalog=document.getElementById('matlistCatalog');
   if(!catalog)return;
-  if(isAbcConnected()){
-    catalog.innerHTML='<div class="mat-loading"><div class="spinner" style="width:16px;height:16px;border-width:2px"></div> Searching ABC Supply…</div>';
-    const live=await abcSearchItems(q,matlistCat==='all'?'':matlistCat);
-    if(live){renderMatlistCatalog(q,live);return;}
-  }
   renderMatlistCatalog(q);
 }
 
@@ -12109,6 +12031,10 @@ init();
       el.textContent=n>0?(n>99?'99+':String(n)):'';
       el.style.display=n>0?'':'none';
     }
+    ['dtMsgBadge','bnMsgBadge'].forEach(function(id){
+      var b=document.getElementById(id);
+      if(b){ b.textContent=n>0?(n>99?'99+':String(n)):''; b.style.display=n>0?'':'none'; }
+    });
     document.title=n>0?`(${n}) ${_origTitle}`:_origTitle;
   }
 
@@ -12219,6 +12145,56 @@ function openEstMessages(){
 }
 
 /* Start live message alerts (badge + notification) once the app is up */
+/* Messages inbox tab */
+async function renderMsgInbox(){
+  const box=document.getElementById('msgInboxList');
+  if(!box)return;
+  box.innerHTML='<div style="padding:24px;text-align:center;color:var(--muted);font-size:13px;">Loading messages…</div>';
+  try{
+    const h={apikey:SB_KEY,Authorization:'Bearer '+(typeof authAccessToken!=='undefined'?authAccessToken:SB_KEY)};
+    const r=await fetch(`${SB_URL}/rest/v1/portal_messages?select=lead_id,sender,sender_name,body,created_at,read_by_staff&order=created_at.desc&limit=1000`,{headers:h});
+    if(!r.ok)throw new Error('http '+r.status);
+    const rows=await r.json();
+    if(!Array.isArray(rows)||!rows.length){box.innerHTML='<div style="padding:32px;text-align:center;color:var(--muted);font-size:13px;">No customer messages yet.<br><span style="font-size:11px;opacity:.7">Texts and portal messages will show up here.</span></div>';return;}
+    const threads={};
+    rows.forEach(m=>{
+      let t=threads[m.lead_id];
+      if(!t){t=threads[m.lead_id]={lead_id:m.lead_id,latest:m,unread:0,cname:''};}
+      if(new Date(m.created_at)>new Date(t.latest.created_at))t.latest=m;
+      if(m.sender==='customer'){ if(!m.read_by_staff)t.unread++; if(m.sender_name&&!t.cname)t.cname=m.sender_name; }
+    });
+    const list=Object.values(threads).sort((a,b)=>{ if((b.unread>0)!==(a.unread>0)) return (b.unread>0?1:0)-(a.unread>0?1:0); return new Date(b.latest.created_at)-new Date(a.latest.created_at); });
+    box.innerHTML=list.map(t=>{
+      const lead=(typeof leads!=='undefined')&&leads.find(l=>l.id===t.lead_id);
+      const nm=(lead&&lead.name)||t.cname||'Customer';
+      const isStaff=t.latest.sender==='staff';
+      const prev=(isStaff?'You: ':'')+String(t.latest.body||'').replace(/\s+/g,' ').slice(0,80);
+      const d=new Date(t.latest.created_at);
+      const when=d.toLocaleDateString([], {month:'short',day:'numeric'})+' '+d.toLocaleTimeString([], {hour:'numeric',minute:'2-digit'});
+      const initial=(String(nm).trim()[0]||'?').toUpperCase();
+      const safeName=String(nm).replace(/\\/g,'').replace(/'/g,"\\'").replace(/"/g,'');
+      return '<div onclick="openLeadMessages(\''+t.lead_id+'\',\''+safeName+'\')" style="display:flex;align-items:center;gap:12px;padding:13px 16px;border-bottom:1px solid var(--iron);cursor:pointer;'+(t.unread?'background:rgba(245,158,11,.06);':'')+'">'
+        +'<div style="width:40px;height:40px;border-radius:50%;background:var(--steel-light);color:var(--amber);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px;flex-shrink:0;">'+initial+'</div>'
+        +'<div style="flex:1;min-width:0;">'
+        +'<div style="display:flex;justify-content:space-between;gap:8px;"><span style="font-weight:600;color:var(--white);font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+esc(nm)+'</span><span style="font-size:11px;color:var(--muted);flex-shrink:0;">'+when+'</span></div>'
+        +'<div style="font-size:12px;color:'+(t.unread?'var(--white)':'var(--muted)')+';white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px;">'+esc(prev)+'</div>'
+        +'</div>'
+        +(t.unread?'<span style="background:var(--amber);color:#0a0c10;font-size:11px;font-weight:700;min-width:20px;height:20px;border-radius:10px;display:flex;align-items:center;justify-content:center;padding:0 6px;flex-shrink:0;">'+t.unread+'</span>':'')
+        +'</div>';
+    }).join('');
+  }catch(e){console.error('inbox',e);box.innerHTML='<div style="padding:24px;text-align:center;color:var(--red,#ef4444);font-size:13px;">Could not load messages.</div>';}
+}
+
+/* Open a customer's most-recent thread from their card */
+function openCustomerMessages(customerId){
+  const cust=(typeof customers!=='undefined')&&customers.find(x=>x.id===customerId);
+  let ls=(typeof leadsForCustomer==='function')?leadsForCustomer(customerId):((typeof leads!=='undefined')?leads.filter(l=>l.customer_id===customerId):[]);
+  if(!ls||!ls.length){alert('No messages yet — once this customer has an estimate or appointment, their texts will appear here.');return;}
+  ls=ls.slice().sort((a,b)=>String(b.updated_at||'').localeCompare(String(a.updated_at||'')));
+  openLeadMessages(ls[0].id, (cust&&cust.name)||ls[0].name||'');
+}
+
+
 try{ startMessageAlerts(); }catch(e){ console.error('alerts init',e); }
 
 </script>
