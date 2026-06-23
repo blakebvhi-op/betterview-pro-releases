@@ -73,6 +73,7 @@ tr.row-zero td:nth-child(2),tr.row-zero td:nth-child(3),tr.row-zero td:nth-child
 .sig-section{background:#fef3c7;border:2px solid var(--amber);border-radius:10px;padding:16px;margin-bottom:16px;}
 .sig-section h2{font-size:14px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--ink);margin-bottom:8px;}
 .sig-section p{font-size:12px;color:var(--steel);margin-bottom:10px;}
+.sig-consent{font-size:10px;line-height:1.5;color:var(--steel);margin-top:11px;padding-top:10px;border-top:1px dashed #e0c98a;}
 .sig-canvas{width:100%;height:160px;background:#fff;border:1px solid #e2e8f0;border-radius:8px;cursor:crosshair;touch-action:none;display:block;}
 .sig-canvas.signed{border-color:var(--green);}
 .sig-row{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;align-items:center;}
@@ -287,6 +288,7 @@ function renderEstimate(d){
           <button class="sig-btn sig-btn-save" id="sigSaveBtn">✓ Sign &amp; Accept</button>
         </div>
         <div class="sig-status" id="sigStatus"></div>
+        <div class="sig-consent">By signing, you authorize Better View Home Improvements to contact you by text message at the phone number provided regarding your project — appointment confirmations, scheduling updates, and portal links. Message &amp; data rates may apply. Reply STOP to opt out at any time. Consent to texts is not a condition of purchase.</div>
       </div>`:''}
     <div class="actions">
       <button class="action-btn action-btn-print" onclick="window.print()">📄 Download / Print PDF</button>
