@@ -1339,7 +1339,6 @@ body:not(.role-owner):not(.role-manager) .role-financial-only{display:none!impor
       <button class="dtab" id="dtEst" onclick="switchMain('est')">📄 ESTIMATES</button>
       <button class="dtab" id="dtPipe" onclick="switchMain('pipe')">📋 PIPELINE</button>
       <button class="dtab" id="dtTasks" onclick="switchMain('tasks')">✓ TASKS <span class="dbadge" id="dtTasksBadge">0</span></button>
-      <button class="dtab" id="dtMat" onclick="switchMain('mat')">🏗 MATERIALS</button>
     </div>
     <button class="dadd btn-amber" id="daddBtn" style="border-radius:6px;font-size:12px;padding:6px 12px;">
       <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -1370,9 +1369,6 @@ body:not(.role-owner):not(.role-manager) .role-financial-only{display:none!impor
   <button class="bnbtn" id="bnTasks" onclick="switchMain('tasks')">
     <div class="bnicon">✓</div><div class="bnlbl">TASKS</div>
     <div class="bnbadge" id="bnTasksBadge"></div>
-  </button>
-  <button class="bnbtn" id="bnMat" onclick="switchMain('mat')">
-    <div class="bnicon">🏗</div><div class="bnlbl">MATERIALS</div>
   </button>
 </div>
 
@@ -1527,47 +1523,6 @@ body:not(.role-owner):not(.role-manager) .role-financial-only{display:none!impor
   </div>
 
   <!-- ═══ MATERIALS ═══ -->
-  <div class="view" id="vMat">
-    <div class="mat-view" style="height:100%">
-      <div class="mat-toolbar">
-        <span style="font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:2px;color:var(--amber);flex-shrink:0;">🏗 MATERIALS</span>
-        <div class="mat-search-wrap">
-          <input class="mat-search" id="matSearch" type="text" placeholder="Search materials catalog…" oninput="debouncedMatSearch()"/>
-          <button class="btn btn-amber btn-sm" onclick="doMatSearch()">Search</button>
-        </div>
-        <button class="mat-export-btn" onclick="exportMatList()">⬇ Export List</button>
-      </div>
-      <div class="mat-cat-tabs" id="matCatTabs">
-        <button class="mat-cat-tab active" onclick="setMatCat('all')">ALL</button>
-        <button class="mat-cat-tab" onclick="setMatCat('Roofing')">ROOFING</button>
-        <button class="mat-cat-tab" onclick="setMatCat('Siding')">SIDING</button>
-        <button class="mat-cat-tab" onclick="setMatCat('Gutters')">GUTTERS</button>
-        <button class="mat-cat-tab" onclick="setMatCat('Soffit')">SOFFIT & FASCIA</button>
-        <button class="mat-cat-tab" onclick="setMatCat('Underlayment')">UNDERLAYMENT</button>
-        <button class="mat-cat-tab" onclick="setMatCat('Flashing')">FLASHING</button>
-        <button class="mat-cat-tab" onclick="setMatCat('Fasteners')">FASTENERS</button>
-      </div>
-      <div class="mat-body">
-        <div class="mat-results" id="matResults"></div>
-        <div class="mat-cart" id="matCart">
-          <div class="mat-cart-hdr">
-            <span class="mat-cart-title">MATERIAL LIST</span>
-            <span style="font-size:10px;color:var(--muted)" id="matCartCount">0 items</span>
-          </div>
-          <div class="mat-cart-list" id="matCartList"></div>
-          <div class="mat-cart-footer">
-            <div class="mat-cart-total">
-              <span class="mat-cart-total-lbl">Subtotal</span>
-              <span class="mat-cart-total-val" id="matCartTotal">$0.00</span>
-            </div>
-            <button class="btn btn-amber" style="width:100%;justify-content:center;font-size:12px;" onclick="addMatListToEstimate()">+ Add to Estimate</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-
   <!-- ═══ CRM ═══ -->
   <div class="view" id="vCRM">
     <div class="crmstats">
@@ -2153,8 +2108,7 @@ function applyRoleBasedUI(){
     crm:  ['bnCRM',  'dtCRM'],
     est:  ['bnEst',  'dtEst'],
     pipe: ['bnPipe', 'dtPipe'],
-    tasks:['bnTasks','dtTasks'],
-    mat:  ['bnMat',  'dtMat']
+    tasks:['bnTasks','dtTasks']
   };
   Object.entries(tabMap).forEach(([key,ids])=>{
     const visible=canSeeTab(key);
@@ -4958,11 +4912,11 @@ function switchMain(v){
   }
   mainView=v;
   document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));
-  const viewMap={sched:'vSched',crm:'vCRM',est:'vEst',mat:'vMat',tasks:'vTasks',pipe:'vPipe',msg:'vMsg'};
+  const viewMap={sched:'vSched',crm:'vCRM',est:'vEst',tasks:'vTasks',pipe:'vPipe',msg:'vMsg'};
   document.getElementById(viewMap[v]||'vSched').classList.add('active');
-  ['bnSched','bnCRM','bnEst','bnMat','bnTasks','bnPipe','bnMsg'].forEach(id=>{const el=document.getElementById(id);if(el)el.classList.toggle('active',id==='bn'+v.charAt(0).toUpperCase()+v.slice(1));});
-  ['dtSched','dtCRM','dtEst','dtMat','dtTasks','dtPipe','dtMsg'].forEach(id=>{const el=document.getElementById(id);if(el)el.classList.toggle('active',id==='dt'+v.charAt(0).toUpperCase()+v.slice(1));});
-  const lblMap={sched:'New Job',crm:'New Customer',est:'New Estimate',mat:'Search Materials',tasks:'New Task',pipe:'New Column',msg:'↻ Refresh'};
+  ['bnSched','bnCRM','bnEst','bnTasks','bnPipe','bnMsg'].forEach(id=>{const el=document.getElementById(id);if(el)el.classList.toggle('active',id==='bn'+v.charAt(0).toUpperCase()+v.slice(1));});
+  ['dtSched','dtCRM','dtEst','dtTasks','dtPipe','dtMsg'].forEach(id=>{const el=document.getElementById(id);if(el)el.classList.toggle('active',id==='dt'+v.charAt(0).toUpperCase()+v.slice(1));});
+  const lblMap={sched:'New Job',crm:'New Customer',est:'New Estimate',tasks:'New Task',pipe:'New Column',msg:'↻ Refresh'};
   document.getElementById('daddLbl').textContent=lblMap[v]||'New';
   document.getElementById('daddBtn').onclick=
     v==='sched'?()=>openJobMov('backlog'):
@@ -4975,7 +4929,6 @@ function switchMain(v){
   if(v==='crm')renderCustomers();
   else if(v==='sched')renderSched();
   else if(v==='est')renderDocList();
-  else if(v==='mat')renderMatView();
   else if(v==='tasks'){renderTaskList();filterTasks(taskFilter);}
   else if(v==='pipe')renderPipeline();
   else if(v==='msg')renderMsgInbox();
@@ -7247,22 +7200,53 @@ function promoteLeadToJob(l){
 // ── CUSTOMER SEARCH IN ESTIMATE EDITOR ───────────────────────
 let docLinkedLeadId=null;
 
+function _leadFromCustomer(customerId){
+  const c=customers.find(x=>x.id===customerId);
+  if(!c) return null;
+  const existing=leads.find(l=>l.customer_id===customerId);
+  if(existing) return existing.id;
+  const a=addressesForCustomer(customerId).find(x=>x.is_primary)||addressesForCustomer(customerId)[0];
+  const addrStr=a?[a.street,a.city,a.state].filter(Boolean).join(', '):'';
+  const newLeadId='l_'+Date.now().toString(36)+Math.random().toString(36).substring(2,7);
+  const newLead={id:newLeadId,name:c.name||'',contact:c.name||'',phone:c.phone||'',email:c.email||'',address:addrStr,stage:'new',customer_id:customerId,company_id:c.company_id||currentCompanyId,types:[],value:'',notes:'',color:'blue',source:c.source||'',matList:[],activity:[],assignedTo:null,createdAt:new Date().toISOString(),updated_at:new Date().toISOString()};
+  leads.push(newLead);
+  saveLead(newLead);
+  return newLeadId;
+}
+function linkCustomerToDoc(customerId){const id=_leadFromCustomer(customerId);if(id)docSelectCust(id);}
+function linkCustomerToJob(customerId){const id=_leadFromCustomer(customerId);if(id)selectCust(id);}
+
 function docCustSearchInput(q){
   const dropdown=document.getElementById('docCustDropdown');
   if(!q||q.length<2){dropdown.style.display='none';return;}
   const qlo=q.toLowerCase();
-  const matches=leads.filter(l=>
+  const qd=q.replace(/[^0-9]/g,'');
+  const phoneHit=(p)=>p&&(p.includes(q)||(qd.length>=3&&p.replace(/[^0-9]/g,'').includes(qd)));
+  const leadMatches=leads.filter(l=>
     l.name.toLowerCase().includes(qlo)||
     (l.address&&l.address.toLowerCase().includes(qlo))||
-    (l.phone&&l.phone.includes(q))||
+    phoneHit(l.phone)||
     (l.contact&&l.contact.toLowerCase().includes(qlo))
   ).slice(0,8);
-  if(!matches.length){dropdown.style.display='none';return;}
-  dropdown.innerHTML=matches.map(l=>`
+  const linked=new Set(leadMatches.map(l=>l.customer_id).filter(Boolean));
+  const custMatches=customers.filter(c=>!c.archived_at&&!linked.has(c.id)&&(
+    (c.name&&c.name.toLowerCase().includes(qlo))||
+    phoneHit(c.phone)||
+    (c.email&&c.email.toLowerCase().includes(qlo))||
+    addressesForCustomer(c.id).some(a=>[a.street,a.city,a.state,a.zip,a.label].filter(Boolean).join(' ').toLowerCase().includes(qlo))
+  )).slice(0,8);
+  if(!leadMatches.length&&!custMatches.length){dropdown.style.display='none';return;}
+  const leadRows=leadMatches.map(l=>`
     <div class="cust-result" tabindex="0" onclick="docSelectCust('${l.id}')">
       <div class="cust-result-name">${esc(l.name)}</div>
       <div class="cust-result-detail">${[l.contact,l.phone,l.address].filter(Boolean).join(' · ')}</div>
     </div>`).join('');
+  const custRows=custMatches.map(c=>{const a=addressesForCustomer(c.id).find(x=>x.is_primary)||addressesForCustomer(c.id)[0];const addrStr=a?[a.street,a.city,a.state].filter(Boolean).join(', '):'';return `
+    <div class="cust-result" tabindex="0" onclick="linkCustomerToDoc('${c.id}')">
+      <div class="cust-result-name">${esc(c.name)} <span style="font-size:9px;color:var(--amber);border:1px solid var(--amber);border-radius:4px;padding:1px 5px;margin-left:4px;">CUSTOMER</span></div>
+      <div class="cust-result-detail">${[c.phone,c.email,addrStr].filter(Boolean).join(' · ')}</div>
+    </div>`;}).join('');
+  dropdown.innerHTML=leadRows+custRows;
   dropdown.style.display='block';
 }
 
@@ -7319,18 +7303,33 @@ function custSearchInput(q){
   const dropdown=document.getElementById('jCustDropdown');
   if(!q||q.length<2){dropdown.style.display='none';return;}
   const qlo=q.toLowerCase();
-  const matches=leads.filter(l=>
+  const qd=q.replace(/[^0-9]/g,'');
+  const phoneHit=(p)=>p&&(p.includes(q)||(qd.length>=3&&p.replace(/[^0-9]/g,'').includes(qd)));
+  const leadMatches=leads.filter(l=>
     l.name.toLowerCase().includes(qlo)||
     (l.address&&l.address.toLowerCase().includes(qlo))||
-    (l.phone&&l.phone.includes(q))||
+    phoneHit(l.phone)||
     (l.contact&&l.contact.toLowerCase().includes(qlo))
   ).slice(0,8);
-  if(!matches.length){dropdown.style.display='none';return;}
-  dropdown.innerHTML=matches.map(l=>`
+  const linked=new Set(leadMatches.map(l=>l.customer_id).filter(Boolean));
+  const custMatches=customers.filter(c=>!c.archived_at&&!linked.has(c.id)&&(
+    (c.name&&c.name.toLowerCase().includes(qlo))||
+    phoneHit(c.phone)||
+    (c.email&&c.email.toLowerCase().includes(qlo))||
+    addressesForCustomer(c.id).some(a=>[a.street,a.city,a.state,a.zip,a.label].filter(Boolean).join(' ').toLowerCase().includes(qlo))
+  )).slice(0,8);
+  if(!leadMatches.length&&!custMatches.length){dropdown.style.display='none';return;}
+  const leadRows=leadMatches.map(l=>`
     <div class="cust-result" tabindex="0" onclick="selectCust('${l.id}')">
       <div class="cust-result-name">${esc(l.name)}</div>
       <div class="cust-result-detail">${[l.contact,l.phone,l.address].filter(Boolean).join(' · ')}</div>
     </div>`).join('');
+  const custRows=custMatches.map(c=>{const a=addressesForCustomer(c.id).find(x=>x.is_primary)||addressesForCustomer(c.id)[0];const addrStr=a?[a.street,a.city,a.state].filter(Boolean).join(', '):'';return `
+    <div class="cust-result" tabindex="0" onclick="linkCustomerToJob('${c.id}')">
+      <div class="cust-result-name">${esc(c.name)} <span style="font-size:9px;color:var(--amber);border:1px solid var(--amber);border-radius:4px;padding:1px 5px;margin-left:4px;">CUSTOMER</span></div>
+      <div class="cust-result-detail">${[c.phone,c.email,addrStr].filter(Boolean).join(' · ')}</div>
+    </div>`;}).join('');
+  dropdown.innerHTML=leadRows+custRows;
   dropdown.style.display='block';
 }
 
