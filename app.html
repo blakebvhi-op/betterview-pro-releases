@@ -12144,6 +12144,15 @@ function openEstMessages(){
 }
 
 /* Start live message alerts (badge + notification) once the app is up */
+/* Open a thread from the inbox — diagnostic-friendly */
+function openInboxThread(leadId){
+  if(typeof openLeadMessages!=='function'){ alert('DIAG A: openLeadMessages is not loaded'); return; }
+  if(!leadId){ alert('DIAG B: row has no lead id'); return; }
+  var nm='Customer';
+  try{ var l=(typeof leads!=='undefined')&&leads.find(function(x){return x.id===leadId;}); if(l&&l.name) nm=l.name; }catch(_){}
+  openLeadMessages(leadId, nm);
+}
+
 /* Messages inbox tab */
 async function renderMsgInbox(){
   const box=document.getElementById('msgInboxList');
@@ -12172,7 +12181,7 @@ async function renderMsgInbox(){
       const when=d.toLocaleDateString([], {month:'short',day:'numeric'})+' '+d.toLocaleTimeString([], {hour:'numeric',minute:'2-digit'});
       const initial=(String(nm).trim()[0]||'?').toUpperCase();
       const safeName=String(nm).replace(/\\/g,'').replace(/'/g,"\\'").replace(/"/g,'');
-      return '<div class="msg-inbox-row" data-lead="'+t.lead_id+'" data-name="'+encodeURIComponent(nm)+'" style="display:flex;align-items:center;gap:12px;padding:13px 16px;border-bottom:1px solid var(--iron);cursor:pointer;'+(t.unread?'background:rgba(245,158,11,.06);':'')+'">'
+      return '<div class="msg-inbox-row" data-lead="'+t.lead_id+'" onclick="openInboxThread(\''+t.lead_id+'\')" style="display:flex;align-items:center;gap:12px;padding:13px 16px;border-bottom:1px solid var(--iron);cursor:pointer;'+(t.unread?'background:rgba(245,158,11,.06);':'')+'">'
         +'<div style="width:40px;height:40px;border-radius:50%;background:var(--steel-light);color:var(--amber);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px;flex-shrink:0;">'+initial+'</div>'
         +'<div style="flex:1;min-width:0;">'
         +'<div style="display:flex;justify-content:space-between;gap:8px;"><span style="font-weight:600;color:var(--white);font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+esc(nm)+'</span><span style="font-size:11px;color:var(--muted);flex-shrink:0;">'+when+'</span></div>'
@@ -12194,18 +12203,6 @@ function openCustomerMessages(customerId){
 }
 
 
-if(!window._inboxDelegationBound){
-  window._inboxDelegationBound=true;
-  document.addEventListener('click',function(e){
-    var row=e.target&&e.target.closest&&e.target.closest('.msg-inbox-row');
-    if(row){
-      var lead=row.getAttribute('data-lead');
-      var nm=row.getAttribute('data-name')||'';
-      try{ nm=decodeURIComponent(nm); }catch(_){}
-      if(typeof openLeadMessages==='function'&&lead){ openLeadMessages(lead, nm); }
-    }
-  });
-}
 try{ startMessageAlerts(); }catch(e){ console.error('alerts init',e); }
 
 </script>
