@@ -1597,13 +1597,33 @@ body:not(.role-owner):not(.role-manager) .role-financial-only{display:none!impor
 </div>
 
   <!-- ═══ MESSAGES INBOX ═══ -->
-  <style>#vMsg.active{display:flex;flex-direction:column;}</style>
+  <style>
+  #vMsg.active{display:flex;flex-direction:column;}
+  #msgPanes{display:flex;flex:1;min-height:0;width:100%;}
+  #msgListPane{width:340px;flex-shrink:0;border-right:1px solid var(--iron);display:flex;flex-direction:column;min-height:0;}
+  #msgThreadPane{flex:1;display:flex;flex-direction:column;min-width:0;min-height:0;}
+  .msg-back-btn{display:none;}
+  @media(max-width:820px){
+    #msgListPane{width:100%;border-right:0;}
+    #msgThreadPane{display:none;}
+    #msgPanes.thread-open #msgListPane{display:none;}
+    #msgPanes.thread-open #msgThreadPane{display:flex;}
+    .msg-back-btn{display:inline-block !important;}
+  }
+  </style>
   <div class="view" id="vMsg">
-    <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--iron);flex-shrink:0;">
-      <div style="font-size:15px;font-weight:700;color:var(--white);letter-spacing:.02em;">💬 Messages</div>
-      <button class="btn btn-ghost btn-sm" onclick="renderMsgInbox()">↻ Refresh</button>
+    <div id="msgPanes">
+      <div id="msgListPane">
+        <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--iron);flex-shrink:0;">
+          <div style="font-size:15px;font-weight:700;color:var(--white);letter-spacing:.02em;">💬 Messages</div>
+          <button class="btn btn-ghost btn-sm" onclick="renderMsgInbox()">↻</button>
+        </div>
+        <div id="msgInboxList" style="flex:1;overflow-y:auto;min-height:0;"></div>
+      </div>
+      <div id="msgThreadPane">
+        <div style="flex:1;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:14px;text-align:center;padding:30px;">Select a conversation to open it here.</div>
+      </div>
     </div>
-    <div id="msgInboxList" style="flex:1;overflow-y:auto;"></div>
   </div>
 
 <!-- ═══ PIPELINE ADD-COLUMN MODAL ═══ -->
@@ -12144,13 +12164,19 @@ function openEstMessages(){
 }
 
 /* Start live message alerts (badge + notification) once the app is up */
+/* TEST: open the first inbox thread directly (proves deployment + open path) */
+function testOpenFirstChat(){
+  var row=document.querySelector('.msg-inbox-row');
+  if(!row){ alert('TEST: no rows found in inbox'); return; }
+  var lead=row.getAttribute('data-lead');
+  alert('TEST: found row, lead id = '+lead+'  — opening now');
+  openInboxThread(lead);
+}
+
 /* Open a thread from the inbox — diagnostic-friendly */
 function openInboxThread(leadId){
-  if(typeof openLeadMessages!=='function'){ alert('DIAG A: openLeadMessages is not loaded'); return; }
-  if(!leadId){ alert('DIAG B: row has no lead id'); return; }
-  var nm='Customer';
-  try{ var l=(typeof leads!=='undefined')&&leads.find(function(x){return x.id===leadId;}); if(l&&l.name) nm=l.name; }catch(_){}
-  openLeadMessages(leadId, nm);
+  if(!leadId){ alert('No conversation id on this row.'); return; }
+  openThreadInPane(leadId);
 }
 
 /* Messages inbox tab */
@@ -12181,7 +12207,7 @@ async function renderMsgInbox(){
       const when=d.toLocaleDateString([], {month:'short',day:'numeric'})+' '+d.toLocaleTimeString([], {hour:'numeric',minute:'2-digit'});
       const initial=(String(nm).trim()[0]||'?').toUpperCase();
       const safeName=String(nm).replace(/\\/g,'').replace(/'/g,"\\'").replace(/"/g,'');
-      return '<div class="msg-inbox-row" data-lead="'+t.lead_id+'" onclick="openInboxThread(\''+t.lead_id+'\')" style="display:flex;align-items:center;gap:12px;padding:13px 16px;border-bottom:1px solid var(--iron);cursor:pointer;'+(t.unread?'background:rgba(245,158,11,.06);':'')+'">'
+      return '<div class="msg-inbox-row" data-lead="'+t.lead_id+'" style="display:flex;align-items:center;gap:12px;padding:13px 16px;border-bottom:1px solid var(--iron);cursor:pointer;'+(t.unread?'background:rgba(245,158,11,.06);':'')+'">'
         +'<div style="width:40px;height:40px;border-radius:50%;background:var(--steel-light);color:var(--amber);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px;flex-shrink:0;">'+initial+'</div>'
         +'<div style="flex:1;min-width:0;">'
         +'<div style="display:flex;justify-content:space-between;gap:8px;"><span style="font-weight:600;color:var(--white);font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+esc(nm)+'</span><span style="font-size:11px;color:var(--muted);flex-shrink:0;">'+when+'</span></div>'
@@ -12190,7 +12216,53 @@ async function renderMsgInbox(){
         +(t.unread?'<span style="background:var(--amber);color:#0a0c10;font-size:11px;font-weight:700;min-width:20px;height:20px;border-radius:10px;display:flex;align-items:center;justify-content:center;padding:0 6px;flex-shrink:0;">'+t.unread+'</span>':'')
         +'</div>';
     }).join('');
+    if(typeof _inboxActiveLead!=='undefined'&&_inboxActiveLead){const ar=box.querySelector('.msg-inbox-row[data-lead="'+_inboxActiveLead+'"]');if(ar)ar.style.background='rgba(245,158,11,.12)';}
   }catch(e){console.error('inbox',e);box.innerHTML='<div style="padding:24px;text-align:center;color:var(--red,#ef4444);font-size:13px;">Could not load messages.</div>';}
+}
+
+/* ===== Two-pane inbox: conversation rendered inline in #msgThreadPane ===== */
+let _inboxActiveLead=null,_inboxPoll=null,_inboxLastCount=-1;
+function _inHeaders(json){const h={apikey:SB_KEY,Authorization:'Bearer '+(typeof authAccessToken!=='undefined'?authAccessToken:SB_KEY)};if(json)h['Content-Type']='application/json';return h;}
+function _inEsc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+async function _inFetch(leadId){try{const r=await fetch(`${SB_URL}/rest/v1/portal_messages?lead_id=eq.${encodeURIComponent(leadId)}&select=id,sender,sender_name,body,created_at,read_by_staff&order=created_at.asc`,{headers:_inHeaders()});if(!r.ok)return [];return await r.json();}catch(e){return [];}}
+async function _inMarkRead(leadId){try{await fetch(`${SB_URL}/rest/v1/portal_messages?lead_id=eq.${encodeURIComponent(leadId)}&sender=eq.customer&read_by_staff=eq.false`,{method:'PATCH',headers:{..._inHeaders(true),Prefer:'return=minimal'},body:JSON.stringify({read_by_staff:true})});}catch(e){}}
+async function _inSend(leadId,body){const name=(typeof currentUser!=='undefined'&&currentUser&&(currentUser.display_name||currentUser.name||currentUser.email))||'Better View';const company=(typeof currentCompanyId!=='undefined'&&currentCompanyId)||null;const r=await fetch(`${SB_URL}/rest/v1/portal_messages`,{method:'POST',headers:{..._inHeaders(true),Prefer:'return=minimal'},body:JSON.stringify({lead_id:leadId,company_id:company,sender:'staff',sender_name:name,body:body,read_by_staff:true})});if(!r.ok)throw new Error(await r.text());}
+function _inRenderMsgs(list){const thread=document.getElementById('msgThreadBody');if(!thread)return;if(!list.length){thread.innerHTML='<div style="color:#9aa3b4;text-align:center;padding:30px;font-size:13px">No messages yet. Send the customer their portal link to start the conversation.</div>';return;}thread.innerHTML=list.map(m=>{const staff=m.sender==='staff';const t=new Date(m.created_at);const ts=isNaN(t)?'':t.toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});return `<div style="display:flex;flex-direction:column;max-width:72%;${staff?'align-self:flex-end;align-items:flex-end':'align-self:flex-start;align-items:flex-start'}"><div style="padding:9px 12px;border-radius:13px;font-size:13.5px;line-height:1.4;white-space:pre-wrap;word-break:break-word;${staff?'background:#f59e0b;color:#1a1206;border-bottom-right-radius:4px':'background:#2a313e;color:#e8ecf3;border-bottom-left-radius:4px'}">${_inEsc(m.body)}</div><div style="font-size:10px;color:#9aa3b4;margin-top:2px">${staff?_inEsc(m.sender_name||'You'):_inEsc(m.sender_name||'Customer')} · ${ts}</div></div>`;}).join('');thread.scrollTop=thread.scrollHeight;}
+async function _inLoad(leadId,force){const list=await _inFetch(leadId);if(force||list.length!==_inboxLastCount){_inboxLastCount=list.length;_inRenderMsgs(list);}if(list.some(m=>m.sender==='customer'&&!m.read_by_staff)){_inMarkRead(leadId);}}
+function openThreadInPane(leadId){
+  if(!leadId)return;
+  _inboxActiveLead=leadId;_inboxLastCount=-1;
+  let nm='Customer';
+  try{const l=(typeof leads!=='undefined')&&leads.find(x=>x.id===leadId);if(l&&l.name)nm=l.name;}catch(_){}
+  document.querySelectorAll('.msg-inbox-row').forEach(r=>{r.style.background=(r.getAttribute('data-lead')===leadId)?'rgba(245,158,11,.12)':'';});
+  const panes=document.getElementById('msgPanes');if(panes)panes.classList.add('thread-open');
+  const pane=document.getElementById('msgThreadPane');if(!pane)return;
+  pane.innerHTML=`
+    <div style="display:flex;align-items:center;gap:10px;padding:13px 16px;border-bottom:1px solid var(--iron);flex-shrink:0;">
+      <button class="msg-back-btn" onclick="closeThreadPane()" style="background:transparent;border:0;color:var(--amber);font-size:24px;cursor:pointer;line-height:1;padding:0 4px;">‹</button>
+      <div style="width:38px;height:38px;border-radius:50%;background:var(--steel-light);color:var(--amber);display:flex;align-items:center;justify-content:center;font-weight:700;flex-shrink:0;">${_inEsc((String(nm).trim()[0]||'?').toUpperCase())}</div>
+      <div style="min-width:0;"><div style="font-weight:700;color:var(--white);font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${_inEsc(nm)}</div><div style="color:#9aa3b4;font-size:11px;">Portal conversation</div></div>
+    </div>
+    <div id="msgThreadBody" style="flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:9px;padding:16px 18px;background:#0f1115;min-height:0;"></div>
+    <div style="display:flex;gap:8px;align-items:flex-end;padding:12px 16px;border-top:1px solid var(--iron);flex-shrink:0;">
+      <textarea id="msgReplyInput" rows="1" placeholder="Reply to the customer…" style="flex:1;resize:none;max-height:120px;padding:10px 12px;font-size:14px;font-family:inherit;border:1px solid var(--iron);border-radius:10px;background:#1e2530;color:#e8ecf3;outline:none;"></textarea>
+      <button id="msgReplyBtn" style="flex-shrink:0;padding:10px 18px;border:0;border-radius:10px;background:var(--amber);color:#0a0c10;font-weight:800;font-size:14px;cursor:pointer;">Send</button>
+    </div>`;
+  const inp=document.getElementById('msgReplyInput'),btn=document.getElementById('msgReplyBtn');
+  const doSend=async()=>{const body=(inp.value||'').trim();if(!body)return;btn.disabled=true;inp.disabled=true;try{await _inSend(leadId,body);inp.value='';_inboxLastCount=-1;await _inLoad(leadId,true);}catch(e){alert('Could not send: '+e.message);}finally{btn.disabled=false;inp.disabled=false;inp.focus();}};
+  btn.onclick=doSend;
+  inp.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();doSend();}});
+  _inLoad(leadId,true);
+  if(_inboxPoll)clearInterval(_inboxPoll);
+  _inboxPoll=setInterval(()=>{if(_inboxActiveLead===leadId&&document.getElementById('msgThreadBody'))_inLoad(leadId,false);else clearInterval(_inboxPoll);},10000);
+  try{if(window.innerWidth>820)inp.focus();}catch(_){}
+}
+function closeThreadPane(){
+  _inboxActiveLead=null;if(_inboxPoll)clearInterval(_inboxPoll);
+  const panes=document.getElementById('msgPanes');if(panes)panes.classList.remove('thread-open');
+  const pane=document.getElementById('msgThreadPane');
+  if(pane)pane.innerHTML='<div style="flex:1;display:flex;align-items:center;justify-content:center;color:var(--muted);font-size:14px;text-align:center;padding:30px;">Select a conversation to open it here.</div>';
+  document.querySelectorAll('.msg-inbox-row').forEach(r=>{r.style.background='';});
 }
 
 /* Open a customer's most-recent thread from their card */
@@ -12203,6 +12275,18 @@ function openCustomerMessages(customerId){
 }
 
 
+if(!window._inboxCapBound){
+  window._inboxCapBound=true;
+  document.addEventListener('click',function(e){
+    try{
+      var els=document.elementsFromPoint(e.clientX,e.clientY)||[];
+      for(var i=0;i<els.length;i++){
+        var row=els[i].closest&&els[i].closest('.msg-inbox-row');
+        if(row){ e.preventDefault(); e.stopPropagation(); openInboxThread(row.getAttribute('data-lead')); return; }
+      }
+    }catch(_){}
+  },true);
+}
 try{ startMessageAlerts(); }catch(e){ console.error('alerts init',e); }
 
 </script>
