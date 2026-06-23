@@ -12173,7 +12173,7 @@ async function renderMsgInbox(){
       const when=d.toLocaleDateString([], {month:'short',day:'numeric'})+' '+d.toLocaleTimeString([], {hour:'numeric',minute:'2-digit'});
       const initial=(String(nm).trim()[0]||'?').toUpperCase();
       const safeName=String(nm).replace(/\\/g,'').replace(/'/g,"\\'").replace(/"/g,'');
-      return '<div onclick="openLeadMessages(\''+t.lead_id+'\',\''+safeName+'\')" style="display:flex;align-items:center;gap:12px;padding:13px 16px;border-bottom:1px solid var(--iron);cursor:pointer;'+(t.unread?'background:rgba(245,158,11,.06);':'')+'">'
+      return '<div class="msg-inbox-row" data-lead="'+t.lead_id+'" data-name="'+encodeURIComponent(nm)+'" style="display:flex;align-items:center;gap:12px;padding:13px 16px;border-bottom:1px solid var(--iron);cursor:pointer;'+(t.unread?'background:rgba(245,158,11,.06);':'')+'">'
         +'<div style="width:40px;height:40px;border-radius:50%;background:var(--steel-light);color:var(--amber);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px;flex-shrink:0;">'+initial+'</div>'
         +'<div style="flex:1;min-width:0;">'
         +'<div style="display:flex;justify-content:space-between;gap:8px;"><span style="font-weight:600;color:var(--white);font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">'+esc(nm)+'</span><span style="font-size:11px;color:var(--muted);flex-shrink:0;">'+when+'</span></div>'
@@ -12182,6 +12182,11 @@ async function renderMsgInbox(){
         +(t.unread?'<span style="background:var(--amber);color:#0a0c10;font-size:11px;font-weight:700;min-width:20px;height:20px;border-radius:10px;display:flex;align-items:center;justify-content:center;padding:0 6px;flex-shrink:0;">'+t.unread+'</span>':'')
         +'</div>';
     }).join('');
+    box.querySelectorAll('.msg-inbox-row').forEach(function(row){
+      row.addEventListener('click',function(){
+        openLeadMessages(this.getAttribute('data-lead'), decodeURIComponent(this.getAttribute('data-name')||''));
+      });
+    });
   }catch(e){console.error('inbox',e);box.innerHTML='<div style="padding:24px;text-align:center;color:var(--red,#ef4444);font-size:13px;">Could not load messages.</div>';}
 }
 
