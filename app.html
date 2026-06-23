@@ -12181,11 +12181,6 @@ async function renderMsgInbox(){
         +(t.unread?'<span style="background:var(--amber);color:#0a0c10;font-size:11px;font-weight:700;min-width:20px;height:20px;border-radius:10px;display:flex;align-items:center;justify-content:center;padding:0 6px;flex-shrink:0;">'+t.unread+'</span>':'')
         +'</div>';
     }).join('');
-    box.querySelectorAll('.msg-inbox-row').forEach(function(row){
-      row.addEventListener('click',function(){
-        openLeadMessages(this.getAttribute('data-lead'), decodeURIComponent(this.getAttribute('data-name')||''));
-      });
-    });
   }catch(e){console.error('inbox',e);box.innerHTML='<div style="padding:24px;text-align:center;color:var(--red,#ef4444);font-size:13px;">Could not load messages.</div>';}
 }
 
@@ -12199,6 +12194,18 @@ function openCustomerMessages(customerId){
 }
 
 
+if(!window._inboxDelegationBound){
+  window._inboxDelegationBound=true;
+  document.addEventListener('click',function(e){
+    var row=e.target&&e.target.closest&&e.target.closest('.msg-inbox-row');
+    if(row){
+      var lead=row.getAttribute('data-lead');
+      var nm=row.getAttribute('data-name')||'';
+      try{ nm=decodeURIComponent(nm); }catch(_){}
+      if(typeof openLeadMessages==='function'&&lead){ openLeadMessages(lead, nm); }
+    }
+  });
+}
 try{ startMessageAlerts(); }catch(e){ console.error('alerts init',e); }
 
 </script>
