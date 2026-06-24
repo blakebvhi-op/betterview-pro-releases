@@ -12091,9 +12091,9 @@ init();
     try{
       if('Notification' in window){
         if(Notification.permission==='granted'){
-          _ensurePushSubscribed();
+          _ensurePushSubscribed(true);
         } else if(Notification.permission==='default'){
-          Notification.requestPermission().then(function(p){ if(p==='granted') _ensurePushSubscribed(); }).catch(function(){});
+          Notification.requestPermission().then(function(p){ if(p==='granted') _ensurePushSubscribed(true); }).catch(function(){});
         }
       }
     }catch(e){}
@@ -12321,15 +12321,19 @@ async function enablePushNotifications(btn){
   }catch(e){alert('Could not enable: '+((e&&e.message)||e));}
   finally{if(btn)btn.disabled=false;_refreshPushBtn();}
 }
-async function _ensurePushSubscribed(){
+async function _ensurePushSubscribed(verbose){
   try{
-    if(!_pushSupported()||Notification.permission!=='granted')return;
-    const reg=_swReg||await _registerSW();if(!reg)return;
+    if(!_pushSupported()){if(verbose)alert('Push not supported on this browser.');return;}
+    if(Notification.permission!=='granted'){if(verbose)alert('Notification permission is: '+Notification.permission);return;}
+    const reg=_swReg||await _registerSW();
+    if(!reg){if(verbose)alert('Service worker did not register (sw.js not reachable?).');return;}
     await navigator.serviceWorker.ready;
     let sub=await reg.pushManager.getSubscription();
-    if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:_urlB64ToUint8(VAPID_PUBLIC_KEY)});
+    if(sub){ try{ await sub.unsubscribe(); }catch(e){} sub=null; }
+    sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:_urlB64ToUint8(VAPID_PUBLIC_KEY)});
     await _pushSaveSub(sub);
-  }catch(e){}
+    if(verbose)alert('✅ Push subscribed on this device. Re-check the table for an Android row.');
+  }catch(e){ if(verbose)alert('❌ Push subscribe FAILED: '+((e&&e.name?e.name+': ':'')+((e&&e.message)||e))); }
 }
 
 if(!window._inboxCapBound){
@@ -12346,7 +12350,6 @@ if(!window._inboxCapBound){
 }
 try{ startMessageAlerts(); }catch(e){ console.error('alerts init',e); }
 try{ _registerSW(); }catch(e){}
-try{ _ensurePushSubscribed(); }catch(e){}
 try{ _refreshPushBtn(); }catch(e){}
 
 </script>
