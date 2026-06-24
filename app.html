@@ -12089,8 +12089,12 @@ init();
   window.startMessageAlerts=function(){
     if(_alertPoll)return;
     try{
-      if('Notification' in window && Notification.permission==='default'){
-        Notification.requestPermission();
+      if('Notification' in window){
+        if(Notification.permission==='granted'){
+          _ensurePushSubscribed();
+        } else if(Notification.permission==='default'){
+          Notification.requestPermission().then(function(p){ if(p==='granted') _ensurePushSubscribed(); }).catch(function(){});
+        }
       }
     }catch(e){}
     poll();
@@ -12314,7 +12318,7 @@ async function enablePushNotifications(btn){
     if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:_urlB64ToUint8(VAPID_PUBLIC_KEY)});
     await _pushSaveSub(sub);
     alert('✅ Lockscreen alerts enabled on this device.');
-  }catch(e){alert('Could not enable: '+(e.message||e));}
+  }catch(e){alert('Could not enable: '+((e&&e.message)||e));}
   finally{if(btn)btn.disabled=false;_refreshPushBtn();}
 }
 async function _ensurePushSubscribed(){
@@ -12322,8 +12326,8 @@ async function _ensurePushSubscribed(){
     if(!_pushSupported()||Notification.permission!=='granted')return;
     const reg=_swReg||await _registerSW();if(!reg)return;
     await navigator.serviceWorker.ready;
-    const sub=await reg.pushManager.getSubscription();
-    if(!sub)return;
+    let sub=await reg.pushManager.getSubscription();
+    if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:_urlB64ToUint8(VAPID_PUBLIC_KEY)});
     await _pushSaveSub(sub);
   }catch(e){}
 }
