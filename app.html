@@ -1616,7 +1616,10 @@ body:not(.role-owner):not(.role-manager) .role-financial-only{display:none!impor
       <div id="msgListPane">
         <div style="display:flex;align-items:center;justify-content:space-between;padding:14px 16px;border-bottom:1px solid var(--iron);flex-shrink:0;">
           <div style="font-size:15px;font-weight:700;color:var(--white);letter-spacing:.02em;">💬 Messages</div>
-          <button class="btn btn-ghost btn-sm" onclick="renderMsgInbox()">↻</button>
+          <div style="display:flex;gap:6px;align-items:center;">
+            <button id="pushBtn" class="btn btn-ghost btn-sm" onclick="enablePushNotifications(this)">🔔 Enable Alerts</button>
+            <button class="btn btn-ghost btn-sm" onclick="renderMsgInbox()">↻</button>
+          </div>
         </div>
         <div id="msgInboxList" style="flex:1;overflow-y:auto;min-height:0;"></div>
       </div>
@@ -8591,17 +8594,10 @@ function saveDocs(){
 async function loadDocsRemote(){
   try{
     const rows=await sb.get('docs');
-    const oldSigned=new Set(docs.filter(d=>d.signature).map(d=>d.id));
     docs=rows.map(dbToDoc);
-    // Detect newly-signed docs
-    const newlySigned=docs.filter(d=>d.signature&&!oldSigned.has(d.id));
-    if(newlySigned.length){
-      newlySigned.forEach(d=>{
-        try{logDocActivity(d.id,`Signed by ${d.signatureName||'customer'}`);}catch{}
-      });
-      // Show a toast
-      try{showSigToast(newlySigned);}catch{}
-    }
+    // Signed-estimate pop-up notifications removed per owner request
+    // (they were re-firing for the whole signed backlog on every app open,
+    //  blocking the screen and spamming each doc's activity log + the DB).
     return true;
   }catch(e){console.error('docs load failed:',e.message||e);return false;}
 }
@@ -12275,6 +12271,63 @@ function openCustomerMessages(customerId){
 }
 
 
+/* ===== WEB PUSH: register this device for lockscreen alerts (was missing) ===== */
+const VAPID_PUBLIC_KEY='BN8tD2yPFtvcQCqi-Gz73Pe86n9JRNWfdn2SKQ01Pz-DZnklgVbVu18brIDsrg0dozwazX_QrByac88BgLmgMsA';
+let _swReg=null;
+function _urlB64ToUint8(b){const pad='='.repeat((4-b.length%4)%4);const s=(b+pad).replace(/-/g,'+').replace(/_/g,'/');const raw=atob(s);const a=new Uint8Array(raw.length);for(let i=0;i<raw.length;i++)a[i]=raw.charCodeAt(i);return a;}
+function _pushSupported(){return ('serviceWorker' in navigator)&&('PushManager' in window)&&('Notification' in window);}
+async function _registerSW(){
+  if(!('serviceWorker' in navigator))return null;
+  try{_swReg=await navigator.serviceWorker.register('/sw.js');return _swReg;}
+  catch(e){console.error('sw register failed',e);return null;}
+}
+async function _pushSaveSub(sub){
+  const j=(sub.toJSON&&sub.toJSON())||{};const keys=j.keys||{};
+  const H={apikey:SB_KEY,Authorization:'Bearer '+(typeof authAccessToken!=='undefined'?authAccessToken:SB_KEY),'Content-Type':'application/json'};
+  try{
+    const ex=await fetch(`${SB_URL}/rest/v1/push_subscriptions?endpoint=eq.${encodeURIComponent(sub.endpoint)}&select=id`,{headers:H});
+    const rows=await ex.json();
+    if(Array.isArray(rows)&&rows.length)return true;
+  }catch(e){}
+  const body={user_id:(typeof currentUser!=='undefined'&&currentUser&&currentUser.id)||null,company_id:(typeof currentCompanyId!=='undefined'&&currentCompanyId)||null,endpoint:sub.endpoint,p256dh:keys.p256dh||null,auth:keys.auth||null,user_agent:navigator.userAgent};
+  const r=await fetch(`${SB_URL}/rest/v1/push_subscriptions`,{method:'POST',headers:{...H,Prefer:'return=minimal'},body:JSON.stringify(body)});
+  if(!r.ok)throw new Error('save '+r.status+' '+(await r.text()));
+  return true;
+}
+function _refreshPushBtn(){
+  const b=document.getElementById('pushBtn');if(!b)return;
+  if(!_pushSupported()){b.textContent='🔔 Not supported';b.disabled=true;return;}
+  if(Notification.permission==='granted')b.textContent='🔔 Alerts On';
+  else if(Notification.permission==='denied')b.textContent='🔔 Blocked';
+  else b.textContent='🔔 Enable Alerts';
+}
+async function enablePushNotifications(btn){
+  if(!_pushSupported()){alert("This browser can't do push notifications. On iPhone, add the app to your Home Screen first (iOS 16.4+).");return;}
+  if(btn){btn.disabled=true;btn.textContent='Enabling…';}
+  try{
+    const reg=await _registerSW();
+    if(!reg)throw new Error('Service worker not found — make sure sw.js is hosted at your site root.');
+    await navigator.serviceWorker.ready;
+    const perm=await Notification.requestPermission();
+    if(perm!=='granted')throw new Error('Permission was "'+perm+'". Turn on notifications for this site in your browser settings.');
+    let sub=await reg.pushManager.getSubscription();
+    if(!sub)sub=await reg.pushManager.subscribe({userVisibleOnly:true,applicationServerKey:_urlB64ToUint8(VAPID_PUBLIC_KEY)});
+    await _pushSaveSub(sub);
+    alert('✅ Lockscreen alerts enabled on this device.');
+  }catch(e){alert('Could not enable: '+(e.message||e));}
+  finally{if(btn)btn.disabled=false;_refreshPushBtn();}
+}
+async function _ensurePushSubscribed(){
+  try{
+    if(!_pushSupported()||Notification.permission!=='granted')return;
+    const reg=_swReg||await _registerSW();if(!reg)return;
+    await navigator.serviceWorker.ready;
+    const sub=await reg.pushManager.getSubscription();
+    if(!sub)return;
+    await _pushSaveSub(sub);
+  }catch(e){}
+}
+
 if(!window._inboxCapBound){
   window._inboxCapBound=true;
   document.addEventListener('click',function(e){
@@ -12288,6 +12341,9 @@ if(!window._inboxCapBound){
   },true);
 }
 try{ startMessageAlerts(); }catch(e){ console.error('alerts init',e); }
+try{ _registerSW(); }catch(e){}
+try{ _ensurePushSubscribed(); }catch(e){}
+try{ _refreshPushBtn(); }catch(e){}
 
 </script>
 

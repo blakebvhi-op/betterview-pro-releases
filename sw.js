@@ -1,37 +1,48 @@
-/* Better View Pro — service worker for Web Push
-   Host this file at the SITE ROOT: https://sign.betterview.homes/sw.js
-   (A service worker can only control pages at or below its own path, so it
-    must sit at the root to cover /app.html.) */
+// Better View Pro — service worker (web push)
+// Host this at your SITE ROOT so its scope covers the app:
+//   https://sign.betterview.homes/sw.js
 
+self.addEventListener('install', (event) => {
+  self.skipWaiting();
+});
+
+self.addEventListener('activate', (event) => {
+  event.waitUntil(self.clients.claim());
+});
+
+// A push arrived from the server — show the notification.
 self.addEventListener('push', (event) => {
   let data = {};
-  try { data = event.data ? event.data.json() : {}; }
-  catch (e) { data = { body: event.data ? event.data.text() : '' }; }
+  try {
+    data = event.data ? event.data.json() : {};
+  } catch (e) {
+    data = { title: 'Better View', body: (event.data && event.data.text()) || '' };
+  }
 
-  const title = data.title || 'Better View Pro';
+  const title = data.title || 'Better View Home Improvements';
   const options = {
     body: data.body || '',
-    tag: data.tag || 'bvp',          // same tag collapses duplicates
-    data: { url: data.url || '/app.html' },
-    icon: data.icon,                 // optional
-    badge: data.badge,               // optional
-    requireInteraction: false,
-    vibrate: [120, 60, 120],
+    icon: data.icon || '/icon-192.png',
+    badge: data.badge || '/icon-192.png',
+    tag: data.tag || 'bv',
+    renotify: true,
+    data: { url: data.url || '/' },
   };
+
   event.waitUntil(self.registration.showNotification(title, options));
 });
 
+// User tapped the notification — focus the app (or open it).
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
-  const url = (event.notification.data && event.notification.data.url) || '/app.html';
-  event.waitUntil((async () => {
-    const all = await clients.matchAll({ type: 'window', includeUncontrolled: true });
-    for (const c of all) {
-      if (c.url.includes('app.html') && 'focus' in c) return c.focus();
-    }
-    if (self.clients.openWindow) return self.clients.openWindow(url);
-  })());
-});
+  const targetUrl = (event.notification.data && event.notification.data.url) || '/';
 
-self.addEventListener('install', () => self.skipWaiting());
-self.addEventListener('activate', (event) => event.waitUntil(self.clients.claim()));
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((wins) => {
+      for (const w of wins) {
+        if ('focus' in w) return w.focus();
+      }
+      if (self.clients.openWindow) return self.clients.openWindow(targetUrl);
+    })
+  );
+});
