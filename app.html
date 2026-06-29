@@ -12091,9 +12091,9 @@ init();
     try{
       if('Notification' in window){
         if(Notification.permission==='granted'){
-          _ensurePushSubscribed(true);
+          _ensurePushSubscribed();
         } else if(Notification.permission==='default'){
-          Notification.requestPermission().then(function(p){ if(p==='granted') _ensurePushSubscribed(true); }).catch(function(){});
+          Notification.requestPermission().then(function(p){ if(p==='granted') _ensurePushSubscribed(); }).catch(function(){});
         }
       }
     }catch(e){}
@@ -12226,7 +12226,7 @@ function _inHeaders(json){const h={apikey:SB_KEY,Authorization:'Bearer '+(typeof
 function _inEsc(s){return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 async function _inFetch(leadId){try{const r=await fetch(`${SB_URL}/rest/v1/portal_messages?lead_id=eq.${encodeURIComponent(leadId)}&select=id,sender,sender_name,body,created_at,read_by_staff&order=created_at.asc`,{headers:_inHeaders()});if(!r.ok)return [];return await r.json();}catch(e){return [];}}
 async function _inMarkRead(leadId){try{await fetch(`${SB_URL}/rest/v1/portal_messages?lead_id=eq.${encodeURIComponent(leadId)}&sender=eq.customer&read_by_staff=eq.false`,{method:'PATCH',headers:{..._inHeaders(true),Prefer:'return=minimal'},body:JSON.stringify({read_by_staff:true})});}catch(e){}}
-async function _inSend(leadId,body){const name=(typeof currentUser!=='undefined'&&currentUser&&(currentUser.display_name||currentUser.name||currentUser.email))||'Better View';const company=(typeof currentCompanyId!=='undefined'&&currentCompanyId)||null;const r=await fetch(`${SB_URL}/rest/v1/portal_messages`,{method:'POST',headers:{..._inHeaders(true),Prefer:'return=minimal'},body:JSON.stringify({lead_id:leadId,company_id:company,sender:'staff',sender_name:name,body:body,read_by_staff:true})});if(!r.ok)throw new Error(await r.text());}
+async function _inSend(leadId,body,portalOnly){const name=(typeof currentUser!=='undefined'&&currentUser&&(currentUser.display_name||currentUser.name||currentUser.email))||'Better View';const company=(typeof currentCompanyId!=='undefined'&&currentCompanyId)||null;const r=await fetch(`${SB_URL}/rest/v1/portal_messages`,{method:'POST',headers:{..._inHeaders(true),Prefer:'return=minimal'},body:JSON.stringify({lead_id:leadId,company_id:company,sender:'staff',sender_name:name,body:body,read_by_staff:true,skip_sms:!!portalOnly})});if(!r.ok)throw new Error(await r.text());}
 function _inRenderMsgs(list){const thread=document.getElementById('msgThreadBody');if(!thread)return;if(!list.length){thread.innerHTML='<div style="color:#9aa3b4;text-align:center;padding:30px;font-size:13px">No messages yet. Send the customer their portal link to start the conversation.</div>';return;}thread.innerHTML=list.map(m=>{const staff=m.sender==='staff';const t=new Date(m.created_at);const ts=isNaN(t)?'':t.toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});return `<div style="display:flex;flex-direction:column;max-width:72%;${staff?'align-self:flex-end;align-items:flex-end':'align-self:flex-start;align-items:flex-start'}"><div style="padding:9px 12px;border-radius:13px;font-size:13.5px;line-height:1.4;white-space:pre-wrap;word-break:break-word;${staff?'background:#f59e0b;color:#1a1206;border-bottom-right-radius:4px':'background:#2a313e;color:#e8ecf3;border-bottom-left-radius:4px'}">${_inEsc(m.body)}</div><div style="font-size:10px;color:#9aa3b4;margin-top:2px">${staff?_inEsc(m.sender_name||'You'):_inEsc(m.sender_name||'Customer')} · ${ts}</div></div>`;}).join('');thread.scrollTop=thread.scrollHeight;}
 async function _inLoad(leadId,force){const list=await _inFetch(leadId);if(force||list.length!==_inboxLastCount){_inboxLastCount=list.length;_inRenderMsgs(list);}if(list.some(m=>m.sender==='customer'&&!m.read_by_staff)){_inMarkRead(leadId);}}
 function openThreadInPane(leadId){
@@ -12244,12 +12244,20 @@ function openThreadInPane(leadId){
       <div style="min-width:0;"><div style="font-weight:700;color:var(--white);font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;">${_inEsc(nm)}</div><div style="color:#9aa3b4;font-size:11px;">Portal conversation</div></div>
     </div>
     <div id="msgThreadBody" style="flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:9px;padding:16px 18px;background:#0f1115;min-height:0;"></div>
-    <div style="display:flex;gap:8px;align-items:flex-end;padding:12px 16px;border-top:1px solid var(--iron);flex-shrink:0;">
-      <textarea id="msgReplyInput" rows="1" placeholder="Reply to the customer…" style="flex:1;resize:none;max-height:120px;padding:10px 12px;font-size:14px;font-family:inherit;border:1px solid var(--iron);border-radius:10px;background:#1e2530;color:#e8ecf3;outline:none;"></textarea>
-      <button id="msgReplyBtn" style="flex-shrink:0;padding:10px 18px;border:0;border-radius:10px;background:var(--amber);color:#0a0c10;font-weight:800;font-size:14px;cursor:pointer;">Send</button>
+    <div style="border-top:1px solid var(--iron);flex-shrink:0;">
+      <label style="display:flex;align-items:center;gap:8px;padding:9px 16px 0;font-size:12px;color:#9aa3b4;cursor:pointer;user-select:none;">
+        <input type="checkbox" id="msgAlsoText" checked style="width:16px;height:16px;accent-color:var(--amber);cursor:pointer;">
+        <span id="msgAlsoTextLbl">📱 Also send as a text (uses Twilio)</span>
+      </label>
+      <div style="display:flex;gap:8px;align-items:flex-end;padding:8px 16px 12px;">
+        <textarea id="msgReplyInput" rows="1" placeholder="Reply to the customer…" style="flex:1;resize:none;max-height:120px;padding:10px 12px;font-size:14px;font-family:inherit;border:1px solid var(--iron);border-radius:10px;background:#1e2530;color:#e8ecf3;outline:none;"></textarea>
+        <button id="msgReplyBtn" style="flex-shrink:0;padding:10px 18px;border:0;border-radius:10px;background:var(--amber);color:#0a0c10;font-weight:800;font-size:14px;cursor:pointer;">Send</button>
+      </div>
     </div>`;
   const inp=document.getElementById('msgReplyInput'),btn=document.getElementById('msgReplyBtn');
-  const doSend=async()=>{const body=(inp.value||'').trim();if(!body)return;btn.disabled=true;inp.disabled=true;try{await _inSend(leadId,body);inp.value='';_inboxLastCount=-1;await _inLoad(leadId,true);}catch(e){alert('Could not send: '+e.message);}finally{btn.disabled=false;inp.disabled=false;inp.focus();}};
+  const alsoText=document.getElementById('msgAlsoText'),alsoTextLbl=document.getElementById('msgAlsoTextLbl');
+  if(alsoText){alsoText.onchange=function(){if(alsoTextLbl)alsoTextLbl.textContent=alsoText.checked?'📱 Also send as a text (uses Twilio)':'🔒 Portal only — no text sent';btn.textContent=alsoText.checked?'Send':'Post';};}
+  const doSend=async()=>{const body=(inp.value||'').trim();if(!body)return;const portalOnly=alsoText?!alsoText.checked:false;btn.disabled=true;inp.disabled=true;try{await _inSend(leadId,body,portalOnly);inp.value='';_inboxLastCount=-1;await _inLoad(leadId,true);}catch(e){alert('Could not send: '+e.message);}finally{btn.disabled=false;inp.disabled=false;inp.focus();}};
   btn.onclick=doSend;
   inp.addEventListener('keydown',e=>{if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();doSend();}});
   _inLoad(leadId,true);
