@@ -8917,6 +8917,190 @@ function showSigToast(signedDocs){
 }
 
 // Background polling for signed estimates (every 30 seconds while authenticated)
+// ── DOCUMENT STATE + PERSISTENCE ──────────────────────────────
+// RESTORED 2026-08-25. These declarations and functions were absent from the
+// deployed app.html — lost when the SaaS build and the app build were merged.
+// Recovered verbatim from the June copy in the project. Their absence threw a
+// ReferenceError inside loadAppData(), which aborted the rest of app boot:
+// docs and customers never loaded, and the Estimates and Customers tabs were
+// left permanently blank.
+
+let docs=[]; // {id, type, status, num, clientName, clientContact, clientAddr, date, dueDate, scope, lineItems, tax, discount, notes, created}
+let editDocId=null;
+let docFilter='all';
+let docSearchQuery=''; // free-text search across name, address, est number
+let liCounter=0;
+let sigPainter=null;
+
+function loadDocs(){
+  // Docs are NOT cached to localStorage anymore.
+  // With signatures, scope text, line items, and material order data, the docs
+  // payload routinely exceeds Chrome's per-origin localStorage quota (~5MB) in
+  // the PWA, which silently breaks all reads of the estimates list. Supabase
+  // is the source of truth — we fetch via loadDocsRemote() on app boot and
+  // hold in memory thereafter. Adds ~200ms to first paint but eliminates the
+  // quota class of bug entirely. The Electron desktop app is unaffected
+  // either way since it has a much larger quota.
+  //
+  // IMPORTANT: this function is called by many render paths as a "make sure
+  // data is loaded" guard. It must therefore NEVER clobber the in-memory
+  // docs array. Make `docs` an empty array only if it hasn't been initialized
+  // yet (truly first call). Subsequent calls are a no-op so that re-renders
+  // don't wipe the data loadDocsRemote() just put there.
+  if(!Array.isArray(docs)) docs=[];
+  // Sweep any old oversized cache entries from previous versions so they
+  // free up the localStorage quota for everything else (jobs/leads/tasks).
+  // Safe to call on every invocation — removeItem on a missing key is a no-op.
+  try{localStorage.removeItem('docs_cache');}catch{}
+  try{localStorage.removeItem('docs_local');}catch{}
+}
+
+async function loadDocsRemote(){
+  try{
+    const rows=await sb.get('docs');
+    const oldSigned=new Set(docs.filter(d=>d.signature).map(d=>d.id));
+    docs=rows.map(dbToDoc);
+    // Detect newly-signed docs
+    const newlySigned=docs.filter(d=>d.signature&&!oldSigned.has(d.id));
+    if(newlySigned.length){
+      newlySigned.forEach(d=>{
+        try{logDocActivity(d.id,`Signed by ${d.signatureName||'customer'}`);}catch{}
+      });
+      // Show a toast
+      try{showSigToast(newlySigned);}catch{}
+    }
+    return true;
+  }catch(e){console.error('docs load failed:',e.message||e);return false;}
+}
+
+function saveDocs(){
+  // No-op. Docs persist to Supabase via saveDocSync (per-doc), not to
+  // localStorage. See loadDocs() above for rationale.
+}
+
+function initSignaturePad(){
+  const canvas=document.getElementById('sigCanvas');
+  if(!canvas) return;
+  // Avoid double-init
+  if(canvas.dataset.inited==='1') return;
+  canvas.dataset.inited='1';
+  const ctx=canvas.getContext('2d');
+  // Match canvas internal size to its CSS size for crisp drawing on HiDPI
+  const fitCanvas=()=>{
+    const rect=canvas.getBoundingClientRect();
+    if(rect.width>0){
+      const dpr=window.devicePixelRatio||1;
+      canvas.width=Math.floor(rect.width*dpr);
+      canvas.height=Math.floor(rect.height*dpr);
+      ctx.setTransform(dpr,0,0,dpr,0,0);
+      ctx.lineWidth=2;ctx.lineCap='round';ctx.lineJoin='round';ctx.strokeStyle='#000';
+    }
+  };
+  fitCanvas();
+  let drawing=false,lastX=0,lastY=0,hasInk=false;
+  const pos=e=>{
+    const r=canvas.getBoundingClientRect();
+    const t=(e.touches&&e.touches[0])||e;
+    return {x:t.clientX-r.left,y:t.clientY-r.top};
+  };
+  const start=e=>{e.preventDefault();drawing=true;const p=pos(e);lastX=p.x;lastY=p.y;};
+  const move=e=>{
+    if(!drawing)return;e.preventDefault();
+    const p=pos(e);
+    ctx.beginPath();ctx.moveTo(lastX,lastY);ctx.lineTo(p.x,p.y);ctx.stroke();
+    lastX=p.x;lastY=p.y;hasInk=true;
+  };
+  const end=()=>{drawing=false;};
+  canvas.addEventListener('mousedown',start);
+  canvas.addEventListener('mousemove',move);
+  canvas.addEventListener('mouseup',end);
+  canvas.addEventListener('mouseleave',end);
+  canvas.addEventListener('touchstart',start,{passive:false});
+  canvas.addEventListener('touchmove',move,{passive:false});
+  canvas.addEventListener('touchend',end);
+  sigPainter={
+    canvas,ctx,
+    clear:()=>{ctx.clearRect(0,0,canvas.width,canvas.height);hasInk=false;canvas.classList.remove('signed');},
+    isEmpty:()=>!hasInk,
+    setInked:v=>{hasInk=v;},
+    toDataURL:()=>canvas.toDataURL('image/png'),
+    drawFromDataURL:url=>new Promise(res=>{
+      const img=new Image();
+      img.onload=()=>{
+        // Preserve transformed scale; image was saved at canvas internal pixels
+        ctx.save();
+        ctx.setTransform(1,0,0,1,0,0);
+        ctx.clearRect(0,0,canvas.width,canvas.height);
+        ctx.drawImage(img,0,0,canvas.width,canvas.height);
+        ctx.restore();
+        hasInk=true;canvas.classList.add('signed');
+        res();
+      };
+      img.onerror=()=>res();
+      img.src=url;
+    }),
+  };
+}
+
+function onLineItemSearchChange(v){
+  const q=(v||'').toString().trim().toLowerCase();
+  document.querySelectorAll('#liRows .li-row-data').forEach(row=>{
+    if(!q){row.style.display='';return;}
+    const descInp=row.querySelector('.li-desc');
+    const desc=(descInp?.value||'').toLowerCase();
+    row.style.display=desc.includes(q)?'':'none';
+  });
+}
+
+function onDocSearchChange(v){
+  docSearchQuery=(v||'').toString().trim().toLowerCase();
+  renderDocList();
+}
+
+function clearSignature(){
+  if(!sigPainter) initSignaturePad();
+  if(sigPainter) sigPainter.clear();
+  const status=document.getElementById('sigStatus');
+  if(status){status.textContent='';status.classList.remove('saved');}
+  // Update doc immediately so cleared signature persists
+  if(editDocId){
+    const d=docs.find(x=>x.id===editDocId);
+    if(d){d.signature='';d.signatureName='';d.signatureDate='';saveDoc();}
+  }
+}
+
+function saveSignature(){
+  if(!sigPainter) initSignaturePad();
+  if(!sigPainter||sigPainter.isEmpty()){
+    const status=document.getElementById('sigStatus');
+    if(status){status.textContent='Please draw a signature first.';status.classList.remove('saved');}
+    return;
+  }
+  const name=document.getElementById('sigName')?.value?.trim()||'';
+  if(!name){
+    const status=document.getElementById('sigStatus');
+    if(status){status.textContent='Please enter the printed name of the signer.';status.classList.remove('saved');}
+    return;
+  }
+  const dataUrl=sigPainter.toDataURL();
+  const d=docs.find(x=>x.id===editDocId)||{id:editDocId};
+  d.signature=dataUrl;
+  d.signatureName=name;
+  d.signatureDate=new Date().toISOString();
+  // Mark the deal as signed + won. Reports counts both signed status
+  // and outcome='won' so this is the single source of truth.
+  d.status='signed';
+  d.outcome=d.outcome||'won';
+  d.closedDate=d.closedDate||d.signatureDate;
+  // Make sure it lands in the docs array
+  if(!docs.find(x=>x.id===d.id)) docs.push(d);
+  saveDoc();
+  sigPainter.canvas.classList.add('signed');
+  const status=document.getElementById('sigStatus');
+  if(status){status.textContent='✓ Signature saved · '+new Date(d.signatureDate).toLocaleString();status.classList.add('saved');}
+  updateDocPreview(collectDoc(d));
+}
+
 let docPollTimer=null;
 function startDocPolling(){
   if(docPollTimer) clearInterval(docPollTimer);
