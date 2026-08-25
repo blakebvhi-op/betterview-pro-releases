@@ -617,6 +617,72 @@ body.resizing{user-select:none;-webkit-user-select:none;}
 .task-link-badge{display:inline-flex;align-items:center;gap:3px;padding:1px 6px;border-radius:3px;background:rgba(245,158,11,.15);color:var(--amber);font-size:9px;font-weight:600;}
 .task-empty{padding:40px 20px;text-align:center;color:var(--muted);font-size:13px;}
 .task-empty-emoji{font-size:36px;opacity:.3;margin-bottom:8px;}
+
+/* ══ EXECULIST BOARD ══════════════════════════════════════════════
+   Four-lane task board ported from the Execulist app. Everything is
+   ex- prefixed and scoped so it can't collide with the CRM's own task
+   styles. Colors come from the CRM palette, not Execulist's dark one,
+   so the board reads as part of this app rather than a bolted-on slab. */
+.ex-board{display:flex;flex-direction:column;height:100%;overflow:hidden;}
+.ex-top{display:flex;align-items:flex-start;gap:10px;padding:10px 14px 8px;background:var(--steel-mid);border-bottom:1px solid var(--iron);flex-shrink:0;}
+.ex-top-l{flex:1;min-width:0;}
+.ex-date{font-family:'Bebas Neue',sans-serif;font-size:12px;letter-spacing:2px;color:var(--muted);}
+.ex-title{font-family:'Bebas Neue',sans-serif;font-size:24px;letter-spacing:1px;color:var(--amber);line-height:1;margin-top:2px;}
+.ex-top-r{text-align:right;flex-shrink:0;}
+.ex-cleared{font-family:'Bebas Neue',sans-serif;font-size:22px;color:var(--white);line-height:1;}
+.ex-cleared-lbl{font-family:'Bebas Neue',sans-serif;font-size:10px;letter-spacing:2px;color:var(--muted);margin-top:2px;}
+.ex-streak{display:inline-flex;align-items:center;gap:4px;background:var(--steel-light);border:1px solid var(--iron);border-radius:99px;padding:3px 10px;font-size:12px;font-weight:600;color:var(--white);cursor:pointer;margin-bottom:4px;}
+.ex-streak.hot{border-color:var(--amber);color:var(--amber);}
+.ex-bar{height:3px;background:var(--iron);flex-shrink:0;}
+.ex-bar-fill{height:100%;background:var(--amber);width:0;transition:width .3s;}
+.ex-legend{display:flex;gap:6px;padding:8px 14px;background:var(--steel-mid);border-bottom:1px solid var(--iron);flex-shrink:0;overflow-x:auto;}
+.ex-pri-chip{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--iron);background:var(--steel-light);border-radius:99px;padding:4px 10px;font-size:11px;color:var(--muted);white-space:nowrap;cursor:pointer;transition:all .15s;}
+.ex-pri-chip.sel{border-color:var(--amber);color:var(--amber);background:var(--steel-mid);}
+.ex-pri-dot{width:16px;height:16px;border-radius:5px;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:700;color:#fff;flex-shrink:0;}
+.ex-p1{background:var(--danger);}.ex-p2{background:var(--orange);}.ex-p3{background:var(--blue);}.ex-p4{background:var(--muted);}
+.ex-nudge{padding:7px 14px;font-size:12px;color:var(--muted);background:var(--steel-mid);border-bottom:1px solid var(--iron);flex-shrink:0;display:flex;align-items:center;gap:7px;}
+.ex-nudge b{color:var(--white);}
+.ex-nudge-dot{width:6px;height:6px;border-radius:50%;background:var(--amber);flex-shrink:0;}
+.ex-grid{flex:1;overflow-y:auto;display:grid;grid-template-columns:1fr 1fr;gap:0;background:var(--steel);align-content:start;}
+@media(min-width:900px){.ex-grid{grid-template-columns:repeat(4,1fr);}}
+.ex-lane{background:var(--steel);padding:10px;min-height:180px;display:flex;flex-direction:column;gap:7px;border-right:1px solid var(--iron);border-bottom:1px solid var(--iron);}
+.ex-grid .ex-lane:nth-child(2n){border-right:none;}
+@media(min-width:900px){.ex-grid .ex-lane:nth-child(2n){border-right:1px solid var(--iron);}.ex-grid .ex-lane:nth-child(4n){border-right:none;}}
+.ex-lane.drop{background:var(--steel-light);outline:2px dashed var(--amber);outline-offset:-4px;}
+.ex-lane-hd{display:flex;align-items:center;gap:8px;flex-shrink:0;}
+.ex-lane-ico{width:26px;height:26px;border-radius:7px;border:1px solid var(--iron);background:var(--steel-mid);display:flex;align-items:center;justify-content:center;font-size:13px;flex-shrink:0;}
+.ex-lane-name{font-family:'Bebas Neue',sans-serif;font-size:15px;letter-spacing:1.5px;color:var(--white);flex:1;}
+.ex-lane-count{font-size:11px;color:var(--muted);background:var(--steel-light);border-radius:99px;padding:1px 8px;}
+.ex-card{background:var(--steel-mid);border:1px solid var(--iron);border-radius:9px;padding:9px 10px;display:flex;align-items:flex-start;gap:8px;cursor:pointer;transition:border-color .15s,opacity .15s;}
+.ex-card:hover{border-color:var(--amber);}
+.ex-card.done{opacity:.5;}
+.ex-card.done .ex-card-text{text-decoration:line-through;color:var(--muted);}
+.ex-card.ritual{border-style:dashed;border-color:var(--amber);}
+.ex-card.dragging{opacity:.4;}
+.ex-card-body{flex:1;min-width:0;}
+.ex-card-text{font-size:13px;font-weight:500;color:var(--white);line-height:1.3;word-break:break-word;}
+.ex-card-meta{font-size:10px;color:var(--muted);margin-top:3px;line-height:1.4;word-break:break-word;}
+.ex-card-meta .ex-due-over{color:var(--danger);font-weight:600;}
+.ex-card-meta .ex-due-today{color:var(--amber);font-weight:600;}
+.ex-badge{display:inline-flex;align-items:center;gap:3px;padding:1px 6px;border-radius:3px;background:rgba(16,168,176,.14);color:var(--amber);font-size:9px;font-weight:600;margin-top:3px;}
+.ex-card-acts{display:flex;flex-direction:column;gap:5px;flex-shrink:0;}
+.ex-act{background:none;border:none;cursor:pointer;font-size:14px;line-height:1;padding:2px;color:var(--amber);}
+.ex-act.del{color:var(--muted);opacity:.5;}
+.ex-act.del:hover{opacity:1;color:var(--danger);}
+.ex-check{width:19px;height:19px;border-radius:5px;border:2px solid var(--muted);cursor:pointer;flex-shrink:0;display:flex;align-items:center;justify-content:center;color:#fff;font-size:12px;font-weight:700;margin-top:1px;background:transparent;}
+.ex-check.on{background:var(--green);border-color:var(--green);}
+.ex-lane-empty{font-size:11px;color:var(--muted);opacity:.6;padding:6px 2px;}
+.ex-foot{display:flex;align-items:center;gap:10px;padding:8px 74px 8px 14px;background:var(--steel-mid);border-top:1px solid var(--iron);flex-shrink:0;}
+.ex-note-btn{flex:1;text-align:left;background:none;border:none;color:var(--muted);font-family:'Bebas Neue',sans-serif;font-size:12px;letter-spacing:1.5px;cursor:pointer;padding:4px 0;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.ex-note-btn.has{color:var(--white);}
+.ex-tom-btn{display:inline-flex;align-items:center;gap:7px;background:var(--steel-light);border:1px solid var(--amber);color:var(--amber);border-radius:99px;padding:6px 14px;font-size:13px;font-weight:600;cursor:pointer;flex-shrink:0;}
+.ex-tom-n{background:var(--amber);color:var(--steel-mid);border-radius:99px;min-width:18px;padding:0 5px;font-size:11px;text-align:center;}
+.ex-chips{display:flex;gap:6px;flex-wrap:wrap;}
+.ex-chip{border:1px solid var(--iron);background:var(--steel-light);border-radius:8px;padding:7px 11px;font-size:12px;color:var(--muted);cursor:pointer;display:inline-flex;align-items:center;gap:6px;transition:all .15s;}
+.ex-chip.sel{border-color:var(--amber);color:var(--amber);background:var(--steel-mid);}
+.ex-tom-row{display:flex;align-items:center;gap:9px;padding:9px 0;border-bottom:1px solid var(--iron);}
+.ex-tom-row-txt{flex:1;min-width:0;font-size:13px;color:var(--white);}
+.ex-tom-row-lane{font-family:'Bebas Neue',sans-serif;font-size:10px;letter-spacing:1.5px;color:var(--muted);margin-top:2px;}
 .doc-list{flex:1;overflow-y:auto;padding:10px 14px 80px;display:flex;flex-direction:column;gap:8px;}
 .doc-card{background:var(--steel-light);border-radius:9px;padding:12px 14px;border-left:4px solid var(--amber);cursor:pointer;transition:background .15s;}
 .doc-card:hover{background:var(--iron);}
@@ -649,6 +715,11 @@ body.resizing{user-select:none;-webkit-user-select:none;}
 /* ── Header: title + back only ── */
 .doc-editor-hdr{display:flex;align-items:center;gap:8px;padding:8px 16px;background:var(--steel-mid);border-bottom:1px solid var(--iron);flex-shrink:0;}
 .doc-editor-title{font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;color:var(--amber);flex:1;}
+/* Editable document number in the editor title bar. Styled to read as part
+   of the title, with a dashed underline so it's discoverable as a field. */
+.doc-editor-num{font-family:'Bebas Neue',sans-serif;font-size:16px;letter-spacing:2px;color:var(--amber);background:transparent;border:none;border-bottom:1px dashed var(--iron);padding:0 2px;width:150px;outline:none;flex:0 0 auto;}
+.doc-editor-num:hover{border-bottom-color:var(--amber);}
+.doc-editor-num:focus{border-bottom-color:var(--amber);background:rgba(0,0,0,.25);}
 
 /* ── Hotbar: save + actions row ── */
 .doc-hotbar{display:flex;align-items:center;gap:6px;padding:6px 16px;background:var(--steel);border-bottom:2px solid var(--amber);flex-shrink:0;flex-wrap:wrap;}
@@ -1515,19 +1586,26 @@ body:not(.role-owner):not(.role-manager) .role-financial-only{display:none!impor
 
   <!-- ═══ TASKS ═══ -->
   <div class="view" id="vTasks">
-    <div class="task-view">
-      <div class="task-toolbar">
-        <span class="task-toolbar-title">✓ TASKS</span>
-        <div class="doc-toolbar-spacer"></div>
-        <button class="btn btn-ghost btn-sm" id="filterAllTasks" onclick="filterTasks('open')" style="border-color:var(--amber);color:var(--amber)">Open</button>
-        <button class="btn btn-ghost btn-sm" id="filterDoneTasks" onclick="filterTasks('done')">Done</button>
-        <button class="btn btn-ghost btn-sm" id="filterAllAllTasks" onclick="filterTasks('all')">All</button>
-        <button class="btn btn-amber btn-sm" onclick="openTaskMov()">+ New Task</button>
+    <div class="ex-board">
+      <div class="ex-top">
+        <div class="ex-top-l">
+          <div class="ex-date" id="exDate">—</div>
+          <div class="ex-title">EXECULIST</div>
+        </div>
+        <div class="ex-top-r">
+          <button class="ex-streak" id="exStreakChip" onclick="exShowStreak()" title="Days in a row you cleared every must-do">🔥 <span id="exStreakN">0</span></button>
+          <div class="ex-cleared" id="exCleared">0/0</div>
+          <div class="ex-cleared-lbl">CLEARED</div>
+        </div>
       </div>
-      <div class="task-quick-add">
-        <input class="finput task-quick-input" id="taskQuickInput" type="text" placeholder="Quick add a task… (press Enter)" autocomplete="off"/>
+      <div class="ex-bar"><div class="ex-bar-fill" id="exBarFill"></div></div>
+      <div class="ex-legend" id="exLegend"></div>
+      <div class="ex-nudge" id="exNudge"><span class="ex-nudge-dot"></span><span id="exNudgeTxt">Nothing due today.</span></div>
+      <div class="ex-grid" id="exGrid"></div>
+      <div class="ex-foot">
+        <button class="ex-note-btn" id="exNoteBtn" onclick="exOpenNote()">+ NOTE FOR TODAY</button>
+        <button class="ex-tom-btn" onclick="exOpenTomorrow()">🌙 Tomorrow <span class="ex-tom-n" id="exTomN">0</span></button>
       </div>
-      <div class="task-list" id="taskList"></div>
     </div>
   </div>
 
@@ -1663,7 +1741,8 @@ body:not(.role-owner):not(.role-manager) .role-financial-only{display:none!impor
   <!-- Title bar: just back button + doc title -->
   <div class="doc-editor-hdr">
     <button class="btn btn-ghost btn-sm" onclick="closeDocEditor()">← Back</button>
-    <span class="doc-editor-title" id="docEditorTitle">NEW ESTIMATE</span>
+    <span class="doc-editor-title" id="docEditorTypeLabel" style="flex:0 0 auto;">NEW ESTIMATE</span>
+    <input class="doc-editor-num" id="docNum" spellcheck="false" autocomplete="off" placeholder="(number)" title="Document number — click to edit">
   </div>
 
   <!-- Hotbar: save + status + actions -->
@@ -2026,19 +2105,19 @@ body:not(.role-owner):not(.role-manager) .role-financial-only{display:none!impor
 
 <!-- ── TASK MODAL ────────────────────────────────────────────── -->
 <div class="mov" id="tMov">
-  <div class="movc">
-    <div class="movh">
-      <span class="movt" id="tMTitle">✓ NEW TASK</span>
-      <button class="movx" onclick="closeMov('tMov')">×</button>
-    </div>
+  <div class="modal">
+    <div class="mhandle"></div>
+    <div class="mtitle" id="tMTitle">✓ NEW TASK</div>
     <div class="fg"><label class="flbl">Task</label><input type="text" class="finput" id="tTitle" placeholder="Pull permit, call homeowner, order materials…" autocomplete="off"/></div>
+    <div class="fg"><label class="flbl">Which lane</label><div class="ex-chips" id="tLaneChips"></div></div>
+    <div class="fg"><label class="flbl">When</label><div class="ex-chips" id="tPriChips"></div></div>
+    <div class="fg" id="tDetailWrap" style="display:none"><label class="flbl" id="tDetailLbl">Detail</label><input type="text" class="finput" id="tDetail" autocomplete="off"/></div>
     <div class="frow">
       <div><label class="flbl">Due Date</label><input type="date" class="finput" id="tDue"/></div>
-      <div><label class="flbl">Priority</label>
-        <select class="finput" id="tPriority">
-          <option value="normal">Normal</option>
-          <option value="high">🔴 High</option>
-          <option value="low">🟢 Low</option>
+      <div><label class="flbl">Staging</label>
+        <select class="finput" id="tStaged">
+          <option value="0">On the board now</option>
+          <option value="1">🌙 Hold for tomorrow</option>
         </select>
       </div>
     </div>
@@ -2055,6 +2134,33 @@ body:not(.role-owner):not(.role-manager) .role-financial-only{display:none!impor
       <button class="btn btn-ghost" onclick="closeMov('tMov')">Cancel</button>
       <button class="btn btn-danger btn-sm" id="tDel" style="display:none" onclick="deleteTask()">Delete</button>
       <button class="btn btn-amber" id="tSave" onclick="saveTaskFromMov()">Save Task</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ TOMORROW PLANNER (Execulist board) ═══ -->
+<div class="mov" id="exTomMov">
+  <div class="modal">
+    <div class="mhandle"></div>
+    <div class="mtitle">🌙 TOMORROW</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:10px;">Held back until tomorrow. These land on the board at the first open of the new day.</div>
+    <div id="exTomList" style="max-height:40vh;overflow-y:auto;"></div>
+    <div class="macts">
+      <button class="btn btn-ghost" onclick="closeMov('exTomMov')">Close</button>
+      <button class="btn btn-amber" onclick="closeMov('exTomMov');openTaskMov(null,true)">+ Add for tomorrow</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ NOTE FOR TODAY (Execulist board) ═══ -->
+<div class="mov" id="exNoteMov">
+  <div class="modal">
+    <div class="mhandle"></div>
+    <div class="mtitle">📝 NOTE FOR TODAY</div>
+    <div class="fg"><textarea class="finput" id="exNoteTxt" rows="4" placeholder="One line to keep in front of you today…"></textarea></div>
+    <div class="macts">
+      <button class="btn btn-ghost" onclick="closeMov('exNoteMov')">Cancel</button>
+      <button class="btn btn-amber" onclick="exSaveNote()">Save Note</button>
     </div>
   </div>
 </div>
@@ -4097,6 +4203,10 @@ async function loadAllRemote(){
   docs=d.map(dbToDoc);
   if(Array.isArray(t))  tasks=t.map(dbToTask);
   if(Array.isArray(tm)) estTemplates=tm.map(dbToTmpl);
+  // Board streak + day note. Local mirror first so the board can paint
+  // immediately offline, then the server row wins if it's reachable.
+  exLoadStateLocal();
+  exLoadStateRemote().catch(()=>{});
   // Refresh local cache so a future offline reload has the latest
   lsSet('jobs_cache',j);
   lsSet('leads_cache',l);
@@ -4281,13 +4391,38 @@ function fmtActivityTime(iso){
   return d.toLocaleDateString('en-US',{month:'short',day:'numeric'})+' '+time;
 }
 
-// ── TASKS ─────────────────────────────────────────────────────
+// ── TASKS · EXECULIST BOARD ───────────────────────────────────
+// Four lanes (To Do / To See / To Send / To Call) x four priorities
+// (Today / Tomorrow / Soon / Horizon), backed by the same Supabase
+// `tasks` table the old list view used. Lane, pri, detail and staged
+// come from the tasks-execulist migration.
 let tasks=[];
 let editTaskId=null;
 let taskFilter='open';
 
-const dbToTask=r=>({id:r.id,title:r.title||'',due:r.due||'',priority:r.priority||'normal',leadId:r.lead_id||null,jobId:r.job_id||null,notes:r.notes||'',done:!!r.done,doneAt:r.done_at||'',created:r.created||Date.now()});
-const taskToDb=t=>({id:t.id,title:t.title||'',due:t.due||null,priority:t.priority||'normal',lead_id:t.leadId||null,job_id:t.jobId||null,notes:t.notes||'',done:!!t.done,done_at:t.doneAt||null,created:t.created||Date.now(),user_id:currentUser?.id||null,updated_at:new Date().toISOString()});
+const EX_LANES=[
+  {key:'do',   name:'To Do',   ico:'🗒', detailLbl:'',                detailPh:''},
+  {key:'see',  name:'To See',  ico:'📍', detailLbl:'Address',         detailPh:'4412 Oakwood Ave, Milwaukee, WI'},
+  {key:'send', name:'To Send', ico:'📤', detailLbl:'Email address',   detailPh:'name@example.com'},
+  {key:'call', name:'To Call', ico:'📞', detailLbl:'Phone number',    detailPh:'414-555-0142'},
+];
+const EX_PRI=[{n:1,lbl:'Today'},{n:2,lbl:'Tomorrow'},{n:3,lbl:'Soon'},{n:4,lbl:'Horizon'}];
+const exLane=k=>EX_LANES.find(l=>l.key===k)||EX_LANES[0];
+const exToday=()=>new Date().toISOString().split('T')[0];
+function exDayOffset(iso,days){
+  if(!iso) return '';
+  const d=new Date(iso+'T00:00:00');d.setDate(d.getDate()+days);
+  return d.toISOString().split('T')[0];
+}
+
+// pri 1-4 is the board's own scale. `priority` (high/normal/low) is kept in
+// sync so any older row or report that still reads it stays sensible.
+const exPriToPriority=p=>p<=1?'high':p>=4?'low':'normal';
+
+const dbToTask=r=>({id:r.id,title:r.title||'',due:r.due||'',priority:r.priority||'normal',leadId:r.lead_id||null,jobId:r.job_id||null,notes:r.notes||'',done:!!r.done,doneAt:r.done_at||'',created:r.created||Date.now(),
+  lane:r.lane||'do',pri:parseInt(r.pri)||1,detail:r.detail||'',staged:!!r.staged});
+const taskToDb=t=>({id:t.id,title:t.title||'',due:t.due||null,priority:exPriToPriority(t.pri||1),lead_id:t.leadId||null,job_id:t.jobId||null,notes:t.notes||'',done:!!t.done,done_at:t.doneAt||null,created:t.created||Date.now(),user_id:currentUser?.id||null,updated_at:new Date().toISOString(),
+  lane:t.lane||'do',pri:t.pri||1,detail:t.detail||'',staged:!!t.staged});
 
 function loadTasks(){
   const cached=lsGet('tasks_cache',null);
@@ -4307,14 +4442,10 @@ async function loadTasksRemote(){
 function saveTaskSync(t){setSS('syncing','Saving…');queueSave('tasks',t);}
 async function delTaskRemote(id){try{await sb.del('tasks',id);}catch(e){console.error('Task delete failed:',e);}}
 
-function filterTasks(f){
-  taskFilter=f;
-  document.querySelectorAll('.task-toolbar .btn').forEach(b=>{b.style.borderColor='';b.style.color='';});
-  const map={open:'filterAllTasks',done:'filterDoneTasks',all:'filterAllAllTasks'};
-  const el=document.getElementById(map[f]);
-  if(el){el.style.borderColor='var(--amber)';el.style.color='var(--amber)';}
-  renderTaskList();
-}
+// filterTasks is kept because switchMain() still calls it. The board has no
+// open/done/all toolbar — done cards stay on the board, struck through,
+// until the day rolls over — so this just re-renders.
+function filterTasks(f){taskFilter=f||'open';renderTaskList();}
 
 function taskIsOverdue(due){
   if(!due) return false;
@@ -4324,62 +4455,252 @@ function taskIsOverdue(due){
 }
 function taskIsToday(due){
   if(!due) return false;
-  const today=new Date().toISOString().split('T')[0];
-  return due===today;
+  return due===exToday();
 }
 
-function renderTaskList(){
-  loadTasks();
-  let list=tasks.slice();
-  if(taskFilter==='open') list=list.filter(t=>!t.done);
-  else if(taskFilter==='done') list=list.filter(t=>t.done);
-  // Sort: overdue first, then today, then by due date asc, then no-due last
-  list.sort((a,b)=>{
-    if(a.done!==b.done) return a.done?1:-1;
-    const ad=a.due?new Date(a.due+'T00:00:00').getTime():Infinity;
-    const bd=b.due?new Date(b.due+'T00:00:00').getTime():Infinity;
-    if(ad!==bd) return ad-bd;
-    const pri={high:0,normal:1,low:2};
-    return (pri[a.priority]||1)-(pri[b.priority]||1);
+// ── BOARD STATE (streak + day note) ───────────────────────────
+// Lives in public.task_board_state, one row per user, so the streak and
+// today's note follow you between phone and desktop. localStorage is the
+// offline mirror; the table is the source of truth on load.
+const EX_STATE_KEY='ex_board_state';
+let exState={streak:0,bestStreak:0,lastGoalDay:'',lastOpenDay:'',dayNote:'',noteDay:''};
+
+function exLoadStateLocal(){
+  const s=lsGet(EX_STATE_KEY,null);
+  if(s&&typeof s==='object') exState=Object.assign(exState,s);
+}
+function exSaveStateLocal(){lsSet(EX_STATE_KEY,exState);}
+async function exLoadStateRemote(){
+  try{
+    const r=await fetch(SB_URL+'/rest/v1/task_board_state?select=*&limit=1',{
+      headers:{apikey:SB_KEY,Authorization:'Bearer '+authAccessToken}
+    });
+    if(!r.ok) return false;
+    const rows=await r.json();
+    if(rows&&rows.length){
+      const x=rows[0];
+      exState={streak:x.streak||0,bestStreak:x.best_streak||0,lastGoalDay:x.last_goal_day||'',
+        lastOpenDay:x.last_open_day||'',dayNote:x.day_note||'',noteDay:x.note_day||''};
+      exSaveStateLocal();
+    }
+    return true;
+  }catch(e){console.error('board state load failed:',e.message||e);return false;}
+}
+async function exSaveStateRemote(){
+  exSaveStateLocal();
+  try{
+    await fetch(SB_URL+'/rest/v1/task_board_state?on_conflict=user_id',{
+      method:'POST',
+      headers:{apikey:SB_KEY,Authorization:'Bearer '+authAccessToken,
+        'Content-Type':'application/json','Prefer':'resolution=merge-duplicates'},
+      body:JSON.stringify({user_id:currentUser?.id||null,streak:exState.streak,best_streak:exState.bestStreak,
+        last_goal_day:exState.lastGoalDay||null,last_open_day:exState.lastOpenDay||null,
+        day_note:exState.dayNote||'',note_day:exState.noteDay||null,updated_at:new Date().toISOString()}),
+    });
+  }catch(e){console.error('board state save failed:',e.message||e);}
+}
+
+// Day rollover: release anything staged for tomorrow onto the board, clear a
+// stale day note, and break the streak if a day was missed. Runs on the first
+// board render of a new day.
+function exRollover(){
+  const today=exToday();
+  if(exState.lastOpenDay===today) return false;
+  const wasOpen=exState.lastOpenDay;
+  let changed=false;
+  tasks.filter(t=>t.staged&&!t.done).forEach(t=>{
+    t.staged=false;
+    saveTaskSync(t);
+    changed=true;
   });
-  const el=document.getElementById('taskList');
-  if(!el) return;
-  if(!list.length){
-    el.innerHTML=`<div class="task-empty"><div class="task-empty-emoji">✓</div>${taskFilter==='open'?'No open tasks. You\'re all caught up.':taskFilter==='done'?'No completed tasks yet.':'No tasks yet. Tap + or use the quick-add above.'}</div>`;
-    updateTaskBadge();
-    return;
+  if(changed) saveTasksCache();
+  // Streak breaks unless the last cleared day was today or yesterday.
+  const yest=exDayOffset(today,-1);
+  if(exState.lastGoalDay&&exState.lastGoalDay!==today&&exState.lastGoalDay!==yest) exState.streak=0;
+  if(exState.noteDay!==today){exState.dayNote='';exState.noteDay='';}
+  exState.lastOpenDay=today;
+  if(wasOpen!==today) exSaveStateRemote();
+  return changed;
+}
+
+// Called after any completion. If every must-do (priority 1, on the board)
+// is done, today counts as cleared and the streak ticks up once.
+function exCheckGoal(){
+  const today=exToday();
+  const mustDos=tasks.filter(t=>!t.staged&&t.pri===1);
+  if(!mustDos.length) return;
+  if(!mustDos.every(t=>t.done)) return;
+  if(exState.lastGoalDay===today) return;
+  const yest=exDayOffset(today,-1);
+  exState.streak=(exState.lastGoalDay===yest)?exState.streak+1:1;
+  exState.bestStreak=Math.max(exState.bestStreak||0,exState.streak);
+  exState.lastGoalDay=today;
+  exSaveStateRemote();
+  // Brief flash on the streak chip rather than a dialog — clearing the board
+  // shouldn't cost you a tap to dismiss.
+  const chip=document.getElementById('exStreakChip');
+  if(chip){
+    chip.style.transition='transform .2s';
+    chip.style.transform='scale(1.35)';
+    setTimeout(()=>{chip.style.transform='';},260);
   }
-  el.innerHTML=list.map(t=>{
-    const overdue=!t.done&&taskIsOverdue(t.due);
-    const today=!t.done&&taskIsToday(t.due);
-    const prCls=t.priority==='high'?' priority-high':t.priority==='low'?' priority-low':'';
-    const lead=t.leadId?leads.find(l=>l.id===t.leadId):null;
-    const job=t.jobId?jobs.find(j=>j.id===t.jobId):null;
-    const dueText=t.due?(()=>{
-      const d=new Date(t.due+'T00:00:00');
-      return d.toLocaleDateString('en-US',{month:'short',day:'numeric'});
-    })():'';
-    const dueCls=overdue?' overdue':today?' today':'';
-    const dueLbl=overdue?'⚠ Overdue · '+dueText:today?'⏰ Today':dueText?'📅 '+dueText:'';
-    return `<div class="task-card${t.done?' done':''}${prCls}" data-tid="${t.id}">
-      <div class="task-checkbox${t.done?' checked':''}" onclick="toggleTask('${t.id}')">${t.done?'✓':''}</div>
-      <div class="task-body" onclick="openTaskMov('${t.id}')">
-        <div class="task-title">${esc(t.title)}</div>
-        <div class="task-meta">
-          ${dueLbl?`<span class="task-due${dueCls}">${dueLbl}</span>`:''}
-          ${lead?`<span class="task-link-badge">📋 ${esc(lead.name)}</span>`:''}
-          ${job?`<span class="task-link-badge">📅 ${esc(job.title)}</span>`:''}
-          ${t.priority==='high'?'<span style="color:var(--danger);font-weight:600">HIGH</span>':''}
+}
+function exShowStreak(){
+  alert(`🔥 Streak: ${exState.streak} day${exState.streak===1?'':'s'}\nBest: ${exState.bestStreak||0}\n\n`+
+    `A day counts as cleared when every "Today" task on the board is checked off.`);
+}
+
+// ── ACTION TARGETS ────────────────────────────────────────────
+// A card's tap-to-act target comes from its own detail field, and falls back
+// to the linked lead's phone / email / address so a task auto-created from a
+// lead is immediately actionable without retyping anything.
+function exTarget(t){
+  const lane=t.lane||'do';
+  if(t.detail&&t.detail.trim()) return t.detail.trim();
+  const lead=t.leadId?leads.find(l=>l.id===t.leadId):null;
+  if(!lead) return '';
+  if(lane==='call') return lead.phone||'';
+  if(lane==='send') return lead.email||'';
+  if(lane==='see')  return lead.address||'';
+  return '';
+}
+function exAct(id,ev){
+  if(ev) ev.stopPropagation();
+  const t=tasks.find(x=>x.id===id);
+  if(!t) return;
+  const d=exTarget(t);
+  if(!d){alert('No contact detail on this task, and its linked lead has none either.\n\nOpen the task to add one.');return;}
+  if(t.lane==='call') window.location.href='tel:'+d.replace(/[^+\d]/g,'');
+  else if(t.lane==='send') window.location.href='mailto:'+d;
+  else if(t.lane==='see') window.open('https://maps.google.com/?q='+encodeURIComponent(d),'_blank','noopener');
+}
+
+// ── RENDER ────────────────────────────────────────────────────
+function renderTaskList(){
+  exRollover();
+  const grid=document.getElementById('exGrid');
+  if(!grid) return;
+
+  const board=tasks.filter(t=>!t.staged);
+  const staged=tasks.filter(t=>t.staged&&!t.done);
+
+  // Header: date, cleared count, streak
+  const dEl=document.getElementById('exDate');
+  if(dEl) dEl.textContent=new Date().toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'}).toUpperCase();
+  const mustDos=board.filter(t=>t.pri===1);
+  const doneMust=mustDos.filter(t=>t.done).length;
+  const clEl=document.getElementById('exCleared');
+  if(clEl) clEl.textContent=doneMust+'/'+mustDos.length;
+  const barEl=document.getElementById('exBarFill');
+  if(barEl) barEl.style.width=(mustDos.length?Math.round(doneMust/mustDos.length*100):0)+'%';
+  const skN=document.getElementById('exStreakN');
+  if(skN) skN.textContent=exState.streak||0;
+  const skChip=document.getElementById('exStreakChip');
+  if(skChip) skChip.classList.toggle('hot',(exState.streak||0)>0);
+
+  // Priority legend
+  const leg=document.getElementById('exLegend');
+  if(leg&&!leg.dataset.built){
+    leg.dataset.built='1';
+    leg.innerHTML=EX_PRI.map(p=>`<span class="ex-pri-chip"><span class="ex-pri-dot ex-p${p.n}">${p.n}</span>${p.lbl}</span>`).join('');
+  }
+
+  // Nudge line
+  const left=mustDos.filter(t=>t.done===false).length;
+  const nTxt=document.getElementById('exNudgeTxt');
+  if(nTxt){
+    const overdue=board.filter(t=>!t.done&&taskIsOverdue(t.due)).length;
+    if(overdue) nTxt.innerHTML=`<b>${overdue}</b> overdue · <b>${left}</b> must-do${left===1?'':'s'} left today.`;
+    else if(left) nTxt.innerHTML=`<b>${left}</b> must-do${left===1?'':'s'} left today.`;
+    else if(mustDos.length) nTxt.innerHTML=`<b>All clear.</b> Every must-do is done.`;
+    else nTxt.textContent='Nothing marked Today yet.';
+  }
+
+  // Lanes
+  grid.innerHTML=EX_LANES.map(lane=>{
+    const items=board.filter(t=>t.lane===lane.key)
+      .sort((a,b)=>(a.done!==b.done)?(a.done?1:-1):((a.pri||1)-(b.pri||1)));
+    const cards=items.map(t=>{
+      const lead=t.leadId?leads.find(l=>l.id===t.leadId):null;
+      const job=t.jobId?jobs.find(j=>j.id===t.jobId):null;
+      const bits=[];
+      if(t.detail) bits.push(esc(t.detail));
+      if(t.due){
+        const dt=new Date(t.due+'T00:00:00').toLocaleDateString('en-US',{month:'short',day:'numeric'});
+        if(!t.done&&taskIsOverdue(t.due)) bits.push(`<span class="ex-due-over">⚠ ${dt}</span>`);
+        else if(taskIsToday(t.due)) bits.push(`<span class="ex-due-today">⏰ Today</span>`);
+        else bits.push('📅 '+dt);
+      }
+      const badges=[
+        lead?`<span class="ex-badge">📋 ${esc(lead.name||'')}</span>`:'',
+        job?`<span class="ex-badge">📅 ${esc(job.title||'')}</span>`:'',
+      ].join('');
+      const canAct=(lane.key!=='do')&&!!exTarget(t);
+      const actIco=lane.key==='call'?'📞':lane.key==='send'?'📤':'📍';
+      return `<div class="ex-card${t.done?' done':''}" draggable="true" data-tid="${t.id}" onclick="openTaskMov('${t.id}')">
+        <div class="ex-check${t.done?' on':''}" onclick="event.stopPropagation();toggleTask('${t.id}')">${t.done?'✓':''}</div>
+        <div class="ex-card-body">
+          <div class="ex-card-text">${esc(t.title)}</div>
+          ${bits.length?`<div class="ex-card-meta">${bits.join(' · ')}</div>`:''}
+          ${badges}
         </div>
+        <div class="ex-card-acts">
+          <span class="ex-pri-dot ex-p${t.pri||1}">${t.pri||1}</span>
+          ${canAct?`<button class="ex-act" title="Open" onclick="exAct('${t.id}',event)">${actIco}</button>`:''}
+        </div>
+      </div>`;
+    }).join('');
+    return `<div class="ex-lane" data-lane="${lane.key}">
+      <div class="ex-lane-hd">
+        <div class="ex-lane-ico">${lane.ico}</div>
+        <div class="ex-lane-name">${lane.name}</div>
+        <div class="ex-lane-count">${items.filter(t=>!t.done).length}</div>
       </div>
+      ${cards||'<div class="ex-lane-empty">Nothing here.</div>'}
     </div>`;
   }).join('');
+  exWireDrag();
+
+  // Footer
+  const tomN=document.getElementById('exTomN');
+  if(tomN) tomN.textContent=staged.length;
+  const noteBtn=document.getElementById('exNoteBtn');
+  if(noteBtn){
+    const has=exState.noteDay===exToday()&&exState.dayNote;
+    noteBtn.textContent=has?('📝 '+exState.dayNote):'+ NOTE FOR TODAY';
+    noteBtn.classList.toggle('has',!!has);
+  }
   updateTaskBadge();
 }
 
+// Desktop drag-and-drop between lanes. HTML5 dnd doesn't fire on touch, so
+// this is inert on phones — there, you change lane by opening the card.
+function exWireDrag(){
+  document.querySelectorAll('#exGrid .ex-card').forEach(c=>{
+    c.addEventListener('dragstart',e=>{
+      e.dataTransfer.setData('text/plain',c.dataset.tid);
+      c.classList.add('dragging');
+    });
+    c.addEventListener('dragend',()=>c.classList.remove('dragging'));
+  });
+  document.querySelectorAll('#exGrid .ex-lane').forEach(l=>{
+    l.addEventListener('dragover',e=>{e.preventDefault();l.classList.add('drop');});
+    l.addEventListener('dragleave',()=>l.classList.remove('drop'));
+    l.addEventListener('drop',e=>{
+      e.preventDefault();l.classList.remove('drop');
+      const id=e.dataTransfer.getData('text/plain');
+      const t=tasks.find(x=>x.id===id);
+      if(!t||t.lane===l.dataset.lane) return;
+      t.lane=l.dataset.lane;
+      saveTasksCache();saveTaskSync(t);
+      renderTaskList();
+    });
+  });
+}
+
 function updateTaskBadge(){
-  const openCount=tasks.filter(t=>!t.done).length;
-  const overdueCount=tasks.filter(t=>!t.done&&taskIsOverdue(t.due)).length;
+  const openCount=tasks.filter(t=>!t.done&&!t.staged).length;
+  const overdueCount=tasks.filter(t=>!t.done&&!t.staged&&taskIsOverdue(t.due)).length;
   const lbl=overdueCount>0?`${openCount} (${overdueCount}!)`:String(openCount);
   ['dtTasksBadge','bnTasksBadge'].forEach(id=>{
     const el=document.getElementById(id);
@@ -4390,32 +4711,101 @@ function updateTaskBadge(){
   });
 }
 
-function openTaskMov(tid){
+// ── TOMORROW PLANNER ──────────────────────────────────────────
+function exOpenTomorrow(){
+  const list=document.getElementById('exTomList');
+  const staged=tasks.filter(t=>t.staged&&!t.done);
+  if(list){
+    list.innerHTML=staged.length?staged.map(t=>`<div class="ex-tom-row">
+      <div class="ex-tom-row-txt">${esc(t.title)}<div class="ex-tom-row-lane">${exLane(t.lane).name} · ${EX_PRI.find(p=>p.n===(t.pri||1))?.lbl||''}</div></div>
+      <button class="btn btn-ghost btn-sm" onclick="exUnstage('${t.id}')">↑ Board now</button>
+    </div>`).join(''):'<div class="ex-lane-empty">Nothing held for tomorrow.</div>';
+  }
+  openMov('exTomMov');
+}
+function exUnstage(id){
+  const t=tasks.find(x=>x.id===id);
+  if(!t) return;
+  t.staged=false;
+  saveTasksCache();saveTaskSync(t);
+  exOpenTomorrow();renderTaskList();
+}
+
+// ── DAY NOTE ──────────────────────────────────────────────────
+function exOpenNote(){
+  const el=document.getElementById('exNoteTxt');
+  if(el) el.value=(exState.noteDay===exToday())?(exState.dayNote||''):'';
+  openMov('exNoteMov');
+  setTimeout(()=>el&&el.focus(),100);
+}
+function exSaveNote(){
+  const el=document.getElementById('exNoteTxt');
+  exState.dayNote=el?el.value.trim():'';
+  exState.noteDay=exState.dayNote?exToday():'';
+  exSaveStateRemote();
+  closeMov('exNoteMov');
+  renderTaskList();
+}
+
+// ── TASK EDITOR ───────────────────────────────────────────────
+let exSelLane='do', exSelPri=1;
+
+function exBuildChips(){
+  const lw=document.getElementById('tLaneChips');
+  if(lw&&!lw.dataset.built){
+    lw.dataset.built='1';
+    lw.innerHTML=EX_LANES.map(l=>`<button type="button" class="ex-chip" data-lane="${l.key}" onclick="exPickLane('${l.key}')">${l.ico} ${l.name}</button>`).join('');
+  }
+  const pw=document.getElementById('tPriChips');
+  if(pw&&!pw.dataset.built){
+    pw.dataset.built='1';
+    pw.innerHTML=EX_PRI.map(p=>`<button type="button" class="ex-chip" data-pri="${p.n}" onclick="exPickPri(${p.n})"><span class="ex-pri-dot ex-p${p.n}">${p.n}</span>${p.lbl}</button>`).join('');
+  }
+}
+function exPickLane(k){
+  exSelLane=k;
+  document.querySelectorAll('#tLaneChips .ex-chip').forEach(c=>c.classList.toggle('sel',c.dataset.lane===k));
+  const cfg=exLane(k);
+  const wrap=document.getElementById('tDetailWrap');
+  const lbl=document.getElementById('tDetailLbl');
+  const inp=document.getElementById('tDetail');
+  if(wrap) wrap.style.display=cfg.detailLbl?'':'none';
+  if(lbl&&cfg.detailLbl) lbl.textContent=cfg.detailLbl;
+  if(inp&&cfg.detailPh) inp.placeholder=cfg.detailPh;
+}
+function exPickPri(n){
+  exSelPri=n;
+  document.querySelectorAll('#tPriChips .ex-chip').forEach(c=>c.classList.toggle('sel',parseInt(c.dataset.pri)===n));
+}
+
+function openTaskMov(tid,forTomorrow){
   loadTasks();
+  exBuildChips();
   editTaskId=tid||null;
   document.getElementById('tMTitle').textContent=tid?'✎ EDIT TASK':'✓ NEW TASK';
   document.getElementById('tDel').style.display=tid?'flex':'none';
-  // Populate lead and job dropdowns
   const leadSel=document.getElementById('tLeadId');
   leadSel.innerHTML='<option value="">— None —</option>'+leads.map(l=>`<option value="${l.id}">${esc(l.name)}</option>`).join('');
   const jobSel=document.getElementById('tJobId');
   jobSel.innerHTML='<option value="">— None —</option>'+jobs.map(j=>`<option value="${j.id}">${esc(j.title)}</option>`).join('');
-  if(tid){
-    const t=tasks.find(x=>x.id===tid);
-    if(t){
-      document.getElementById('tTitle').value=t.title||'';
-      document.getElementById('tDue').value=t.due||'';
-      document.getElementById('tPriority').value=t.priority||'normal';
-      document.getElementById('tNotes').value=t.notes||'';
-      leadSel.value=t.leadId||'';
-      jobSel.value=t.jobId||'';
-    }
+  const t=tid?tasks.find(x=>x.id===tid):null;
+  if(t){
+    document.getElementById('tTitle').value=t.title||'';
+    document.getElementById('tDue').value=t.due||'';
+    document.getElementById('tNotes').value=t.notes||'';
+    document.getElementById('tDetail').value=t.detail||'';
+    document.getElementById('tStaged').value=t.staged?'1':'0';
+    leadSel.value=t.leadId||'';
+    jobSel.value=t.jobId||'';
+    exPickLane(t.lane||'do');exPickPri(t.pri||1);
   } else {
     document.getElementById('tTitle').value='';
     document.getElementById('tDue').value='';
-    document.getElementById('tPriority').value='normal';
     document.getElementById('tNotes').value='';
+    document.getElementById('tDetail').value='';
+    document.getElementById('tStaged').value=forTomorrow?'1':'0';
     leadSel.value='';jobSel.value='';
+    exPickLane('do');exPickPri(1);
   }
   openMov('tMov');
   setTimeout(()=>document.getElementById('tTitle').focus(),100);
@@ -4425,26 +4815,25 @@ function saveTaskFromMov(){
   const title=document.getElementById('tTitle').value.trim();
   if(!title){document.getElementById('tTitle').style.borderColor='#ef4444';return;}
   document.getElementById('tTitle').style.borderColor='';
+  const fields={
+    title,
+    due:document.getElementById('tDue').value,
+    leadId:document.getElementById('tLeadId').value||null,
+    jobId:document.getElementById('tJobId').value||null,
+    notes:document.getElementById('tNotes').value,
+    lane:exSelLane,
+    pri:exSelPri,
+    detail:document.getElementById('tDetail').value.trim(),
+    staged:document.getElementById('tStaged').value==='1',
+  };
+  fields.priority=exPriToPriority(fields.pri);
   let t;
   if(editTaskId){
     t=tasks.find(x=>x.id===editTaskId);
     if(!t){closeMov('tMov');return;}
-    t.title=title;
-    t.due=document.getElementById('tDue').value;
-    t.priority=document.getElementById('tPriority').value;
-    t.leadId=document.getElementById('tLeadId').value||null;
-    t.jobId=document.getElementById('tJobId').value||null;
-    t.notes=document.getElementById('tNotes').value;
+    Object.assign(t,fields);
   } else {
-    t={
-      id:uid(),title,
-      due:document.getElementById('tDue').value,
-      priority:document.getElementById('tPriority').value,
-      leadId:document.getElementById('tLeadId').value||null,
-      jobId:document.getElementById('tJobId').value||null,
-      notes:document.getElementById('tNotes').value,
-      done:false,doneAt:'',created:Date.now(),
-    };
+    t=Object.assign({id:uid(),done:false,doneAt:'',created:Date.now()},fields);
     tasks.push(t);
   }
   saveTasksCache();saveTaskSync(t);
@@ -4468,14 +4857,16 @@ function toggleTask(tid){
   t.done=!t.done;
   t.doneAt=t.done?new Date().toISOString():'';
   saveTasksCache();saveTaskSync(t);
+  if(t.done) exCheckGoal();
   renderTaskList();
 }
 
 function quickAddTask(){
   const inp=document.getElementById('taskQuickInput');
+  if(!inp) return;
   const title=inp.value.trim();
   if(!title) return;
-  const t={id:uid(),title,due:'',priority:'normal',leadId:null,jobId:null,notes:'',done:false,doneAt:'',created:Date.now()};
+  const t={id:uid(),title,due:'',priority:'high',leadId:null,jobId:null,notes:'',done:false,doneAt:'',created:Date.now(),lane:'do',pri:1,detail:'',staged:false};
   tasks.push(t);
   saveTasksCache();saveTaskSync(t);
   inp.value='';
@@ -7018,6 +7409,7 @@ function runStageAutomations(lead,oldStage,newStage){
         title:`Follow up with ${lead.name||'lead'} on quote`,
         due:dueIn(3),
         priority:'normal',
+        lane:'call',pri:3,detail:lead.phone||'',staged:false,
         leadId:lead.id,jobId:null,
         notes:`Auto-created when ${lead.name||'lead'} was moved to Quote Sent. Check in to answer questions or close the deal.`,
         done:false,doneAt:'',created:Date.now()
@@ -7031,6 +7423,7 @@ function runStageAutomations(lead,oldStage,newStage){
         title:`Schedule job for ${lead.name||'lead'}`,
         due:dueIn(1),
         priority:'high',
+        lane:'do',pri:1,detail:'',staged:false,
         leadId:lead.id,jobId:null,
         notes:`Auto-created when ${lead.name||'lead'} accepted. Confirm start date, order materials, assign crew.`,
         done:false,doneAt:'',created:Date.now()
@@ -7044,6 +7437,7 @@ function runStageAutomations(lead,oldStage,newStage){
         title:`Re-engage ${lead.name||'lead'} (declined)`,
         due:dueIn(90),
         priority:'low',
+        lane:'call',pri:4,detail:lead.phone||'',staged:false,
         leadId:lead.id,jobId:null,
         notes:`Auto-created when ${lead.name||'lead'} declined. Worth circling back in 90 days — situations change.`,
         done:false,doneAt:'',created:Date.now()
@@ -7057,6 +7451,7 @@ function runStageAutomations(lead,oldStage,newStage){
         title:`Request review from ${lead.name||'lead'}`,
         due:dueIn(2),
         priority:'normal',
+        lane:'send',pri:2,detail:lead.email||'',staged:false,
         leadId:lead.id,jobId:null,
         notes:`Auto-created when ${lead.name||'lead'} marked done. Send a Google review link by text or email while the experience is fresh.`,
         done:false,doneAt:'',created:Date.now()
@@ -8540,9 +8935,53 @@ function stopDocPolling(){if(docPollTimer){clearInterval(docPollTimer);docPollTi
 function nextDocNum(type){
   const cfg=DOC_TYPES[type]||DOC_TYPES.estimate;
   const prefix=cfg.prefix;
-  const existing=docs.filter(d=>d.type===type).map(d=>parseInt((d.num||'0').replace(/\D/g,''))||0);
+  // Use the LAST run of digits in the number, not every digit in the string.
+  // Doc numbers are user-editable now, so a hand-typed number like "2026-105"
+  // would otherwise be read as 2026105 and push every future auto-number
+  // into the millions. Trailing group gives 105.
+  const seqOf=s=>{const m=String(s||'').match(/(\d+)(?!.*\d)/);return m?parseInt(m[1],10):0;};
+  const existing=docs.filter(d=>d.type===type).map(d=>seqOf(d.num));
   const next=(existing.length?Math.max(...existing):0)+1;
   return prefix+'-'+String(next).padStart(4,'0');
+}
+
+// Write the editor title bar: static type label + the editable number field.
+// Replaces the old pattern of stuffing "LABEL NUM" into one text node and
+// parsing the number back out on save.
+function setDocTitle(type,num){
+  const lbl=document.getElementById('docEditorTypeLabel');
+  const inp=document.getElementById('docNum');
+  if(lbl) lbl.textContent=getDocTypeConfig(type).label.toUpperCase();
+  // Don't clobber what the user is actively typing.
+  if(inp&&document.activeElement!==inp) inp.value=num||'';
+}
+
+// Sanity-check a user-edited doc number just before it's saved. Never blocks
+// the save (auto-saves happen on editor close) — it reverts the number
+// instead, so nothing is lost either way. `prev` is the stored version.
+function guardDocNum(d,prev){
+  const el=document.getElementById('docNum');
+  const cfg=getDocTypeConfig(d.type);
+  const oldNum=String((prev&&prev.num)||'').trim();
+  let n=String(d.num||'').trim();
+  const revert=v=>{d.num=v;if(el)el.value=v;};
+  // Blank — fall back to what it had, or generate one for a brand-new doc.
+  if(!n){revert(oldNum||nextDocNum(d.type));return;}
+  if(n===oldNum) return; // unchanged, nothing to check
+  // Duplicate within the same doc type
+  const dupe=docs.find(x=>x.id!==d.id&&x.type===d.type&&String(x.num||'').trim().toLowerCase()===n.toLowerCase());
+  if(dupe&&!confirm(
+    `${cfg.label} number "${n}" is already used by ${dupe.clientName||('another '+cfg.label.toLowerCase())}.\n\n`+
+    `Save anyway with a duplicate number?`
+  )){revert(oldNum||nextDocNum(d.type));return;}
+  // Already pushed to QuickBooks — qb-sync-invoice matches on the number
+  if(prev&&prev.qbInvoiceId&&!confirm(
+    `This invoice is already in QuickBooks as "${oldNum}".\n\n`+
+    `QuickBooks sync matches on the invoice number, so changing it to "${n}" here `+
+    `will stop sync from finding it until you change it in QuickBooks too.\n\n`+
+    `Change it anyway?`
+  )){revert(oldNum);return;}
+  if(oldNum) try{logDocActivity(d.id,`${cfg.label} number changed from ${oldNum} to ${n}`);}catch{}
 }
 
 // Central registry of every doc type the app knows about. New types
@@ -8742,7 +9181,7 @@ function openDocEditor(id,newType){
   setProfitVal('docMatCost',doc.matCost);
   setProfitVal('docLaborCost',doc.laborCost);
   setProfitVal('docOtherCost',doc.otherCost);
-  document.getElementById('docEditorTitle').textContent=getDocTypeConfig(doc.type).label.toUpperCase()+' '+doc.num;
+  setDocTitle(doc.type,doc.num);
   document.getElementById('docSendBtn').textContent=doc.type==='invoice'?'Mark Paid →':'Convert to Invoice →';
   // Show "Check QuickBooks" button only when editing an invoice. We don't
   // gate on "is QB connected" here — the click handler shows a clearer
@@ -8809,7 +9248,7 @@ function updateDocType(){
   const t=document.getElementById('docType').value;
   const d=collectDoc({id:editDocId||uid()});
   if(!editDocId) d.num=nextDocNum(t);
-  document.getElementById('docEditorTitle').textContent=getDocTypeConfig(t).label.toUpperCase()+' '+d.num;
+  setDocTitle(t,d.num);
   document.getElementById('docSendBtn').textContent=t==='invoice'?'Mark Paid →':'Convert to Invoice →';
   // Show/hide the Check QuickBooks button based on doc type
   const qbBtn=document.getElementById('docQbSyncBtn');
@@ -8933,16 +9372,12 @@ function collectDoc(base){
   const labCostEl=document.getElementById('docLaborCost');
   const othCostEl=document.getElementById('docOtherCost');
   const num=el=>{if(!el)return '';const v=el.value;return(v!==''&&v!=null&&!isNaN(parseFloat(v)))?parseFloat(v):'';};
-  // Extract the bare doc number from the editor title. The title format is
-  // "<TYPE LABEL UPPERCASED> <NUM>" — strip the type label prefix so we save
-  // just the number. Previously this only stripped "ESTIMATE "/"INVOICE ",
-  // which mangled change-order/contract/lien-waiver numbers on every save.
-  const titleText=document.getElementById('docEditorTitle').textContent||'';
-  const typeLabels=Object.values(DOC_TYPES).map(c=>c.label.toUpperCase());
-  let bareNum=titleText;
-  for(const lbl of typeLabels){
-    if(bareNum.startsWith(lbl+' ')){bareNum=bareNum.slice(lbl.length+1);break;}
-  }
+  // The doc number is its own editable input now, so read it straight off the
+  // field. This replaces the old approach of parsing it back out of the editor
+  // title text, which mangled change-order/contract/lien-waiver numbers.
+  // Fall back to whatever's stored if the field isn't in the DOM yet.
+  const docNumEl=document.getElementById('docNum');
+  const bareNum=docNumEl?String(docNumEl.value||'').trim():String(base.num||'');
   return{...base,
     type:document.getElementById('docType').value,
     status:document.getElementById('docStatus').value,
@@ -8971,6 +9406,9 @@ function saveDoc(){
   // Don't call loadDocs() here — it would clobber in-memory unsaved docs
   const base=editDocId?(docs.find(x=>x.id===editDocId)||{id:editDocId,created:Date.now()}):{id:uid(),created:Date.now()};
   const d=collectDoc(base);
+  // The number is user-editable — check it for blanks/duplicates/QB links
+  // before it goes to storage.
+  guardDocNum(d,base);
   if(editDocId){
     const idx=docs.findIndex(x=>x.id===editDocId);
     if(idx>=0)docs[idx]=d;else docs.push(d);
@@ -8980,7 +9418,7 @@ function saveDoc(){
   }
   saveDocs();
   saveDocSync(d); // push to Supabase so all devices see it
-  document.getElementById('docEditorTitle').textContent=(d.type==='invoice'?'INVOICE ':'ESTIMATE ')+d.num;
+  setDocTitle(d.type,d.num);
   // Show save confirmation inside the editor
   const conf=document.getElementById('docSaveConfirm');
   if(conf){conf.style.opacity='1';setTimeout(()=>conf.style.opacity='0',2000);}
@@ -8998,7 +9436,7 @@ function sendDoc(){
     d.num=nextDocNum('invoice');
     document.getElementById('docType').value='invoice';
     document.getElementById('docStatus').value='invoiced';
-    document.getElementById('docEditorTitle').textContent='INVOICE '+d.num;
+    setDocTitle('invoice',d.num);
     document.getElementById('docSendBtn').textContent='Mark Paid →';
     saveDoc();
     try{logDocActivity(d.id,`Estimate ${oldNum} converted to Invoice ${d.num}`);}catch{}
