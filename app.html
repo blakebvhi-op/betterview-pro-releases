@@ -5218,6 +5218,95 @@ async function delJob(id){setSS('syncing','Deleting…');delete saveQueue.jobs[i
 async function delLead(id){setSS('syncing','Deleting…');delete saveQueue.leads[id];lsSet('leads_cache',leads.map(leadToDb));try{await sb.del('leads',id);setSS('synced','Done ✓');setTimeout(()=>document.getElementById('syncLbl').textContent='',2000);}catch(e){setSS('error','Delete failed');}}
 
 // ── CUSTOMER / TAG DATA HELPERS (Phase 3) ────────────────────
+// ── CUSTOMER SPINE ────────────────────────────────────────────
+// customers is the source of truth. Every lead must point at one, because
+// documents resolve their customer THROUGH the lead. Two lead-creation paths
+// (the lead modal, and the auto-lead built from an estimate) were creating
+// leads with customer_id = null, so anything that came in through them was
+// invisible to the customer file. This is the shared fix.
+//
+// Phone key: strip everything that isn't a digit, keep the last 10.
+//
+// NOTE this is deliberately MORE tolerant than extract_phone_smart() in
+// customers-backfill-real.sql, which required 10 CONSECUTIVE digits and so
+// returned NULL for any formatted number — "(414) 234-3700" produced no key
+// at all. Those leads each became their own customer instead of clustering.
+// Comparisons here normalise BOTH sides, so a tolerant key still matches a
+// customer whose stored phone is bare digits.
+function normPhone10(raw){
+  if(!raw) return '';
+  const s=String(raw);
+  // Match a phone-SHAPED run first. `contact` is freeform ("Bob · 414-234-3700
+  // ext 5"), so simply stripping non-digits and taking the last ten would drag
+  // in the extension. The trailing (?!\d) stops it biting into a longer run.
+  const m=s.match(/(?:\+?1[\s._-]*)?\(?\s*(\d{3})\s*\)?[\s._-]*(\d{3})[\s._-]*(\d{4})(?!\d)/);
+  if(m) return m[1]+m[2]+m[3];
+  const digits=s.replace(/\D/g,'');
+  return digits.length===10?digits:'';
+}
+function leadPhoneKey(l){
+  return normPhone10(l&&l.phone) || normPhone10(l&&l.contact) || '';
+}
+
+// Find the customer this lead belongs to, creating one only when the lead
+// carries enough contact detail to be a real record. Returns a customer id,
+// or '' when the lead has nothing to key on (same rule the SQL backfill uses:
+// no phone and no email means no customer).
+function ensureCustomerForLead(lead){
+  if(!lead) return '';
+  if(lead.customer_id) return lead.customer_id;
+  const key=leadPhoneKey(lead);
+  const email=String(lead.email||'').trim().toLowerCase();
+  // 1. Existing customer with the same phone
+  if(key){
+    const byPhone=customers.find(c=>!c.archived_at&&normPhone10(c.phone)===key);
+    if(byPhone) return byPhone.id;
+  }
+  // 2. Existing customer with the same email
+  if(email){
+    const byEmail=customers.find(c=>!c.archived_at&&String(c.email||'').trim().toLowerCase()===email);
+    if(byEmail) return byEmail.id;
+  }
+  // 3. Exact name, but only against a customer that has NO phone on file.
+  //    Catches the records the old backfill created without a phone key, so
+  //    a tolerant match here doesn't spawn a duplicate of the same person.
+  //    Never used to CREATE a customer — only to find one that exists.
+  const nm=String(lead.name||'').trim().toLowerCase();
+  if(nm){
+    const byName=customers.find(c=>!c.archived_at&&!normPhone10(c.phone)
+      &&String(c.name||'').trim().toLowerCase()===nm);
+    if(byName) return byName.id;
+  }
+  // 4. Nothing to key on — leave unlinked rather than invent a record
+  if(!key&&!email) return '';
+  // 5. Create one, using the same id shape the backfill used
+  const id=key?('cust_'+key):('cust_'+lead.id);
+  if(customers.some(c=>c.id===id)) return id;
+  const cust={
+    id,
+    company_id:lead.company_id||currentCompanyId||null,
+    name:String(lead.name||'').trim()||'Unknown',
+    phone:key||null,
+    email:email||null,
+    source:lead.source||null,
+    notes:null,
+    created_at:new Date().toISOString(),
+    updated_at:new Date().toISOString(),
+  };
+  customers.push(cust);
+  saveCustomer(cust);
+  return id;
+}
+
+// Attach a newly created lead to its customer, then persist the lead.
+// Safe to call on any lead; a no-op when it already has one.
+function linkLeadToCustomer(lead){
+  if(!lead||lead.customer_id) return lead;
+  const cid=ensureCustomerForLead(lead);
+  if(cid) lead.customer_id=cid;
+  return lead;
+}
+
 function saveCustomer(c){setSS('syncing','Saving…');queueSave('customers',c);}
 function saveCustomerAddress(a){setSS('syncing','Saving…');queueSave('customer_addresses',a);}
 function saveTag(t){setSS('syncing','Saving…');queueSave('tags',t);}
@@ -8413,6 +8502,7 @@ document.getElementById('lSave').addEventListener('click',async()=>{
       color:leadColor,estId:null,matList:[],source:document.getElementById('lSource')?.value||'',
       assignedTo:assignedTo,
       activity:[{ts:new Date().toISOString(),msg:'Lead created'+(assignedTo?` · assigned to ${teamRoster.find(m=>m.id===assignedTo)?.name||'team member'}`:'')}]};
+    linkLeadToCustomer(lead);   // customers is the spine — never leave a lead orphaned
     leads.push(lead);
     // Brand new lead created in non-default stage? run automation too
     if(ns!=='new') runStageAutomations(lead,'new',ns);
@@ -11552,6 +11642,7 @@ function syncEstToLead(doc){
       address:doc.clientAddr||'',notes:doc.scope||'',color:'blue',
       estId:doc.id,matList:[],
     };
+    linkLeadToCustomer(newLead);
     leads.push(newLead);
     saveLead(newLead);
     lsSet('leads_cache',leads.map(leadToDb));
