@@ -9263,7 +9263,10 @@ function docLead(d){
     if(byCust.length>1){
       const exact=byCust.find(l=>l.estId===d.id);
       if(exact) return exact;
-      return byCust.slice().sort((a,b)=>String(b.createdAt||'').localeCompare(String(a.createdAt||'')))[0];
+      // NOTE: leads.created_at does not exist in the database (the column is
+      // created_by), so lead.createdAt is always null and can't order anything.
+      // Sort by id so the choice is at least deterministic.
+      return byCust.slice().sort((a,b)=>String(b.createdAt||b.id||'').localeCompare(String(a.createdAt||a.id||'')))[0];
     }
   }
   // 2. A lead that points directly at this document
