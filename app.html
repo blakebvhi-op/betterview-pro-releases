@@ -715,6 +715,14 @@ body.resizing{user-select:none;-webkit-user-select:none;}
 .doc-filter-count{font-size:11px;color:var(--muted);white-space:nowrap;}
 .doc-stage-badge{display:inline-flex;align-items:center;gap:3px;padding:1px 7px;border-radius:99px;font-size:9px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;white-space:nowrap;}
 .doc-stage-badge.none{background:var(--steel-light);color:var(--muted);border:1px dashed var(--iron);}
+.doc-stage-badge.clickable{cursor:pointer;transition:filter .12s;}
+.doc-stage-badge.clickable:hover{filter:brightness(.92);}
+.doc-status-menu{position:fixed;z-index:9999;background:var(--steel-mid);border:1px solid var(--iron);border-radius:9px;box-shadow:0 8px 28px rgba(0,0,0,.18);padding:4px;min-width:180px;}
+.doc-status-opt{display:flex;align-items:center;gap:8px;padding:8px 10px;font-size:13px;color:var(--white);border-radius:6px;cursor:pointer;}
+.doc-status-opt:hover{background:var(--steel-light);}
+.doc-status-opt.current{font-weight:700;}
+.doc-status-opt.current::after{content:'✓';margin-left:auto;color:var(--amber);}
+.doc-status-dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
 .doc-hotbar-stage{display:inline-flex;align-items:center;gap:6px;}
 
 .doc-empty-icon{font-size:42px;opacity:.3;}
@@ -1663,7 +1671,6 @@ body:not(.role-owner):not(.role-manager) .role-financial-only{display:none!impor
         <option value="name_asc">A–Z by name</option>
       </select>
       <button type="button" class="btn btn-ghost btn-sm" id="leadBulkBtn" onclick="toggleLeadBulkMode()" title="Select multiple to delete" style="flex-shrink:0">✏️ Edit</button>
-      <button type="button" class="btn btn-ghost btn-sm" id="custTagLibBtn" onclick="openTagLibrary()" title="Manage tag library" style="flex-shrink:0">🏷 Tags</button>
     </div>
     <!-- Assigned-to filter pills — owner/manager see all 3, employees only see 'mine' (rest is forced by RLS) -->
     <div class="sched-sub-filter" id="leadAssignedFilter">
@@ -1784,12 +1791,16 @@ body:not(.role-owner):not(.role-manager) .role-financial-only{display:none!impor
     <span id="docSaveConfirm" style="font-size:11px;color:var(--green);opacity:0;transition:opacity .4s;">✓ Saved</span>
     <div class="doc-hotbar-sep"></div>
     <div class="doc-hotbar-stage" id="docHotbarStage" style="display:none;">
-      <span class="doc-filter-lbl">JOB</span>
-      <span id="docLeadStage"></span>
+      <span class="doc-filter-lbl">STATUS</span>
+      <select class="doc-finput" id="docLeadStageSel" style="font-size:11px;padding:4px 8px;max-width:150px;" onchange="onDocStageChange(this.value)"></select>
     </div>
     <div class="doc-hotbar-sep" id="docHotbarStageSep" style="display:none;"></div>
     <div class="doc-hotbar-status">
-      <select class="doc-finput" id="docStatus" style="font-size:11px;padding:4px 8px;max-width:130px;">
+      <!-- The document's own status is no longer edited by hand. It stays in the
+           DOM because collectDoc() reads it and QuickBooks sync / the signing
+           portal still depend on the value; sendDoc() and the signature flow
+           keep it current automatically. -->
+      <select class="doc-finput" id="docStatus" style="display:none;">
         <option value="draft">Draft</option>
         <option value="sent">Sent</option>
         <option value="approved">Approved</option>
@@ -5039,7 +5050,7 @@ const leadToDb=l=>({id:l.id,name:l.name,contact:l.contact,phone:l.phone,email:l.
 const _parseMoData=v=>{try{return typeof v==='string'?JSON.parse(v||'{}'):(v||{});}catch{return {};}};
 const dbToDoc=r=>{
   const mo=_parseMoData(r.mat_order_data);
-  return {id:r.id,type:r.type||'estimate',status:r.status||'draft',num:r.num||'',customerId:r.customer_id||null,clientName:r.client_name||'',clientContact:r.client_contact||'',clientAddr:r.client_addr||'',date:r.date||'',dueDate:r.due_date||'',scope:r.scope||'',lineItems:safeParseArr(r.line_items),tax:r.tax||0,discount:r.discount||0,notes:r.notes||'',manualTotal:r.manual_total||'',created:r.created||Date.now(),signature:r.signature||'',signatureName:r.signature_name||'',signatureDate:r.signature_date||'',leadSource:r.lead_source||'',activity:safeParseArr(r.activity),checklist:safeParseArr(r.checklist),extras:safeParseArr(r.extras),pmId:r.pm_id||'',arrival:r.arrival||'',sourceEstId:r.source_est_id||null,sourceEstNum:r.source_est_num||'',matCost:r.mat_cost!=null?r.mat_cost:'',laborCost:r.labor_cost!=null?r.labor_cost:'',otherCost:r.other_cost!=null?r.other_cost:'',outcome:r.outcome||null,closedDate:r.closed_date||null,linkedJobId:r.linked_job_id||null,qbInvoiceId:r.qb_invoice_id||null,qbPushedAt:r.qb_pushed_at||null,
+  return {id:r.id,type:r.type||'estimate',status:r.status||'draft',num:r.num||'',customerId:r.customer_id||null,stage:r.stage||'',clientName:r.client_name||'',clientContact:r.client_contact||'',clientAddr:r.client_addr||'',date:r.date||'',dueDate:r.due_date||'',scope:r.scope||'',lineItems:safeParseArr(r.line_items),tax:r.tax||0,discount:r.discount||0,notes:r.notes||'',manualTotal:r.manual_total||'',created:r.created||Date.now(),signature:r.signature||'',signatureName:r.signature_name||'',signatureDate:r.signature_date||'',leadSource:r.lead_source||'',activity:safeParseArr(r.activity),checklist:safeParseArr(r.checklist),extras:safeParseArr(r.extras),pmId:r.pm_id||'',arrival:r.arrival||'',sourceEstId:r.source_est_id||null,sourceEstNum:r.source_est_num||'',matCost:r.mat_cost!=null?r.mat_cost:'',laborCost:r.labor_cost!=null?r.labor_cost:'',otherCost:r.other_cost!=null?r.other_cost:'',outcome:r.outcome||null,closedDate:r.closed_date||null,linkedJobId:r.linked_job_id||null,qbInvoiceId:r.qb_invoice_id||null,qbPushedAt:r.qb_pushed_at||null,
   // Material order fields (stored as JSON)
   moJobName:mo.moJobName||'',moPhone:mo.moPhone||'',moEmail:mo.moEmail||'',
   moLayers:mo.moLayers||'',moStories:mo.moStories||'',moCedar:mo.moCedar||'',moRedeck:mo.moRedeck||'',
@@ -5063,7 +5074,8 @@ const docToDb=d=>{
   return {id:d.id,type:d.type||'estimate',status:d.status||'draft',num:d.num||'',client_name:d.clientName||'',client_contact:d.clientContact||'',client_addr:d.clientAddr||'',date:d.date||null,due_date:d.dueDate||null,scope:d.scope||'',line_items:JSON.stringify(d.lineItems||[]),tax:parseFloat(d.tax)||0,discount:parseFloat(d.discount)||0,notes:d.notes||'',manual_total:(d.manualTotal!=null&&d.manualTotal!=='')?parseFloat(d.manualTotal):null,created:d.created||Date.now(),signature:d.signature||'',signature_name:d.signatureName||'',signature_date:d.signatureDate||null,lead_source:d.leadSource||'',activity:JSON.stringify(d.activity||[]),checklist:JSON.stringify(d.checklist||[]),extras:JSON.stringify(d.extras||[]),pm_id:d.pmId||'',arrival:d.arrival||'',source_est_id:d.sourceEstId||null,source_est_num:d.sourceEstNum||'',mat_cost:(d.matCost!=null&&d.matCost!=='')?parseFloat(d.matCost):null,labor_cost:(d.laborCost!=null&&d.laborCost!=='')?parseFloat(d.laborCost):null,other_cost:(d.otherCost!=null&&d.otherCost!=='')?parseFloat(d.otherCost):null,outcome:d.outcome||null,closed_date:d.closedDate||null,linked_job_id:d.linkedJobId||null,mat_order_data:JSON.stringify(moData),user_id:currentUser?.id||null,updated_at:new Date().toISOString(),
     // Only sent once the column actually exists (detected in loadDocsRemote),
     // so deploying this before the migration can't 400 every document save.
-    ...(docsHaveCustomerId?{customer_id:d.customerId||null}:{})};
+    ...(docsHaveCustomerId?{customer_id:d.customerId||null}:{}),
+    ...(docsHaveStage?{stage:d.stage||null}:{})};
 };
 const dbToTmpl=r=>({id:r.id,name:r.name,scope:r.scope||'',lineItems:safeParseArr(r.line_items),tax:r.tax||0,discount:r.discount||0,notes:r.notes||'',created:r.created||Date.now()});
 const tmplToDb=t=>({id:t.id,name:t.name,scope:t.scope||'',line_items:JSON.stringify(t.lineItems||[]),tax:parseFloat(t.tax)||0,discount:parseFloat(t.discount)||0,notes:t.notes||'',created:t.created||Date.now(),user_id:currentUser?.id||null,updated_at:new Date().toISOString()});
@@ -6477,9 +6489,16 @@ function renderCustomers(){
   const bulkBtn=document.getElementById('leadBulkBtn');
   if(bulkBtn) bulkBtn.style.display='none';
 
-  // ── TAG FILTER CHIPS ────────────────────────────────────────
-  // Only render tags that are actually applied to at least one customer.
-  // Order by usage descending so the most-used filter chip is first.
+  // ── TAG FILTER CHIPS — REMOVED ──────────────────────────────
+  // Customers no longer carry tags. The tags and customer_tags tables and all
+  // their rows are LEFT INTACT — nothing is deleted — so this is reversible by
+  // restoring the UI. Estimate tags are untouched.
+  const custTagsDisabled=true;
+  if(custTagsDisabled){
+    const oldBar=document.getElementById('custTagFilterBar');
+    if(oldBar) oldBar.remove();
+    customerTagFilter=[];
+  } else {
   let tagBar=document.getElementById('custTagFilterBar');
   if(!tagBar){
     tagBar=document.createElement('div');
@@ -6530,6 +6549,7 @@ function renderCustomers(){
     }
   }
 
+  }
   // (Search input is wired by the main IIFE handler — it routes to renderCustomers
   // when mainView==='crm'. No second handler needed here.)
 
@@ -6613,7 +6633,6 @@ function customerCard(c){
       <div class="cust-name-row">
         <span class="lead-name">${esc(c.name||'(unnamed)')}</span>
         ${stageBadge}
-        ${cTags.length>0?`<span class="cust-tags">${tagChips}</span>`:''}
       </div>
       <div class="cust-contact-row">
         ${phone?`<span class="cust-phone">📞 ${esc(phone)}</span>`:''}
@@ -6717,10 +6736,6 @@ function renderCustomerDetail(c){
         <div style="flex:1;min-width:0">
           <div style="font-size:9px;color:var(--muted);letter-spacing:.18em;text-transform:uppercase;font-weight:700;margin-bottom:2px">Customer · click any field to edit</div>
           <input id="cdName" class="finput" value="${esc(c.name||'')}" onchange="updateCustomerField('name',this.value)" style="font-size:20px;font-weight:700;background:transparent;border:1px solid transparent;padding:2px 6px;margin:-2px -6px;color:var(--ink-bright,#fff);width:100%;border-radius:4px" onfocus="this.style.borderColor='var(--amber)';this.style.background='rgba(245,158,11,.05)'" onblur="this.style.borderColor='transparent';this.style.background='transparent'"/>
-          <div class="cust-tags" style="margin-top:8px;display:flex;flex-wrap:wrap;gap:4px;align-items:center">
-            ${tagChipsHTML}
-            <button class="btn btn-ghost" onclick="openTagPicker('customer','${c.id}')" style="font-size:11px;padding:3px 10px;border-radius:100px">+ Tag</button>
-          </div>
         </div>
         <div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0">
           <button class="btn btn-ghost" onclick="openCustomerMessages('${c.id}')" title="View text messages" style="padding:6px 10px;font-size:13px">💬 Messages</button>
@@ -9104,7 +9119,10 @@ async function loadDocsRemote(){
     const rows=await sb.get('docs');
     // Detect the column from the payload instead of assuming the migration ran.
     // Lets the app write customer_id once it exists, with no deploy ordering.
-    if(rows.length) docsHaveCustomerId=Object.prototype.hasOwnProperty.call(rows[0],'customer_id');
+    if(rows.length){
+      docsHaveCustomerId=Object.prototype.hasOwnProperty.call(rows[0],'customer_id');
+      docsHaveStage=Object.prototype.hasOwnProperty.call(rows[0],'stage');
+    }
     const oldSigned=new Set(docs.filter(d=>d.signature).map(d=>d.id));
     docs=rows.map(dbToDoc);
     // Detect newly-signed docs
@@ -9379,15 +9397,90 @@ function docLead(d){
   return null;
 }
 
+// ── THE JOB STATUS LIVES ON THE ESTIMATE ──────────────────────
+// customer -> estimates ("jobs") -> each job carries its own status, and that
+// status is what places it in the pipeline. It used to live on the lead, which
+// meant a customer with three estimates had one stage between them.
+//
+// Estimates and change orders carry a stage. A change order attaches to an
+// estimate, so it INHERITS its parent's stage until it is moved on its own.
+// Invoices, work orders, material orders and lien waivers have no stage of
+// their own — they display the stage of the estimate they came from.
+const DOC_STAGE_TYPES=['estimate','changeorder'];
+const STAGE_RANK={declined:0,new:1,contact:2,quote:3,accepted:4,invoiced:5,paid:6,done:7};
+const docCarriesStage=d=>d&&DOC_STAGE_TYPES.includes(d.type);
+// Set from the row shape at load, so the app can write `stage` once the column
+// exists without any deploy ordering.
+let docsHaveStage=false;
+
+// The estimate this document belongs to (invoices, WOs, COs all descend from one)
+function docParent(d){
+  if(!d) return null;
+  if(d.sourceEstId){
+    const byId=docs.find(x=>x.id===d.sourceEstId);
+    if(byId) return byId;
+  }
+  if(d.sourceEstNum){
+    const byNum=docs.find(x=>x.num===d.sourceEstNum&&x.id!==d.id);
+    if(byNum) return byNum;
+  }
+  return null;
+}
+
+// The effective stage of a document, and where it came from.
+function docStageOf(d){
+  if(!d) return null;
+  if(docCarriesStage(d)&&d.stage) return d.stage;
+  const parent=docParent(d);
+  if(parent&&parent.stage) return parent.stage;
+  // Nothing stored yet (pre-migration, or a doc with no parent) — fall back to
+  // the lead so the badge is never blank while the data catches up.
+  const lead=docLead(d);
+  return lead?lead.stage:null;
+}
 function docStageInfo(d){
-  const l=docLead(d);
-  if(!l) return null;
-  return STAGES.find(s=>s.id===l.stage)||STAGES[0];
+  const st=docStageOf(d);
+  if(!st) return null;
+  return STAGES.find(x=>x.id===st)||STAGES[0];
 }
 function docStageBadge(d,dashedWhenNone){
   const st=docStageInfo(d);
-  if(!st) return dashedWhenNone?`<span class="doc-stage-badge none">No customer link</span>`:'';
+  if(!st) return dashedWhenNone?`<span class="doc-stage-badge none">No status</span>`:'';
   return `<span class="doc-stage-badge" style="background:${st.color}22;color:${st.color};border:1px solid ${st.color}55;">${esc(st.label)}</span>`;
+}
+
+// Keep the lead's stage as the high-water mark of its customer's jobs, so the
+// CRM and pipeline (still lead-driven) stay honest while they get reworked.
+async function syncLeadStageFromDocs(lead){
+  if(!lead) return;
+  const mine=docs.filter(x=>docCarriesStage(x)&&x.stage&&docLead(x)&&docLead(x).id===lead.id);
+  if(!mine.length) return;
+  let best=mine[0].stage;
+  for(const x of mine){
+    if((STAGE_RANK[x.stage]??0)>(STAGE_RANK[best]??0)) best=x.stage;
+  }
+  if(best&&best!==lead.stage) await moveLead(lead.id,best);
+}
+
+// Change a document's own stage. This is the single write path — the card
+// menu and the editor dropdown both come through here.
+// NAMED setDocJobStage, not setDocStage: setDocStage is already the FILTER
+// dropdown's setter. The collision silently made every status click set a
+// filter instead of writing the stage.
+async function setDocJobStage(docId,ns){
+  const d=docs.find(x=>x.id===docId);
+  if(!d||!ns||!docCarriesStage(d)) return;
+  const old=d.stage||'';
+  if(old===ns) return;
+  d.stage=ns;
+  d.activity=d.activity||[];
+  d.activity.push({ts:new Date().toISOString(),
+    msg:`Status: ${(STAGES.find(x=>x.id===old)||{}).label||'(unset)'} → ${(STAGES.find(x=>x.id===ns)||{}).label||ns}`});
+  if(d.activity.length>50) d.activity=d.activity.slice(-50);
+  saveDocs();saveDocSync(d);
+  try{ await syncLeadStageFromDocs(docLead(d)); }catch(e){ console.error('lead stage sync:',e); }
+  renderDocList();
+  if(editDocId===docId) updateDocHotbarStage(d);
 }
 
 // Local-date ISO. Deliberately not toISOString(), which converts to UTC and
@@ -9430,19 +9523,89 @@ function docInDateRange(d){
 }
 function docMatchesStage(d){
   if(docStageFilter==='all') return true;
-  const l=docLead(d);
-  if(docStageFilter==='nolead') return !l;
-  return !!l&&l.stage===docStageFilter;
+  const st=docStageOf(d);
+  if(docStageFilter==='nolead') return !st;
+  return st===docStageFilter;
 }
+// ── THE ESTIMATE'S STATUS ─────────────────────────────────────
+// One status per estimate, and it is the JOB status — the stage of the lead
+// the document belongs to. The document's own draft/sent/paid field still
+// exists underneath (QuickBooks sync and the signing portal read it) but it is
+// no longer shown or edited by hand; sendDoc() and the signature flow keep it
+// current on their own.
+function docStatusControl(d){
+  const st=docStageInfo(d);
+  const owns=docCarriesStage(d);
+  if(!st) return owns
+    ? `<span class="doc-stage-badge clickable" style="border:1px dashed var(--iron);color:var(--muted);"
+         title="Click to set the job status"
+         onclick="event.stopPropagation();openDocStatusMenu('${d.id}',event)">Set status ▾</span>`
+    : `<span class="doc-stage-badge none" title="No linked estimate to take a status from">—</span>`;
+  if(!owns){
+    // Invoices, work orders, material orders and lien waivers show the status
+    // of the estimate they came from. Read-only: move the estimate instead.
+    return `<span class="doc-stage-badge" style="background:${st.color}18;color:${st.color};border:1px dashed ${st.color}55;"
+       title="From the linked estimate — change it there">${esc(st.label)}</span>`;
+  }
+  return `<span class="doc-stage-badge clickable" style="background:${st.color}22;color:${st.color};border:1px solid ${st.color}55;"
+     title="Click to change the job status"
+     onclick="event.stopPropagation();openDocStatusMenu('${d.id}',event)">${esc(st.label)} ▾</span>`;
+}
+
+// Small popup anchored to the badge. Changing the status routes through
+// moveLead(), the same path the CRM uses — so the activity log, the stage
+// automations and the promote-to-job step all still happen.
+function openDocStatusMenu(docId,ev){
+  closeDocStatusMenu();
+  const d=docs.find(x=>x.id===docId);
+  if(!d||!docCarriesStage(d)) return;
+  const cur=docStageOf(d);
+  const menu=document.createElement('div');
+  menu.className='doc-status-menu';
+  menu.id='docStatusMenu';
+  menu.innerHTML=STAGES.map(st=>`<div class="doc-status-opt${st.id===cur?' current':''}"
+      data-stage="${st.id}"><span class="doc-status-dot" style="background:${st.color}"></span>${esc(st.label)}</div>`).join('');
+  document.body.appendChild(menu);
+  const r=ev.currentTarget.getBoundingClientRect();
+  const top=r.bottom+4, left=Math.min(r.left,window.innerWidth-190);
+  menu.style.top=(top+menu.offsetHeight>window.innerHeight?Math.max(4,r.top-menu.offsetHeight-4):top)+'px';
+  menu.style.left=Math.max(4,left)+'px';
+  menu.querySelectorAll('.doc-status-opt').forEach(opt=>{
+    opt.addEventListener('click',async e=>{
+      e.stopPropagation();
+      const ns=opt.dataset.stage;
+      closeDocStatusMenu();
+      await setDocJobStage(docId,ns);
+    });
+  });
+  setTimeout(()=>document.addEventListener('click',closeDocStatusMenu,{once:true}),0);
+}
+function closeDocStatusMenu(){
+  const m=document.getElementById('docStatusMenu');
+  if(m) m.remove();
+}
+
 function updateDocHotbarStage(d){
   const wrap=document.getElementById('docHotbarStage');
   const sep=document.getElementById('docHotbarStageSep');
-  const slot=document.getElementById('docLeadStage');
-  if(!wrap||!slot) return;
-  const st=docStageInfo(d);
-  if(!st){wrap.style.display='none';if(sep)sep.style.display='none';return;}
+  const sel=document.getElementById('docLeadStageSel');
+  if(!wrap||!sel) return;
+  if(!docCarriesStage(d)){wrap.style.display='none';if(sep)sep.style.display='none';return;}
   wrap.style.display='';if(sep)sep.style.display='';
-  slot.innerHTML=docStageBadge(d,false);
+  if(!sel.dataset.built){
+    sel.dataset.built='1';
+    sel.innerHTML=STAGES.map(st=>`<option value="${st.id}">${esc(st.label)}</option>`).join('');
+  }
+  const cur=docStageOf(d)||'new';
+  sel.value=cur;
+  const st=STAGES.find(x=>x.id===cur);
+  sel.style.color=st?st.color:'';
+}
+
+// Changing the status from inside the editor goes through the same moveLead()
+// path as the CRM and the card menu, so it can't drift from them.
+async function onDocStageChange(ns){
+  await setDocJobStage(editDocId,ns);
 }
 
 function docFiltersActive(){
@@ -9589,7 +9752,7 @@ function renderDocList(){
         <div style="display:flex;align-items:flex-start;gap:0;flex:1">
           <div class="bulk-cb${isSelected?' checked':''}">${isSelected?'✓':''}</div>
           <div style="flex:1">
-            <div class="doc-card-num">${d.num||'—'} · <span class="doc-status ${d.status||'draft'}">${(d.status||'draft').toUpperCase()}</span>${signed?' <span class="doc-signed-badge">✓ SIGNED</span>':''} ${docStageBadge(d,false)}</div>
+            <div class="doc-card-num">${d.num||'—'} ${docStatusControl(d)}${signed?' <span class="doc-signed-badge">✓ SIGNED</span>':''}</div>
             <div class="doc-card-name">${esc(displayName)}</div>
             ${(d.clientAddr&&!isMo)?`<div class="doc-card-addr">📍 ${esc(d.clientAddr)}</div>`:''}
             ${isWo&&pm?`<div class="doc-card-addr">👷 PM: ${esc(pm.name)}</div>`:''}

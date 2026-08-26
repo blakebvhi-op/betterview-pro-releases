@@ -30,7 +30,8 @@ body{background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSys
 
 /* Header */
 .head{display:flex;align-items:flex-start;justify-content:space-between;padding:22px 28px 18px;border-bottom:3px solid var(--amber);flex-wrap:wrap;gap:12px;}
-.company{flex:1;min-width:200px;}
+.company{flex:1;min-width:200px;display:flex;align-items:flex-start;gap:14px;}
+.company-logo{width:120px;height:auto;max-height:70px;object-fit:contain;flex-shrink:0;}
 .company-name{font-size:22px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:var(--ink);line-height:1.1;}
 .company-tag{font-size:10px;color:var(--steel);letter-spacing:1.5px;text-transform:uppercase;margin-top:3px;}
 .company-meta{font-size:11px;color:var(--steel);margin-top:6px;line-height:1.5;}
@@ -41,7 +42,7 @@ body{background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSys
 /* Body */
 .body{padding:18px 28px 28px;}
 .parties{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:18px;}
-@media(max-width:560px){.parties{grid-template-columns:1fr;}.head{padding:18px 16px 14px;}.body{padding:14px 16px 18px;}.doc-info{text-align:left;width:100%;}}
+@media(max-width:560px){.parties{grid-template-columns:1fr;}.head{padding:18px 16px 14px;}.body{padding:14px 16px 18px;}.doc-info{text-align:left;width:100%;}.company{flex-wrap:wrap;}}
 .party-lbl{font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--mute);margin-bottom:4px;}
 .party-name{font-weight:700;font-size:14px;}
 .party-detail{font-size:12px;color:var(--steel);line-height:1.6;margin-top:2px;}
@@ -73,7 +74,6 @@ tr.row-zero td:nth-child(2),tr.row-zero td:nth-child(3),tr.row-zero td:nth-child
 .sig-section{background:#fef3c7;border:2px solid var(--amber);border-radius:10px;padding:16px;margin-bottom:16px;}
 .sig-section h2{font-size:14px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:var(--ink);margin-bottom:8px;}
 .sig-section p{font-size:12px;color:var(--steel);margin-bottom:10px;}
-.sig-consent{font-size:10px;line-height:1.5;color:var(--steel);margin-top:11px;padding-top:10px;border-top:1px dashed #e0c98a;}
 .sig-canvas{width:100%;height:160px;background:#fff;border:1px solid #e2e8f0;border-radius:8px;cursor:crosshair;touch-action:none;display:block;}
 .sig-canvas.signed{border-color:var(--green);}
 .sig-row{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap;align-items:center;}
@@ -105,18 +105,6 @@ tr.row-zero td:nth-child(2),tr.row-zero td:nth-child(3),tr.row-zero td:nth-child
 
 .footer{text-align:center;font-size:10px;color:var(--mute);padding:16px 24px;border-top:1px solid #e2e8f0;}
 
-/* Your Project panel (Phase 1 customer portal) */
-.project{background:#eff6ff;border:1px solid #bfdbfe;border-radius:10px;padding:14px 16px;margin-bottom:16px;}
-.project-lbl{font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#2563eb;margin-bottom:10px;}
-.proj-job{display:flex;align-items:flex-start;gap:12px;padding:10px 0;border-top:1px solid #dbeafe;}
-.proj-job:first-of-type{border-top:none;padding-top:0;}
-.proj-job-main{flex:1;min-width:0;}
-.proj-job-type{font-weight:700;font-size:14px;color:var(--ink);}
-.proj-job-when{font-size:12px;color:var(--steel);margin-top:3px;line-height:1.5;}
-.proj-badge{font-size:9px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;padding:4px 8px;border-radius:6px;white-space:nowrap;}
-.proj-badge.sched{background:#dcfce7;color:#15803d;}
-.proj-badge.pending{background:#fef3c7;color:#92400e;}
-
 @media print{
   body{background:#fff;padding:0;}
   .wrap{box-shadow:none;border-radius:0;}
@@ -133,10 +121,56 @@ tr.row-zero td:nth-child(2),tr.row-zero td:nth-child(3),tr.row-zero td:nth-child
 const SB_URL='https://fryaksqvfknxdptrlppy.supabase.co';
 const SB_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZyeWFrc3F2ZmtueGRwdHJscHB5Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4OTczOTcsImV4cCI6MjA5MDQ3MzM5N30.azNBXDI3ySkvMRED9VjNYoSc6ct3NA32No5vybsahnk';
 
-const COMPANY={name:'Better View Home Improvements',tagline:'Roofing · Siding · Gutters · Windows & Doors',phone:'(414) 234-3700',email:'info@betterview.homes',address:'W141N5974 Kaul Ave, Menomonee Falls, WI 53051',license:'License #: 082200823-DC',website:'www.betterview.homes'};
+// ── COMPANY LETTERHEAD ────────────────────────────────────────────
+// Loaded from public.companies at runtime, keyed on the company_id of the
+// document being viewed. Previously these were hardcoded here, which meant
+// this page drifted out of sync with the app and showed customers stale
+// contact details and a stale license number on documents they signed.
+//
+// There is deliberately NO hardcoded fallback. If the row can't be read the
+// letterhead block is omitted rather than rendered with wrong or empty
+// values — a blank space is recoverable, a wrong license number on a signed
+// document is not.
+//
+// REQUIRES the anon read grant in sign-company-access.sql. Run that first.
+let COMPANY={name:'',tagline:'',phone:'',email:'',address:'',license:'',website:'',logo_url:''};
+let COMPANY_LOADED=false;
+
+// A change order is its own signable document, linked to an estimate but
+// carrying a separate signature. The portal used to label every document
+// "Estimate", so a customer signing a change order saw the wrong heading.
+const DOC_LABELS={estimate:'Estimate',invoice:'Invoice',contract:'Contract',
+  changeorder:'Change Order',lienwaiver:'Lien Waiver',
+  workorder:'Work Order',matorder:'Material Order'};
+const docLabel=t=>DOC_LABELS[t]||'Document';
 
 const esc=s=>String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 const fmt=v=>'$'+Number(v||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
+// Join only the parts that actually have a value, so a missing field doesn't
+// leave a dangling separator like "· ·" on a customer-facing document.
+const joinParts=(sep,...parts)=>parts.filter(p=>p&&String(p).trim()).map(p=>esc(String(p).trim())).join(sep);
+const brParts=(...parts)=>parts.filter(p=>p&&String(p).trim()).map(p=>esc(String(p).trim())).join('<br>');
+
+async function loadCompany(companyId){
+  if(!companyId) return false;
+  try{
+    const r=await fetch(`${SB_URL}/rest/v1/companies?id=eq.${encodeURIComponent(companyId)}`
+      +`&select=name,tagline,address,phone,email,license,website,logo_url`,{
+      headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY}
+    });
+    if(!r.ok){console.error('company load failed: HTTP '+r.status);return false;}
+    const arr=await r.json();
+    if(!arr.length){console.error('no company row for '+companyId);return false;}
+    const c=arr[0];
+    COMPANY={
+      name:c.name||'',tagline:c.tagline||'',phone:c.phone||'',email:c.email||'',
+      address:c.address||'',license:c.license||'',website:c.website||'',logo_url:c.logo_url||''
+    };
+    COMPANY_LOADED=true;
+    if(COMPANY.name) document.title=(COMPANY.name)+' — Estimate';
+    return true;
+  }catch(e){console.error('company load error:',e);return false;}
+}
 
 function getDocId(){
   const u=new URL(window.location.href);
@@ -156,17 +190,18 @@ function showError(title,msg){
 
 async function loadDoc(){
   const id=getDocId();
-  if(!id){showError('No estimate ID','This link is missing an estimate ID. Ask the sender to resend.');return;}
+  if(!id){showError('No document ID','This link is missing a document ID. Ask the sender to resend.');return;}
   try{
     const r=await fetch(`${SB_URL}/rest/v1/docs?id=eq.${encodeURIComponent(id)}&select=*`,{
       headers:{apikey:SB_KEY,Authorization:'Bearer '+SB_KEY}
     });
     if(!r.ok) throw new Error('HTTP '+r.status);
     const arr=await r.json();
-    if(!arr.length){showError('Estimate not found','This estimate may have been deleted, or the link is incorrect.');return;}
+    if(!arr.length){showError('Document not found','This document may have been deleted, or the link is incorrect.');return;}
     const row=arr[0];
     return {
       id:row.id,type:row.type||'estimate',num:row.num||'',status:row.status||'draft',
+      companyId:row.company_id||null,
       clientName:row.client_name||'',clientContact:row.client_contact||'',clientAddr:row.client_addr||'',
       date:row.date||'',dueDate:row.due_date||'',scope:row.scope||'',
       lineItems:(()=>{try{return typeof row.line_items==='string'?JSON.parse(row.line_items):(row.line_items||[]);}catch{return [];}})(),
@@ -236,8 +271,29 @@ function extractEmail(d){
   return m?m[0]:'';
 }
 
+// Header block. Renders nothing at all if the company row didn't load, rather
+// than printing empty lines onto a document a customer is about to sign.
+function companyHeaderHtml(){
+  if(!COMPANY_LOADED) return '<div class="company"></div>';
+  const logo=COMPANY.logo_url
+    ? `<img class="company-logo" src="${esc(COMPANY.logo_url)}" alt="${esc(COMPANY.name)}"/>`
+    : '';
+  const meta=[joinParts(' · ',COMPANY.phone,COMPANY.email),esc(COMPANY.address),esc(COMPANY.license)]
+    .filter(Boolean).join('<br>');
+  return `<div class="company">
+      ${logo}
+      <div>
+        ${COMPANY.name?`<div class="company-name">${esc(COMPANY.name)}</div>`:''}
+        ${COMPANY.tagline?`<div class="company-tag">${esc(COMPANY.tagline)}</div>`:''}
+        ${meta?`<div class="company-meta">${meta}</div>`:''}
+      </div>
+    </div>`;
+}
+
 function renderEstimate(d){
   const isInv=d.type==='invoice';
+  const label=docLabel(d.type);
+  const isCO=d.type==='changeorder';
   const items=(d.lineItems||[]).filter(li=>(li.desc||'').trim());
   const total=calcTotal(d);
   const rows=items.map(li=>{
@@ -250,25 +306,22 @@ function renderEstimate(d){
     return `<tr><td>${esc(li.desc)}</td><td>${li.qty}</td><td>${fmt(price)}</td><td>${fmt(qty*price)}</td></tr>`;
   }).join('');
   const alreadySigned=!!d.signature;
+  const fromDetail=brParts(COMPANY.address,COMPANY.phone,COMPANY.email);
+  const footerLine=joinParts(' · ',COMPANY.name,COMPANY.address,COMPANY.website);
   const html=`
   <div class="head">
-    <div class="company">
-      <div class="company-name">${esc(COMPANY.name)}</div>
-      <div class="company-tag">${esc(COMPANY.tagline)}</div>
-      <div class="company-meta">${esc(COMPANY.phone)} · ${esc(COMPANY.email)}<br>${esc(COMPANY.address)}<br>${esc(COMPANY.license)}</div>
-    </div>
+    ${companyHeaderHtml()}
     <div class="doc-info">
-      <div class="doc-type">${isInv?'Invoice':'Estimate'}</div>
+      <div class="doc-type">${esc(label)}</div>
       <div class="doc-num">#${esc(d.num||'—')}</div>
       <div class="doc-date">Date: ${esc(d.date||'—')}</div>
       <div class="doc-date">${isInv?'Due':'Valid until'}: ${esc(d.dueDate||'—')}</div>
     </div>
   </div>
   <div class="body">
-    ${alreadySigned?`<div class="signed-banner"><div class="signed-banner-icon">✅</div><div class="signed-banner-msg"><div class="signed-banner-title">This estimate has been signed</div><div class="signed-banner-detail">Signed by ${esc(d.signatureName||'')} on ${d.signatureDate?new Date(d.signatureDate).toLocaleString():''}</div></div></div>`:''}
-    <div id="projectPanel"></div>
+    ${alreadySigned?`<div class="signed-banner"><div class="signed-banner-icon">✅</div><div class="signed-banner-msg"><div class="signed-banner-title">This ${esc(label.toLowerCase())} has been signed</div><div class="signed-banner-detail">Signed by ${esc(d.signatureName||'')} on ${d.signatureDate?new Date(d.signatureDate).toLocaleString():''}</div></div></div>`:''}
     <div class="parties">
-      <div><div class="party-lbl">From</div><div class="party-name">${esc(COMPANY.name)}</div><div class="party-detail">${esc(COMPANY.address)}<br>${esc(COMPANY.phone)}<br>${esc(COMPANY.email)}</div></div>
+      <div><div class="party-lbl">From</div>${COMPANY.name?`<div class="party-name">${esc(COMPANY.name)}</div>`:''}${fromDetail?`<div class="party-detail">${fromDetail}</div>`:''}</div>
       <div><div class="party-lbl">${isInv?'Bill To':'Prepared For'}</div><div class="party-name">${esc(d.clientName||'')}</div><div class="party-detail">${esc(d.clientContact||'')}<br>${esc(d.clientAddr||'')}</div></div>
     </div>
     ${d.scope?`<div class="scope"><div class="scope-lbl">Scope of Work</div><div class="scope-text">${esc(d.scope)}</div></div>`:''}
@@ -279,117 +332,24 @@ function renderEstimate(d){
     ${alreadySigned?`<div class="embedded-sig"><div class="embedded-sig-lbl">Accepted &amp; Authorized By</div><div class="embedded-sig-row"><img class="embedded-sig-img" src="${d.signature}" alt="signature"/><div><div class="embedded-sig-name">${esc(d.signatureName||'')}</div><div class="embedded-sig-date">${d.signatureDate?new Date(d.signatureDate).toLocaleString():''}</div></div></div></div>`:''}
     ${(!isInv&&!alreadySigned)?`
       <div class="sig-section">
-        <h2>✍️ Sign &amp; Accept</h2>
-        <p>Sign below with your finger (mobile) or mouse (desktop) to accept this estimate. Once signed, the contractor will be notified.</p>
+        <h2>✍️ Sign &amp; ${isCO?'Approve':'Accept'}</h2>
+        <p>Sign below with your finger (mobile) or mouse (desktop) to ${isCO?'approve this change order':'accept this '+esc(label.toLowerCase())}.
+           ${isCO?'It is separate from the estimate you already signed.':''} Once signed, the contractor will be notified.</p>
         <canvas class="sig-canvas" id="sigCanvas" width="800" height="160"></canvas>
         <div class="sig-row">
           <input class="sig-name-input" id="sigName" placeholder="Your printed name" autocomplete="name"/>
           <button class="sig-btn sig-btn-clear" id="sigClearBtn">Clear</button>
-          <button class="sig-btn sig-btn-save" id="sigSaveBtn">✓ Sign &amp; Accept</button>
+          <button class="sig-btn sig-btn-save" id="sigSaveBtn">✓ Sign &amp; ${isCO?'Approve':'Accept'}</button>
         </div>
         <div class="sig-status" id="sigStatus"></div>
-        <div class="sig-consent">By signing, you authorize Better View Home Improvements to contact you by text message at the phone number provided regarding your project — appointment confirmations, scheduling updates, and portal links. Message &amp; data rates may apply. Reply STOP to opt out at any time. Consent to texts is not a condition of purchase.</div>
       </div>`:''}
     <div class="actions">
       <button class="action-btn action-btn-print" onclick="window.print()">📄 Download / Print PDF</button>
     </div>
   </div>
-  <div class="footer">${esc(COMPANY.name)} · ${esc(COMPANY.address)} · ${esc(COMPANY.website)}</div>`;
+  ${footerLine?`<div class="footer">${footerLine}</div>`:''}`;
   document.getElementById('wrap').innerHTML=html;
-  loadProjectPanel(d.id);
   if(!isInv&&!alreadySigned) wireSignaturePad(d);
-}
-
-// ── YOUR PROJECT panel (Phase 1 customer portal) ───────────────
-// Resolves the scheduled job(s) for this estimate WITHOUT enumerating
-// any table. Path: estimate -> its work order (source_est_id) -> job
-// (linked_job_id). The estimate + WO live in the docs table; we read
-// the WO's linked_job_id, then fetch ONLY that job id with only the
-// customer-safe scheduling columns (RLS + column grant enforce this
-// server-side too).
-const APPT_LABELS={sales:'Consultation',inspection:'Inspection',followup:'Follow-Up',design:'Design Consultation',repair:'Repair',roof_replace:'Roof Replacement',gutter_replace:'Gutter Replacement',siding_replace:'Siding Replacement'};
-
-function fmtTime(t){
-  const m=String(t||'').match(/^(\d{1,2}):(\d{2})/);
-  if(!m) return String(t||'');
-  let h=+m[1];const ap=h>=12?'PM':'AM';h=h%12||12;
-  return h+':'+m[2]+' '+ap;
-}
-function fmtTimeRange(a,b){
-  const x=fmtTime(a),y=fmtTime(b);
-  if(x&&y) return x+' – '+y;
-  return x||y||'';
-}
-function fmtProjDay(day){
-  if(!day||day==='backlog') return '';
-  const dt=new Date(day+'T00:00:00');
-  if(isNaN(dt)) return String(day);
-  return dt.toLocaleDateString('en-US',{weekday:'long',month:'long',day:'numeric',year:'numeric'});
-}
-
-async function fetchProjectJobs(estId){
-  const H={apikey:SB_KEY,Authorization:'Bearer '+SB_KEY};
-  const SAFE='id,day,end_day,start_time,end_time,appt_type';
-  const byId={};
-  try{
-    // Path A — canonical: estimate -> lead(s) -> jobs (calendar-scheduled work).
-    const leadR=await fetch(`${SB_URL}/rest/v1/leads?est_id=eq.${encodeURIComponent(estId)}&select=id`,{headers:H});
-    if(leadR.ok){
-      const leadIds=[...new Set((await leadR.json()||[]).map(x=>x.id).filter(Boolean))];
-      if(leadIds.length){
-        const jR=await fetch(`${SB_URL}/rest/v1/jobs?lead_id=in.(${leadIds.map(encodeURIComponent).join(',')})&select=${SAFE}`,{headers:H});
-        if(jR.ok)(await jR.json()||[]).forEach(j=>{byId[j.id]=j;});
-      }
-    }
-    // Path B — fallback: estimate -> work order -> job (WO-spawned work).
-    const famR=await fetch(`${SB_URL}/rest/v1/docs?or=(id.eq.${encodeURIComponent(estId)},source_est_id.eq.${encodeURIComponent(estId)})&select=id,linked_job_id`,{headers:H});
-    if(famR.ok){
-      const jobIds=[...new Set((await famR.json()||[]).map(x=>x.linked_job_id).filter(Boolean))].filter(id=>!byId[id]);
-      if(jobIds.length){
-        const jR=await fetch(`${SB_URL}/rest/v1/jobs?id=in.(${jobIds.map(encodeURIComponent).join(',')})&select=${SAFE}`,{headers:H});
-        if(jR.ok)(await jR.json()||[]).forEach(j=>{byId[j.id]=j;});
-      }
-    }
-  }catch(e){console.error('project fetch',e);}
-  return Object.values(byId);
-}
-
-function renderProjectPanel(jobs){
-  // Scheduled jobs first, then anything still being scheduled.
-  const sorted=jobs.slice().sort((a,b)=>{
-    const ab=(!a.day||a.day==='backlog')?1:0, bb=(!b.day||b.day==='backlog')?1:0;
-    if(ab!==bb) return ab-bb;
-    return String(a.day||'').localeCompare(String(b.day||''));
-  });
-  const rows=sorted.map(j=>{
-    const label=APPT_LABELS[j.appt_type]||'Project Work';
-    const scheduled=j.day&&j.day!=='backlog';
-    const dayStr=fmtProjDay(j.day);
-    const timeStr=fmtTimeRange(j.start_time,j.end_time);
-    let when, badge, badgeCls;
-    if(scheduled){
-      badge='Scheduled';badgeCls='sched';
-      when=dayStr+(timeStr?' · '+timeStr:'');
-    }else{
-      badge='Scheduling';badgeCls='pending';
-      when='We\u2019re finalizing your schedule — we\u2019ll contact you to confirm a date.';
-    }
-    return `<div class="proj-job">
-      <div class="proj-job-main">
-        <div class="proj-job-type">${esc(label)}</div>
-        <div class="proj-job-when">${esc(when)}</div>
-      </div>
-      <span class="proj-badge ${badgeCls}">${badge}</span>
-    </div>`;
-  }).join('');
-  return `<div class="project"><div class="project-lbl">Your Project</div>${rows}</div>`;
-}
-
-async function loadProjectPanel(estId){
-  const slot=document.getElementById('projectPanel');
-  if(!slot) return;
-  const jobs=await fetchProjectJobs(estId);
-  slot.innerHTML=jobs.length?renderProjectPanel(jobs):'';
 }
 
 function wireSignaturePad(d){
@@ -482,6 +442,9 @@ function wireSignaturePad(d){
 (async()=>{
   const d=await loadDoc();
   if(!d) return;
+  // Pull the letterhead for whichever company owns this document, before any
+  // render, so the header is never painted twice or painted with stale values.
+  await loadCompany(d.companyId);
   // Already verified in this session?
   if(sessionStorage.getItem('bvp_verified_'+d.id)){
     renderEstimate(d);
