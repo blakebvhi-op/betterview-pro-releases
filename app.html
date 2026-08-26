@@ -705,6 +705,18 @@ body.resizing{user-select:none;-webkit-user-select:none;}
 .doc-status.paid{background:rgba(20,184,166,.15);color:var(--teal);}
 .doc-status.declined{background:rgba(239,68,68,.15);color:var(--danger);}
 .doc-empty{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;padding:48px 24px;text-align:center;}
+/* ══ ESTIMATE FILTERS + JOB-STATUS BADGE ══════════════════════════
+   The estimate list can be narrowed by date range and by the pipeline
+   stage of the customer the document belongs to. The stage badge is the
+   lead's stage — one source of truth — not a second status kept on the doc. */
+.doc-filter-row{display:flex;align-items:center;gap:8px;padding:7px 14px;background:var(--steel-mid);border-bottom:1px solid var(--iron);flex-shrink:0;flex-wrap:wrap;}
+.doc-filter-lbl{font-family:'Bebas Neue',sans-serif;font-size:11px;letter-spacing:1.5px;color:var(--muted);}
+.doc-filter-sel{font-size:11px;padding:4px 8px;width:auto;min-width:110px;}
+.doc-filter-count{font-size:11px;color:var(--muted);white-space:nowrap;}
+.doc-stage-badge{display:inline-flex;align-items:center;gap:3px;padding:1px 7px;border-radius:99px;font-size:9px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;white-space:nowrap;}
+.doc-stage-badge.none{background:var(--steel-light);color:var(--muted);border:1px dashed var(--iron);}
+.doc-hotbar-stage{display:inline-flex;align-items:center;gap:6px;}
+
 .doc-empty-icon{font-size:42px;opacity:.3;}
 .doc-empty-txt{font-size:13px;color:var(--muted);}
 
@@ -1580,6 +1592,27 @@ body:not(.role-owner):not(.role-manager) .role-financial-only{display:none!impor
           </div>
         </div>
       </div>
+      <div class="doc-filter-row">
+        <span class="doc-filter-lbl">DATE</span>
+        <select class="doc-finput doc-filter-sel" id="docDateRangeSel" onchange="setDocDateRange(this.value)">
+          <option value="all">All dates</option>
+          <option value="week">This week</option>
+          <option value="month">This month</option>
+          <option value="last30">Last 30 days</option>
+          <option value="quarter">This quarter</option>
+          <option value="custom">Custom range…</option>
+        </select>
+        <span id="docCustomRange" style="display:none;align-items:center;gap:6px;">
+          <input type="date" class="doc-finput doc-filter-sel" id="docDateFrom" onchange="setDocCustomRange()">
+          <span class="doc-filter-lbl">TO</span>
+          <input type="date" class="doc-finput doc-filter-sel" id="docDateTo" onchange="setDocCustomRange()">
+        </span>
+        <span class="doc-filter-lbl">JOB STATUS</span>
+        <select class="doc-finput doc-filter-sel" id="docStageSel" onchange="setDocStage(this.value)"></select>
+        <button class="btn btn-ghost btn-sm" id="docClearFilters" onclick="clearDocFilters()" style="display:none">✕ Clear</button>
+        <div class="doc-toolbar-spacer"></div>
+        <span class="doc-filter-count" id="docFilterCount"></span>
+      </div>
       <div class="doc-list" id="docList"></div>
     </div>
   </div>
@@ -1750,6 +1783,11 @@ body:not(.role-owner):not(.role-manager) .role-financial-only{display:none!impor
     <button class="btn btn-amber" onclick="saveDoc()" style="font-weight:700;padding:6px 18px;">💾 Save</button>
     <span id="docSaveConfirm" style="font-size:11px;color:var(--green);opacity:0;transition:opacity .4s;">✓ Saved</span>
     <div class="doc-hotbar-sep"></div>
+    <div class="doc-hotbar-stage" id="docHotbarStage" style="display:none;">
+      <span class="doc-filter-lbl">JOB</span>
+      <span id="docLeadStage"></span>
+    </div>
+    <div class="doc-hotbar-sep" id="docHotbarStageSep" style="display:none;"></div>
     <div class="doc-hotbar-status">
       <select class="doc-finput" id="docStatus" style="font-size:11px;padding:4px 8px;max-width:130px;">
         <option value="draft">Draft</option>
@@ -4525,9 +4563,22 @@ function exRollover(){
 
 // Called after any completion. If every must-do (priority 1, on the board)
 // is done, today counts as cleared and the streak ticks up once.
+// What belongs on today's board.
+// A finished card stays visible for the rest of the day it was finished, so
+// you can see what you cleared — then it drops off. Without this the board
+// accumulates every task ever completed, which is exactly what happened after
+// the migration bulk-archived the old list. The rows are never deleted; they
+// stay in Supabase for reporting, they just stop cluttering the board.
+function exOnBoard(t){
+  if(t.staged) return false;
+  if(!t.done) return true;
+  if(!t.doneAt) return false;              // done but never stamped = old
+  return String(t.doneAt).slice(0,10)===exToday();
+}
+
 function exCheckGoal(){
   const today=exToday();
-  const mustDos=tasks.filter(t=>!t.staged&&t.pri===1);
+  const mustDos=tasks.filter(t=>exOnBoard(t)&&t.pri===1);
   if(!mustDos.length) return;
   if(!mustDos.every(t=>t.done)) return;
   if(exState.lastGoalDay===today) return;
@@ -4581,7 +4632,7 @@ function renderTaskList(){
   const grid=document.getElementById('exGrid');
   if(!grid) return;
 
-  const board=tasks.filter(t=>!t.staged);
+  const board=tasks.filter(exOnBoard);
   const staged=tasks.filter(t=>t.staged&&!t.done);
 
   // Header: date, cleared count, streak
@@ -4988,7 +5039,7 @@ const leadToDb=l=>({id:l.id,name:l.name,contact:l.contact,phone:l.phone,email:l.
 const _parseMoData=v=>{try{return typeof v==='string'?JSON.parse(v||'{}'):(v||{});}catch{return {};}};
 const dbToDoc=r=>{
   const mo=_parseMoData(r.mat_order_data);
-  return {id:r.id,type:r.type||'estimate',status:r.status||'draft',num:r.num||'',clientName:r.client_name||'',clientContact:r.client_contact||'',clientAddr:r.client_addr||'',date:r.date||'',dueDate:r.due_date||'',scope:r.scope||'',lineItems:safeParseArr(r.line_items),tax:r.tax||0,discount:r.discount||0,notes:r.notes||'',manualTotal:r.manual_total||'',created:r.created||Date.now(),signature:r.signature||'',signatureName:r.signature_name||'',signatureDate:r.signature_date||'',leadSource:r.lead_source||'',activity:safeParseArr(r.activity),checklist:safeParseArr(r.checklist),extras:safeParseArr(r.extras),pmId:r.pm_id||'',arrival:r.arrival||'',sourceEstId:r.source_est_id||null,sourceEstNum:r.source_est_num||'',matCost:r.mat_cost!=null?r.mat_cost:'',laborCost:r.labor_cost!=null?r.labor_cost:'',otherCost:r.other_cost!=null?r.other_cost:'',outcome:r.outcome||null,closedDate:r.closed_date||null,linkedJobId:r.linked_job_id||null,qbInvoiceId:r.qb_invoice_id||null,qbPushedAt:r.qb_pushed_at||null,
+  return {id:r.id,type:r.type||'estimate',status:r.status||'draft',num:r.num||'',customerId:r.customer_id||null,clientName:r.client_name||'',clientContact:r.client_contact||'',clientAddr:r.client_addr||'',date:r.date||'',dueDate:r.due_date||'',scope:r.scope||'',lineItems:safeParseArr(r.line_items),tax:r.tax||0,discount:r.discount||0,notes:r.notes||'',manualTotal:r.manual_total||'',created:r.created||Date.now(),signature:r.signature||'',signatureName:r.signature_name||'',signatureDate:r.signature_date||'',leadSource:r.lead_source||'',activity:safeParseArr(r.activity),checklist:safeParseArr(r.checklist),extras:safeParseArr(r.extras),pmId:r.pm_id||'',arrival:r.arrival||'',sourceEstId:r.source_est_id||null,sourceEstNum:r.source_est_num||'',matCost:r.mat_cost!=null?r.mat_cost:'',laborCost:r.labor_cost!=null?r.labor_cost:'',otherCost:r.other_cost!=null?r.other_cost:'',outcome:r.outcome||null,closedDate:r.closed_date||null,linkedJobId:r.linked_job_id||null,qbInvoiceId:r.qb_invoice_id||null,qbPushedAt:r.qb_pushed_at||null,
   // Material order fields (stored as JSON)
   moJobName:mo.moJobName||'',moPhone:mo.moPhone||'',moEmail:mo.moEmail||'',
   moLayers:mo.moLayers||'',moStories:mo.moStories||'',moCedar:mo.moCedar||'',moRedeck:mo.moRedeck||'',
@@ -5009,7 +5060,10 @@ const docToDb=d=>{
     moMaterials:d.moMaterials||{},
     moRows:Array.isArray(d.moRows)?d.moRows:null
   };
-  return {id:d.id,type:d.type||'estimate',status:d.status||'draft',num:d.num||'',client_name:d.clientName||'',client_contact:d.clientContact||'',client_addr:d.clientAddr||'',date:d.date||null,due_date:d.dueDate||null,scope:d.scope||'',line_items:JSON.stringify(d.lineItems||[]),tax:parseFloat(d.tax)||0,discount:parseFloat(d.discount)||0,notes:d.notes||'',manual_total:(d.manualTotal!=null&&d.manualTotal!=='')?parseFloat(d.manualTotal):null,created:d.created||Date.now(),signature:d.signature||'',signature_name:d.signatureName||'',signature_date:d.signatureDate||null,lead_source:d.leadSource||'',activity:JSON.stringify(d.activity||[]),checklist:JSON.stringify(d.checklist||[]),extras:JSON.stringify(d.extras||[]),pm_id:d.pmId||'',arrival:d.arrival||'',source_est_id:d.sourceEstId||null,source_est_num:d.sourceEstNum||'',mat_cost:(d.matCost!=null&&d.matCost!=='')?parseFloat(d.matCost):null,labor_cost:(d.laborCost!=null&&d.laborCost!=='')?parseFloat(d.laborCost):null,other_cost:(d.otherCost!=null&&d.otherCost!=='')?parseFloat(d.otherCost):null,outcome:d.outcome||null,closed_date:d.closedDate||null,linked_job_id:d.linkedJobId||null,mat_order_data:JSON.stringify(moData),user_id:currentUser?.id||null,updated_at:new Date().toISOString()};
+  return {id:d.id,type:d.type||'estimate',status:d.status||'draft',num:d.num||'',client_name:d.clientName||'',client_contact:d.clientContact||'',client_addr:d.clientAddr||'',date:d.date||null,due_date:d.dueDate||null,scope:d.scope||'',line_items:JSON.stringify(d.lineItems||[]),tax:parseFloat(d.tax)||0,discount:parseFloat(d.discount)||0,notes:d.notes||'',manual_total:(d.manualTotal!=null&&d.manualTotal!=='')?parseFloat(d.manualTotal):null,created:d.created||Date.now(),signature:d.signature||'',signature_name:d.signatureName||'',signature_date:d.signatureDate||null,lead_source:d.leadSource||'',activity:JSON.stringify(d.activity||[]),checklist:JSON.stringify(d.checklist||[]),extras:JSON.stringify(d.extras||[]),pm_id:d.pmId||'',arrival:d.arrival||'',source_est_id:d.sourceEstId||null,source_est_num:d.sourceEstNum||'',mat_cost:(d.matCost!=null&&d.matCost!=='')?parseFloat(d.matCost):null,labor_cost:(d.laborCost!=null&&d.laborCost!=='')?parseFloat(d.laborCost):null,other_cost:(d.otherCost!=null&&d.otherCost!=='')?parseFloat(d.otherCost):null,outcome:d.outcome||null,closed_date:d.closedDate||null,linked_job_id:d.linkedJobId||null,mat_order_data:JSON.stringify(moData),user_id:currentUser?.id||null,updated_at:new Date().toISOString(),
+    // Only sent once the column actually exists (detected in loadDocsRemote),
+    // so deploying this before the migration can't 400 every document save.
+    ...(docsHaveCustomerId?{customer_id:d.customerId||null}:{})};
 };
 const dbToTmpl=r=>({id:r.id,name:r.name,scope:r.scope||'',lineItems:safeParseArr(r.line_items),tax:r.tax||0,discount:r.discount||0,notes:r.notes||'',created:r.created||Date.now()});
 const tmplToDb=t=>({id:t.id,name:t.name,scope:t.scope||'',line_items:JSON.stringify(t.lineItems||[]),tax:parseFloat(t.tax)||0,discount:parseFloat(t.discount)||0,notes:t.notes||'',created:t.created||Date.now(),user_id:currentUser?.id||null,updated_at:new Date().toISOString()});
@@ -8958,6 +9012,9 @@ function loadDocs(){
 async function loadDocsRemote(){
   try{
     const rows=await sb.get('docs');
+    // Detect the column from the payload instead of assuming the migration ran.
+    // Lets the app write customer_id once it exists, with no deploy ordering.
+    if(rows.length) docsHaveCustomerId=Object.prototype.hasOwnProperty.call(rows[0],'customer_id');
     const oldSigned=new Set(docs.filter(d=>d.signature).map(d=>d.id));
     docs=rows.map(dbToDoc);
     // Detect newly-signed docs
@@ -9182,6 +9239,162 @@ const DOC_TYPES={
 };
 function getDocTypeConfig(type){return DOC_TYPES[type]||DOC_TYPES.estimate;}
 
+// ── ESTIMATE FILTERS + JOB STATUS ─────────────────────────────
+// The flow the app models: a CUSTOMER is the spine. Leads hang off the
+// customer and carry the pipeline stage. Jobs (appointments) and documents
+// hang off the lead. So a document's "job status" is not a second status
+// stored on the doc — it is the stage of the lead the doc belongs to.
+// docLead() is the single place that resolves doc -> lead.
+let docDateRange='all';   // all | week | month | last30 | quarter | custom
+let docDateFrom='';
+let docDateTo='';
+let docStageFilter='all'; // all | <stage id> | nolead
+// Set from the real row shape at load time, so the app can write customer_id
+// once the column exists without a hard ordering dependency on the migration.
+let docsHaveCustomerId=false;
+
+// Resolve the lead a document belongs to, most reliable link first.
+function docLead(d){
+  if(!d) return null;
+  // 1. Explicit customer link (populated by the docs.customer_id backfill)
+  if(d.customerId){
+    const byCust=leads.filter(l=>l.customer_id===d.customerId);
+    if(byCust.length===1) return byCust[0];
+    if(byCust.length>1){
+      const exact=byCust.find(l=>l.estId===d.id);
+      if(exact) return exact;
+      return byCust.slice().sort((a,b)=>String(b.createdAt||'').localeCompare(String(a.createdAt||'')))[0];
+    }
+  }
+  // 2. A lead that points directly at this document
+  const byEst=leads.find(l=>l.estId===d.id);
+  if(byEst) return byEst;
+  // 3. Through a scheduled job linked to this document
+  const job=jobs.find(j=>j.linkedDocId===d.id&&j.leadId);
+  if(job){const l=leads.find(x=>x.id===job.leadId);if(l) return l;}
+  // 4. Through the parent estimate (invoices / change orders converted from one)
+  if(d.sourceEstId){
+    const viaParent=leads.find(l=>l.estId===d.sourceEstId);
+    if(viaParent) return viaParent;
+  }
+  // 5. Name match — last resort, and why the customer_id backfill matters
+  const nm=(d.clientName||'').trim().toLowerCase();
+  if(nm){
+    const byName=leads.find(l=>(l.name||'').trim().toLowerCase()===nm);
+    if(byName) return byName;
+  }
+  return null;
+}
+
+function docStageInfo(d){
+  const l=docLead(d);
+  if(!l) return null;
+  return STAGES.find(s=>s.id===l.stage)||STAGES[0];
+}
+function docStageBadge(d,dashedWhenNone){
+  const st=docStageInfo(d);
+  if(!st) return dashedWhenNone?`<span class="doc-stage-badge none">No customer link</span>`:'';
+  return `<span class="doc-stage-badge" style="background:${st.color}22;color:${st.color};border:1px solid ${st.color}55;">${esc(st.label)}</span>`;
+}
+
+// Local-date ISO. Deliberately not toISOString(), which converts to UTC and
+// would shift every boundary by a day for anyone west of Greenwich.
+function _isoLocal(dt){
+  return dt.getFullYear()+'-'+String(dt.getMonth()+1).padStart(2,'0')+'-'+String(dt.getDate()).padStart(2,'0');
+}
+function docRangeBounds(){
+  const now=new Date();
+  if(docDateRange==='custom') return [docDateFrom||'',docDateTo||''];
+  if(docDateRange==='week'){
+    const dow=now.getDay()||7;                      // Monday-start week
+    const mon=new Date(now); mon.setDate(now.getDate()-(dow-1));
+    const sun=new Date(mon); sun.setDate(mon.getDate()+6);
+    return [_isoLocal(mon),_isoLocal(sun)];
+  }
+  if(docDateRange==='month'){
+    return [_isoLocal(new Date(now.getFullYear(),now.getMonth(),1)),
+            _isoLocal(new Date(now.getFullYear(),now.getMonth()+1,0))];
+  }
+  if(docDateRange==='last30'){
+    const start=new Date(now); start.setDate(now.getDate()-29);
+    return [_isoLocal(start),_isoLocal(now)];
+  }
+  if(docDateRange==='quarter'){
+    const q=Math.floor(now.getMonth()/3);
+    return [_isoLocal(new Date(now.getFullYear(),q*3,1)),
+            _isoLocal(new Date(now.getFullYear(),q*3+3,0))];
+  }
+  return ['',''];
+}
+function docInDateRange(d){
+  if(docDateRange==='all') return true;
+  const ds=String(d.date||'').slice(0,10);
+  if(!ds) return false;                              // undated docs drop out of any range
+  const [from,to]=docRangeBounds();
+  if(from&&ds<from) return false;
+  if(to&&ds>to) return false;
+  return true;
+}
+function docMatchesStage(d){
+  if(docStageFilter==='all') return true;
+  const l=docLead(d);
+  if(docStageFilter==='nolead') return !l;
+  return !!l&&l.stage===docStageFilter;
+}
+function updateDocHotbarStage(d){
+  const wrap=document.getElementById('docHotbarStage');
+  const sep=document.getElementById('docHotbarStageSep');
+  const slot=document.getElementById('docLeadStage');
+  if(!wrap||!slot) return;
+  const st=docStageInfo(d);
+  if(!st){wrap.style.display='none';if(sep)sep.style.display='none';return;}
+  wrap.style.display='';if(sep)sep.style.display='';
+  slot.innerHTML=docStageBadge(d,false);
+}
+
+function docFiltersActive(){
+  return docDateRange!=='all'||docStageFilter!=='all';
+}
+
+function setDocDateRange(v){
+  docDateRange=v||'all';
+  // Keep the control in step when this is called from code, not just onchange.
+  const sel=document.getElementById('docDateRangeSel');
+  if(sel&&sel.value!==docDateRange) sel.value=docDateRange;
+  const wrap=document.getElementById('docCustomRange');
+  if(wrap) wrap.style.display=(v==='custom')?'inline-flex':'none';
+  renderDocList();
+}
+function setDocCustomRange(){
+  docDateFrom=document.getElementById('docDateFrom')?.value||'';
+  docDateTo=document.getElementById('docDateTo')?.value||'';
+  docDateRange='custom';
+  renderDocList();
+}
+function setDocStage(v){
+  docStageFilter=v||'all';
+  const sel=document.getElementById('docStageSel');
+  if(sel&&sel.value!==docStageFilter) sel.value=docStageFilter;
+  renderDocList();
+}
+function clearDocFilters(){
+  docDateRange='all';docDateFrom='';docDateTo='';docStageFilter='all';
+  const set=(id,v)=>{const el=document.getElementById(id);if(el)el.value=v;};
+  set('docDateRangeSel','all');set('docDateFrom','');set('docDateTo','');set('docStageSel','all');
+  const wrap=document.getElementById('docCustomRange');
+  if(wrap) wrap.style.display='none';
+  renderDocList();
+}
+// Build the stage dropdown from STAGES so it can never drift from the pipeline.
+function buildDocStageSelect(){
+  const sel=document.getElementById('docStageSel');
+  if(!sel||sel.dataset.built) return;
+  sel.dataset.built='1';
+  sel.innerHTML='<option value="all">Any status</option>'
+    +STAGES.map(s=>`<option value="${s.id}">${esc(s.label)}</option>`).join('')
+    +'<option value="nolead">— No customer link —</option>';
+}
+
 function filterDocs(f){
   docFilter=f;
   document.querySelectorAll('#estView .doc-toolbar .btn').forEach(b=>{b.style.borderColor='';b.style.color='';});
@@ -9207,7 +9420,10 @@ function renderDocList(){
   // it on every render would wipe the in-memory docs we just fetched from
   // Supabase. The init flow in loadAppData() handles the initial server load.
   const list=document.getElementById('docList');
+  buildDocStageSelect();
   let filtered=docFilter==='all'?docs:docs.filter(d=>d.type===docFilter);
+  // Date range + job-status (lead stage) filters
+  filtered=filtered.filter(d=>docInDateRange(d)&&docMatchesStage(d));
   // Apply text search across customer name + address + doc number.
   // Search is case-insensitive and matches partial strings.
   if(docSearchQuery){
@@ -9221,10 +9437,18 @@ function renderDocList(){
       return hay.includes(q);
     });
   }
+  const totalOfType=docFilter==='all'?docs.length:docs.filter(d=>d.type===docFilter).length;
+  const cntEl=document.getElementById('docFilterCount');
+  if(cntEl) cntEl.textContent=(docFiltersActive()||docSearchQuery)
+    ? `${filtered.length} of ${totalOfType}` : `${filtered.length}`;
+  const clrEl=document.getElementById('docClearFilters');
+  if(clrEl) clrEl.style.display=docFiltersActive()?'':'none';
   if(!filtered.length){
     const msg=docSearchQuery
       ? `No documents match "${esc(docSearchQuery)}".<br>Try a different search.`
-      : 'No documents yet.<br>Create your first estimate.';
+      : docFiltersActive()
+        ? 'Nothing in this date range or status.<br>Try widening the filters.'
+        : 'No documents yet.<br>Create your first estimate.';
     list.innerHTML=`<div class="doc-empty"><div class="doc-empty-icon">📄</div><div class="doc-empty-txt">${msg}</div></div>`;
     return;
   }
@@ -9272,7 +9496,7 @@ function renderDocList(){
         <div style="display:flex;align-items:flex-start;gap:0;flex:1">
           <div class="bulk-cb${isSelected?' checked':''}">${isSelected?'✓':''}</div>
           <div style="flex:1">
-            <div class="doc-card-num">${d.num||'—'} · <span class="doc-status ${d.status||'draft'}">${(d.status||'draft').toUpperCase()}</span>${signed?' <span class="doc-signed-badge">✓ SIGNED</span>':''}</div>
+            <div class="doc-card-num">${d.num||'—'} · <span class="doc-status ${d.status||'draft'}">${(d.status||'draft').toUpperCase()}</span>${signed?' <span class="doc-signed-badge">✓ SIGNED</span>':''} ${docStageBadge(d,false)}</div>
             <div class="doc-card-name">${esc(displayName)}</div>
             ${(d.clientAddr&&!isMo)?`<div class="doc-card-addr">📍 ${esc(d.clientAddr)}</div>`:''}
             ${isWo&&pm?`<div class="doc-card-addr">👷 PM: ${esc(pm.name)}</div>`:''}
@@ -9366,6 +9590,8 @@ function openDocEditor(id,newType){
   setProfitVal('docLaborCost',doc.laborCost);
   setProfitVal('docOtherCost',doc.otherCost);
   setDocTitle(doc.type,doc.num);
+  // Job status = the pipeline stage of the lead this document belongs to.
+  updateDocHotbarStage(doc);
   document.getElementById('docSendBtn').textContent=doc.type==='invoice'?'Mark Paid →':'Convert to Invoice →';
   // Show "Check QuickBooks" button only when editing an invoice. We don't
   // gate on "is QB connected" here — the click handler shows a clearer
