@@ -1751,16 +1751,12 @@ body:not(.role-owner):not(.role-manager) .role-financial-only{display:none!impor
   <!-- ═══ PIPELINE KANBAN ═══ -->
   <div class="view" id="vPipe">
     <div class="pipe-view">
-      <!-- Board tabs strip -->
-      <div class="pipe-boards" id="pipeBoards"></div>
-      <!-- Board header (title + meta + actions) -->
+      <!-- Board header: the columns are the job statuses, so no tabs, no
+           custom columns. Reworked 2026-09-03 to be driven by estimate stage. -->
       <div class="pipe-board-head">
         <div>
-          <span class="pipe-board-title" id="pipeBoardTitle">—</span>
+          <span class="pipe-board-title" id="pipeBoardTitle">Jobs</span>
           <span class="pipe-board-meta" id="pipeBoardMeta"></span>
-        </div>
-        <div class="pipe-board-actions">
-          <button class="btn btn-amber btn-sm" id="pipeAddColBtn" onclick="openPipeColDialog()">+ Add Column</button>
         </div>
       </div>
       <!-- Board canvas -->
@@ -1813,25 +1809,6 @@ body:not(.role-owner):not(.role-manager) .role-financial-only{display:none!impor
       </div>
     </div>
   </div>
-
-<!-- ═══ PIPELINE ADD-COLUMN MODAL ═══ -->
-<div class="pipe-modal" id="pipeColModal" style="display:none;">
-  <div class="pipe-modal-inner">
-    <div style="font-size:11px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--white);margin-bottom:14px;">Add Column</div>
-    <div style="margin-bottom:12px;">
-      <label style="font-size:9px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;display:block;">Column Name</label>
-      <input type="text" id="pipeColName" placeholder="e.g. Materials Ordered" autocomplete="off" style="width:100%;background:var(--steel);border:1px solid var(--iron);border-radius:4px;color:var(--white);font-family:inherit;font-size:13px;padding:9px 11px;outline:none;"/>
-    </div>
-    <div style="margin-bottom:18px;">
-      <label style="font-size:9px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--muted);margin-bottom:6px;display:block;">Color</label>
-      <div id="pipeColColorGrid" style="display:grid;grid-template-columns:repeat(8,1fr);gap:6px;"></div>
-    </div>
-    <div style="display:flex;gap:8px;justify-content:flex-end;">
-      <button class="btn btn-ghost btn-sm" onclick="closePipeColDialog()">Cancel</button>
-      <button class="btn btn-amber btn-sm" id="pipeColSaveBtn">Add Column</button>
-    </div>
-  </div>
-</div>
 
 <!-- ═══ DOCUMENT EDITOR (fullscreen fixed overlay, outside abody) ═══ -->
 <div class="doc-editor" id="docEditor">
@@ -4340,10 +4317,8 @@ let customerAddresses=[];  // {id, customer_id, kind, street, city, state, zip, 
 let tags=[];               // {id, name, color, kind, archived_at}
 let customerTags=[];       // {id, customer_id, tag_id}
 let estimateTags=[];       // {id, lead_id, tag_id}
-// Pipeline kanban system — see pipeline-phase1-schema.sql
-let pipelineBoards=[];     // {id, company_id, name, position}
-let pipelineColumns=[];    // {id, company_id, board_id, name, color, position}
-let pipelineCards=[];      // {id, company_id, board_id, column_id, position, lead_id, doc_id}
+// Pipeline kanban tables (pipeline_boards/columns/cards) retired 2026-09-03 —
+// the Pipeline view is now driven directly by estimate stage (docs.stage).
 let calView='week';       // 'week' | 'month' | 'year'
 let weekOffset=0;
 let monthYear=new Date().getFullYear(), monthMonth=new Date().getMonth();
@@ -5386,44 +5361,6 @@ async function loadEstimateTagsRemote(){
   }catch(e){console.error('loadEstimateTagsRemote:',e);return false;}
 }
 
-// ── PIPELINE KANBAN DATA HELPERS ─────────────────────────────
-function savePipelineBoard(b){setSS('syncing','Saving…');queueSave('pipeline_boards',b);}
-function savePipelineColumn(c){setSS('syncing','Saving…');queueSave('pipeline_columns',c);}
-function savePipelineCard(c){setSS('syncing','Saving…');queueSave('pipeline_cards',c);}
-
-async function delPipelineColumn(id){
-  pipelineColumns=pipelineColumns.filter(c=>c.id!==id);
-  // Any cards in this column become unassigned (column_id=null).
-  // The DB handles this via ON DELETE SET NULL, but we mirror locally for speed.
-  for(const card of pipelineCards){
-    if(card.column_id===id){card.column_id=null;savePipelineCard(card);}
-  }
-  try{await sb.del('pipeline_columns',id);}catch(e){console.error('delPipelineColumn:',e);}
-}
-async function delPipelineCard(id){
-  pipelineCards=pipelineCards.filter(c=>c.id!==id);
-  try{await sb.del('pipeline_cards',id);}catch(e){console.error('delPipelineCard:',e);}
-}
-
-async function loadPipelineBoardsRemote(){
-  try{
-    pipelineBoards=await sb.req('GET','pipeline_boards?order=position.asc');
-    return true;
-  }catch(e){console.error('loadPipelineBoardsRemote:',e);return false;}
-}
-async function loadPipelineColumnsRemote(){
-  try{
-    pipelineColumns=await sb.req('GET','pipeline_columns?order=position.asc');
-    return true;
-  }catch(e){console.error('loadPipelineColumnsRemote:',e);return false;}
-}
-async function loadPipelineCardsRemote(){
-  try{
-    pipelineCards=await sb.req('GET','pipeline_cards?order=position.asc');
-    return true;
-  }catch(e){console.error('loadPipelineCardsRemote:',e);return false;}
-}
-
 // Helpers used by render functions
 function leadsForCustomer(customerId){
   return leads.filter(l=>l.customer_id===customerId);
@@ -5528,8 +5465,7 @@ async function loadAppData(){
   loadDocs();loadTemplates();loadTasks();loadTeam();
   Promise.all([loadDocsRemote(),loadTemplatesRemote(),loadTasksRemote(),
                loadCustomersRemote(),loadCustomerAddressesRemote(),
-               loadTagsRemote(),loadCustomerTagsRemote(),loadEstimateTagsRemote(),
-               loadPipelineBoardsRemote(),loadPipelineColumnsRemote(),loadPipelineCardsRemote()
+               loadTagsRemote(),loadCustomerTagsRemote(),loadEstimateTagsRemote()
   ]).then(([dOk,tOk,tasksOk])=>{
     // Always re-render the estimates list when docs come back from the server,
     // even if the user isn't on the Estimates view yet. switchMain('est') won't
@@ -5538,6 +5474,9 @@ async function loadAppData(){
     // they refresh. Rendering unconditionally is cheap and avoids that bug.
     if(dOk&&typeof renderDocList==='function'){
       try{renderDocList();}catch(e){console.error('renderDocList failed:',e);}
+    }
+    if(dOk&&mainView==='pipe'&&typeof renderPipeline==='function'){
+      try{renderPipeline();}catch(e){console.error('renderPipeline failed:',e);}
     }
     if(tasksOk&&mainView==='tasks'&&typeof renderTaskList==='function')renderTaskList();
     if(tasksOk) updateTaskBadge();
@@ -5567,14 +5506,14 @@ function switchMain(v){
   document.getElementById(viewMap[v]||'vSched').classList.add('active');
   ['bnSched','bnCRM','bnEst','bnTasks','bnPipe','bnMsg','bnMat'].forEach(id=>{const el=document.getElementById(id);if(el)el.classList.toggle('active',id==='bn'+v.charAt(0).toUpperCase()+v.slice(1));});
   ['dtSched','dtCRM','dtEst','dtTasks','dtPipe','dtMsg','dtMat'].forEach(id=>{const el=document.getElementById(id);if(el)el.classList.toggle('active',id==='dt'+v.charAt(0).toUpperCase()+v.slice(1));});
-  const lblMap={sched:'New Job',crm:'New Customer',est:'New Estimate',tasks:'New Task',pipe:'New Column',msg:'↻ Refresh',mat:'Search'};
+  const lblMap={sched:'New Job',crm:'New Customer',est:'New Estimate',tasks:'New Task',pipe:'New Estimate',msg:'↻ Refresh',mat:'Search'};
   document.getElementById('daddLbl').textContent=lblMap[v]||'New';
   document.getElementById('daddBtn').onclick=
     v==='sched'?()=>openJobMov('backlog'):
     v==='crm'?()=>openCustomerMov():
     v==='est'?()=>openDocEditor():
     v==='tasks'?()=>openTaskMov():
-    v==='pipe'?()=>openPipeColDialog():
+    v==='pipe'?()=>openDocEditor():
     v==='msg'?()=>renderMsgInbox():
     ()=>document.getElementById('matSearch')?.focus();
   if(v==='crm')renderCustomers();
@@ -5590,7 +5529,7 @@ function handleFab(){
   else if(mainView==='crm')openCustomerMov();
   else if(mainView==='est')openDocEditor();
   else if(mainView==='tasks')openTaskMov();
-  else if(mainView==='pipe')openPipeColDialog();
+  else if(mainView==='pipe')openDocEditor();
 }
 
 // ── CAL VIEW SWITCH ──────────────────────────────────────────
@@ -5992,246 +5931,155 @@ function renderCRM(){
 }
 
 // ══════════════════════════════════════════════════════════════
-// PIPELINE KANBAN UI
+// PIPELINE — STAGE-DRIVEN JOB BOARD (reworked 2026-09-03)
+// The columns ARE the job statuses. One card per estimate ("job"), placed by
+// the estimate's own stage. A change order rides inside its parent estimate's
+// card until someone gives it its own stage — then it gets its own card.
+// Leads with no estimate yet show as lead cards in their CRM stage column and
+// drop off as soon as an estimate exists for them. Dragging a card writes the
+// stage through setDocJobStage / moveLead — the same single write paths used
+// everywhere else, so the activity log and the CRM stay in step.
+// The old free-form kanban (pipeline_boards/columns/cards) is retired: its
+// tables are untouched in the DB, the app just no longer reads them.
 // ══════════════════════════════════════════════════════════════
-let activePipeBoardId=null;        // which board tab is currently visible
-let pipeDragCardId=null;           // card being dragged
-let pipeDragSourceColId=null;      // 'unassigned' or column id
-let pipeDragColId=null;            // column being dragged (for column reorder)
-let pipePendingCol={color:'#3b82f6'};  // for the add-column dialog
+let pipeDragKind=null;  // 'doc' | 'lead' while a card is mid-drag
+let pipeDragId=null;
 
-const PIPE_COLORS=[
-  '#3b82f6','#22c55e','#f59e0b','#a855f7',
-  '#14b8a6','#ec4899','#ef4444','#f97316',
-];
+// Bucket every card by stage: {none:[...], new:[...], contact:[...], ...}
+// card = {kind:'doc'|'lead', obj}
+function pipelineBuckets(){
+  const buckets={none:[]};
+  STAGES.forEach(st=>buckets[st.id]=[]);
+  const put=(stage,card)=>{(buckets[stage]||buckets.none).push(card);};
+  const coveredLeads=new Set();
+  for(const d of docs){
+    if(d.type==='estimate'){
+      const l=docLead(d); if(l) coveredLeads.add(l.id);
+      put(docStageOf(d)||'none',{kind:'doc',obj:d});
+    } else if(d.type==='changeorder'&&d.stage){
+      put(d.stage,{kind:'doc',obj:d});
+    }
+  }
+  for(const l of leads){
+    if(coveredLeads.has(l.id)) continue;
+    put(l.stage||'new',{kind:'lead',obj:l});
+  }
+  return buckets;
+}
+
+function pipeCardValue(card){
+  // calcDocTotal returns {sub,disc,tax,grand} — take grand, guard NaN so one
+  // bad doc can't wipe the board total.
+  let v=0;
+  if(card.kind==='doc'){
+    try{const t=calcDocTotal(card.obj);v=Number(t&&typeof t==='object'?t.grand:t);}catch{v=0;}
+  }else{
+    v=Number(card.obj.value||0);
+  }
+  return isFinite(v)?v:0;
+}
 
 function renderPipeline(){
-  // Pick active board: prior selection, else the first board
-  if(!activePipeBoardId || !pipelineBoards.find(b=>b.id===activePipeBoardId)){
-    activePipeBoardId=pipelineBoards[0]?.id||null;
-  }
-  renderPipeBoardTabs();
-  renderPipeBoard();
-}
-
-function renderPipeBoardTabs(){
-  const wrap=document.getElementById('pipeBoards');
-  if(!wrap) return;
-  wrap.innerHTML='';
-  if(pipelineBoards.length===0){
-    wrap.innerHTML='<div style="padding:14px 18px;color:var(--muted);font-size:11px;letter-spacing:.12em;text-transform:uppercase">No boards. Ask owner to seed pipeline_boards.</div>';
-    return;
-  }
-  for(const b of pipelineBoards){
-    const cnt=pipelineCards.filter(c=>c.board_id===b.id).length;
-    const btn=document.createElement('button');
-    btn.className='pipe-board-tab'+(activePipeBoardId===b.id?' active':'');
-    btn.innerHTML=`${esc(b.name)} <span class="pipe-board-tab-cnt">${cnt}</span>`;
-    btn.onclick=()=>{activePipeBoardId=b.id;renderPipeline();};
-    wrap.appendChild(btn);
-  }
-}
-
-function renderPipeBoard(){
-  const board=pipelineBoards.find(b=>b.id===activePipeBoardId);
   const surf=document.getElementById('pipeBoard');
   if(!surf) return;
-  if(!board){
-    surf.innerHTML='';
-    document.getElementById('pipeBoardTitle').textContent='—';
-    document.getElementById('pipeBoardMeta').textContent='';
-    return;
-  }
-  const cols=pipelineColumns.filter(c=>c.board_id===board.id).sort((a,b)=>(a.position||0)-(b.position||0));
-  const cards=pipelineCards.filter(c=>c.board_id===board.id);
-  const unassigned=cards.filter(c=>!c.column_id);
-  document.getElementById('pipeBoardTitle').textContent=board.name;
-  document.getElementById('pipeBoardMeta').textContent=
-    `· ${cols.length} ${cols.length===1?'column':'columns'} · ${cards.length} ${cards.length===1?'card':'cards'}`;
-
+  const buckets=pipelineBuckets();
+  let total=0,count=0;
+  Object.values(buckets).forEach(arr=>arr.forEach(c=>{count++;total+=pipeCardValue(c);}));
+  const meta=document.getElementById('pipeBoardMeta');
+  if(meta)meta.textContent=`· ${count} ${count===1?'card':'cards'}${total>0?` · $${Math.round(total).toLocaleString()}`:''}`;
   surf.innerHTML='';
-  // Always render the Unassigned column on the left
-  surf.appendChild(buildPipeColumnEl({
-    id:'unassigned',
-    name:'UNASSIGNED',
-    color:'#64748b',
-    isUnassigned:true,
-  }, unassigned));
-  // Then each user-defined column in order
-  for(const col of cols){
-    const colCards=cards.filter(c=>c.column_id===col.id).sort((a,b)=>(a.position||0)-(b.position||0));
-    surf.appendChild(buildPipeColumnEl(col, colCards));
-  }
-  // Add-column tail button
-  const addBtn=document.createElement('button');
-  addBtn.className='pipe-add-col-btn';
-  addBtn.textContent='+ Add Column';
-  addBtn.onclick=openPipeColDialog;
-  surf.appendChild(addBtn);
-
+  // "No status" column appears only when something actually lacks a stage.
+  // It is not a drop target — you place a job by dragging it INTO a stage.
+  if(buckets.none.length) surf.appendChild(buildPipeStageCol({id:'none',label:'No status',color:'#64748b'},buckets.none,false));
+  for(const st of STAGES) surf.appendChild(buildPipeStageCol(st,buckets[st.id],true));
   wirePipeDragDrop();
 }
 
-function buildPipeColumnEl(col, cardsInCol){
+function buildPipeStageCol(st,cards,droppable){
   const wrap=document.createElement('div');
   wrap.className='pipe-col';
-  wrap.style.setProperty('--col-color', col.color||'#3b82f6');
-  // Mark which column this is so column-drag handlers can identify it.
-  // Skip drag wiring for the Unassigned system column.
-  if(!col.isUnassigned){
-    wrap.dataset.colId=col.id;
-    wrap.classList.add('pipe-col-draggable');
-  } else {
-    wrap.classList.add('pipe-col-unassigned');
-  }
-  const totalVal=cardsInCol.reduce((s,c)=>{
-    const doc=docs.find(d=>d.id===c.doc_id);
-    const lead=leads.find(l=>l.id===c.lead_id);
-    const v=doc?Number(calcDocTotal?.(doc)||0):Number(lead?.value||0);
-    return s+v;
-  },0);
+  wrap.style.setProperty('--col-color',st.color);
+  wrap.dataset.stage=st.id;
+  if(droppable) wrap.dataset.drop='1';
+  const totalVal=cards.reduce((s,c)=>s+pipeCardValue(c),0);
   const valStr=totalVal>0?` · $${(totalVal/1000).toFixed(1)}k`:'';
-  const isUnassigned=!!col.isUnassigned;
-  // The header is the drag handle for the COLUMN itself (only when not unassigned).
-  // We make the header element draggable, NOT the whole column, so card drag
-  // from inside the column body still works without conflict.
-  const headerDragAttr=isUnassigned?'':' draggable="true" data-col-drag-handle="1"';
   wrap.innerHTML=`
-    <div class="pipe-col-head"${headerDragAttr}>
-      <div style="flex:1;min-width:0">
-        ${isUnassigned
-          ? `<div class="pipe-col-name">${esc(col.name)}</div>`
-          : `<input type="text" class="pipe-col-name pipe-col-name-edit" value="${esc(col.name)}" data-col-id="${col.id}"/>`}
-      </div>
+    <div class="pipe-col-head" style="border-top:2px solid ${st.color};">
+      <div style="flex:1;min-width:0"><div class="pipe-col-name" style="color:${st.color}">${esc(st.label)}</div></div>
       <div class="pipe-col-meta">
-        <span class="pipe-col-cnt">${cardsInCol.length}</span>
+        <span class="pipe-col-cnt">${cards.length}</span>
         ${valStr?`<span>${esc(valStr)}</span>`:''}
-        ${isUnassigned?'':`<button class="pipe-col-menu" data-col-id="${col.id}" title="Delete column">×</button>`}
       </div>
     </div>
-    <div class="pipe-cards" data-col-id="${isUnassigned?'unassigned':col.id}">
-      ${cardsInCol.map(c=>renderPipeCard(c)).join('')}
-    </div>
-  `;
+    <div class="pipe-cards" data-stage="${st.id}">
+      ${cards.map(renderPipeCard).join('')}
+    </div>`;
   return wrap;
 }
 
 function renderPipeCard(card){
-  const lead=leads.find(l=>l.id===card.lead_id);
-  const doc=docs.find(d=>d.id===card.doc_id);
-  const name=esc(lead?.name||doc?.clientName||'(no name)');
-  const addr=esc(lead?.address||doc?.clientAddr||'');
-  const val=(typeof calcDocTotal==='function' && doc)?calcDocTotal(doc):Number(lead?.value||0);
-  const valStr=val?`$${Math.round(val).toLocaleString()}`:'';
-  // Card stripe color: lead's color, or the column's color, fallback blue
-  const color=lead?.color
-    ? (COLORS.find(c=>c.id===lead.color)?.hex||'#3b82f6')
-    : '#3b82f6';
-  const shortId=card.id.slice(-4).toUpperCase();
-  // Tags from estimate_tags
-  const tagChips=(typeof tagsForEstimate==='function' && lead
-    ? tagsForEstimate(lead.id)
-    : []).slice(0,3).map(t=>
-      `<span class="pipe-card-tag" style="color:${esc(t.color||'#9ca3af')}">${esc(t.name)}</span>`
-    ).join('');
+  if(card.kind==='lead'){
+    const l=card.obj;
+    const val=Number(l.value||0);
+    const color=(COLORS.find(c=>c.id===l.color)||{}).hex||'#64748b';
+    return `
+      <div class="pipe-card" draggable="true" data-kind="lead" data-id="${esc(l.id)}" style="--card-color:${color}" onclick="openLeadMov('${esc(l.id)}')">
+        <div class="pipe-card-stripe">LEAD</div>
+        <div class="pipe-card-body">
+          <div class="pipe-card-name">${esc(l.name||'(no name)')}</div>
+          ${l.address?`<div class="pipe-card-addr">${esc(l.address)}</div>`:''}
+          <div class="pipe-card-row">
+            <div class="pipe-card-tags"><span class="pipe-card-tag" style="color:#94a3b8">No estimate yet</span></div>
+            ${val?`<div class="pipe-card-val">$${Math.round(val).toLocaleString()}</div>`:''}
+          </div>
+        </div>
+      </div>`;
+  }
+  const d=card.obj;
+  const isCO=d.type==='changeorder';
+  const val=pipeCardValue(card);
+  const st=docStageInfo(d);
+  const color=st?st.color:'#3b82f6';
+  // Only COs still riding along (no stage of their own) count in the chip —
+  // a CO that's been moved to its own column already shows as its own card.
+  const cos=isCO?[]:docs.filter(x=>x.type==='changeorder'&&!x.stage&&(docParent(x)||{}).id===d.id);
+  const chips=[];
+  if(d.signature) chips.push('<span class="pipe-card-tag" style="color:#22c55e">✓ Signed</span>');
+  if(cos.length) chips.push(`<span class="pipe-card-tag" style="color:#f59e0b">${cos.length} CO</span>`);
+  if(isCO) chips.push('<span class="pipe-card-tag" style="color:#f59e0b">Change order</span>');
+  const stripe=(d.num||'DOC').replace(/^([A-Z]+)-?0*/,'$1 ');
   return `
-    <div class="pipe-card" draggable="true" data-card-id="${card.id}" style="--card-color:${color}" onclick="openPipeCard('${esc(card.id)}')">
-      <div class="pipe-card-stripe">${shortId}</div>
+    <div class="pipe-card" draggable="true" data-kind="doc" data-id="${esc(d.id)}" style="--card-color:${color}" onclick="openDocEditor('${esc(d.id)}')">
+      <div class="pipe-card-stripe">${esc(stripe)}</div>
       <div class="pipe-card-body">
-        <div class="pipe-card-name">${name}</div>
-        ${addr?`<div class="pipe-card-addr">${addr}</div>`:''}
+        <div class="pipe-card-name">${esc(d.clientName||'(no name)')}</div>
+        ${d.clientAddr?`<div class="pipe-card-addr">${esc(d.clientAddr)}</div>`:''}
         <div class="pipe-card-row">
-          <div class="pipe-card-tags">${tagChips}</div>
-          ${valStr?`<div class="pipe-card-val">${valStr}</div>`:''}
+          <div class="pipe-card-tags">${chips.join('')}</div>
+          ${val?`<div class="pipe-card-val">$${Math.round(val).toLocaleString()}</div>`:''}
         </div>
       </div>
     </div>`;
 }
 
-// Click on a card → open the linked doc, or fall back to lead modal
-function openPipeCard(cardId){
-  const card=pipelineCards.find(c=>c.id===cardId);
-  if(!card) return;
-  if(card.doc_id && typeof openDocEditor==='function'){
-    openDocEditor(card.doc_id);
-  } else if(card.lead_id && typeof openLeadMov==='function'){
-    openLeadMov(card.lead_id);
-  }
-}
-
 function wirePipeDragDrop(){
-  // ── COLUMN DRAG (reorder columns within a board) ───────────────
-  // The column header (with data-col-drag-handle) is the drag handle.
-  // We intentionally exclude the Unassigned column from column drag.
-  document.querySelectorAll('#pipeBoard [data-col-drag-handle]').forEach(headEl=>{
-    headEl.addEventListener('dragstart',e=>{
-      // Don't fire column-drag if the user is dragging the rename input itself
-      if(e.target.tagName==='INPUT') return;
-      const colEl=headEl.closest('.pipe-col');
-      pipeDragColId=colEl?.dataset.colId||null;
-      pipeDragCardId=null;
-      pipeDragSourceColId=null;
-      e.dataTransfer.effectAllowed='move';
-      try{e.dataTransfer.setData('text/plain','col:'+pipeDragColId);}catch(_){}
-      if(colEl) colEl.classList.add('dragging-col');
-    });
-    headEl.addEventListener('dragend',()=>{
-      document.querySelectorAll('#pipeBoard .pipe-col.dragging-col').forEach(c=>c.classList.remove('dragging-col'));
-      document.querySelectorAll('#pipeBoard .pipe-col.drop-target').forEach(c=>c.classList.remove('drop-target'));
-      pipeDragColId=null;
-    });
-  });
-  // Column drop zones — each draggable column itself accepts drops.
-  // The Unassigned column does NOT accept column drops (always stays leftmost).
-  document.querySelectorAll('#pipeBoard .pipe-col-draggable').forEach(colEl=>{
-    colEl.addEventListener('dragover',e=>{
-      if(!pipeDragColId) return;
-      // Skip if dragging a column over itself
-      if(colEl.dataset.colId===pipeDragColId) return;
-      e.preventDefault();
-      e.dataTransfer.dropEffect='move';
-      colEl.classList.add('drop-target');
-    });
-    colEl.addEventListener('dragleave',e=>{
-      if(e.target===colEl || !colEl.contains(e.relatedTarget)){
-        colEl.classList.remove('drop-target');
-      }
-    });
-    colEl.addEventListener('drop',e=>{
-      if(!pipeDragColId) return;
-      e.preventDefault();
-      e.stopPropagation();
-      colEl.classList.remove('drop-target');
-      const dstColId=colEl.dataset.colId;
-      if(dstColId===pipeDragColId) return;
-      reorderPipeColumns(pipeDragColId, dstColId);
-    });
-  });
-
-  // ── CARD DRAG (existing behavior — unchanged) ──────────────────
   document.querySelectorAll('#pipeBoard .pipe-card').forEach(el=>{
     el.addEventListener('dragstart',e=>{
-      pipeDragCardId=el.dataset.cardId;
-      const colEl=el.closest('.pipe-cards');
-      pipeDragSourceColId=colEl?colEl.dataset.colId:null;
-      pipeDragColId=null; // ensure we're not in column-drag mode
+      pipeDragKind=el.dataset.kind;
+      pipeDragId=el.dataset.id;
       el.classList.add('dragging');
       e.dataTransfer.effectAllowed='move';
-      try{e.dataTransfer.setData('text/plain',pipeDragCardId);}catch(_){}
-      // Important: stop the event from bubbling to the column header dragstart
-      e.stopPropagation();
+      try{e.dataTransfer.setData('text/plain',pipeDragId);}catch(_){}
     });
     el.addEventListener('dragend',()=>{
       el.classList.remove('dragging');
-      document.querySelectorAll('#pipeBoard .pipe-cards.drag-over').forEach(c=>c.classList.remove('drag-over'));
-      pipeDragCardId=null;pipeDragSourceColId=null;
+      document.querySelectorAll('#pipeBoard .pipe-cards.drag-over').forEach(z=>z.classList.remove('drag-over'));
+      pipeDragKind=null;pipeDragId=null;
     });
   });
-  // Make columns drop zones for cards
-  document.querySelectorAll('#pipeBoard .pipe-cards').forEach(zone=>{
+  document.querySelectorAll('#pipeBoard .pipe-col[data-drop] .pipe-cards').forEach(zone=>{
     zone.addEventListener('dragover',e=>{
-      // Don't fire card-drop if we're in column-drag mode
-      if(pipeDragColId) return;
+      if(!pipeDragId) return;
       e.preventDefault();
       e.dataTransfer.dropEffect='move';
       zone.classList.add('drag-over');
@@ -6239,170 +6087,22 @@ function wirePipeDragDrop(){
     zone.addEventListener('dragleave',e=>{
       if(e.target===zone) zone.classList.remove('drag-over');
     });
-    zone.addEventListener('drop',e=>{
-      if(pipeDragColId) return; // skip; column drop handler owns this
+    zone.addEventListener('drop',async e=>{
       e.preventDefault();
       zone.classList.remove('drag-over');
-      if(!pipeDragCardId) return;
-      const dstColId=zone.dataset.colId;
-      movePipeCard(pipeDragCardId, dstColId, e.clientY);
-    });
-  });
-  // Column name edits
-  document.querySelectorAll('.pipe-col-name-edit').forEach(inp=>{
-    inp.addEventListener('change',()=>{
-      const col=pipelineColumns.find(c=>c.id===inp.dataset.colId);
-      if(col){col.name=inp.value.trim()||'Untitled';col.updated_at=new Date().toISOString();savePipelineColumn(col);}
-    });
-    // Prevent input clicks from triggering column drag
-    inp.addEventListener('mousedown',e=>e.stopPropagation());
-  });
-  // Column delete
-  document.querySelectorAll('.pipe-col-menu').forEach(btn=>{
-    btn.addEventListener('click',async()=>{
-      const col=pipelineColumns.find(c=>c.id===btn.dataset.colId);
-      if(!col) return;
-      const cardsInCol=pipelineCards.filter(c=>c.column_id===col.id).length;
-      const msg=cardsInCol
-        ? `Delete column "${col.name}"? Its ${cardsInCol} card${cardsInCol>1?'s':''} will move to Unassigned.`
-        : `Delete column "${col.name}"?`;
-      if(!confirm(msg)) return;
-      await delPipelineColumn(col.id);
+      if(!pipeDragId) return;
+      const kind=pipeDragKind,id=pipeDragId,ns=zone.dataset.stage;
+      pipeDragKind=null;pipeDragId=null;
+      try{
+        if(kind==='doc') await setDocJobStage(id,ns);
+        else if(kind==='lead') await moveLead(id,ns);
+      }catch(err){console.error('pipeline drop:',err);}
       renderPipeline();
     });
   });
 }
-
-// Reorder columns within the active board.
-// Strategy: take dragged col out of its slot, insert before the drop target.
-function reorderPipeColumns(draggedId, targetId){
-  const boardCols=pipelineColumns
-    .filter(c=>c.board_id===activePipeBoardId)
-    .sort((a,b)=>(a.position||0)-(b.position||0));
-  const dragIdx=boardCols.findIndex(c=>c.id===draggedId);
-  const targetIdx=boardCols.findIndex(c=>c.id===targetId);
-  if(dragIdx<0||targetIdx<0) return;
-  // Remove dragged from list, then insert it BEFORE targetIdx
-  // (accounting for the removal index shift if dragIdx < targetIdx)
-  const [dragged]=boardCols.splice(dragIdx,1);
-  const adjustedTarget=dragIdx<targetIdx ? targetIdx-1 : targetIdx;
-  boardCols.splice(adjustedTarget,0,dragged);
-  // Persist new positions
-  boardCols.forEach((c,i)=>{
-    const newPos=i+1;
-    if(c.position!==newPos){
-      c.position=newPos;
-      c.updated_at=new Date().toISOString();
-      savePipelineColumn(c);
-    }
-  });
-  renderPipeline();
-}
-
-function movePipeCard(cardId, dstColId, dropY){
-  const card=pipelineCards.find(c=>c.id===cardId);
-  if(!card) return;
-  const newColumnId=dstColId==='unassigned'?null:dstColId;
-  card.column_id=newColumnId;
-  card.updated_at=new Date().toISOString();
-
-  // Recompute position based on drop Y relative to existing cards in target
-  const zone=document.querySelector(`#pipeBoard .pipe-cards[data-col-id="${dstColId}"]`);
-  if(zone){
-    const otherCards=Array.from(zone.querySelectorAll('.pipe-card'))
-      .filter(el=>el.dataset.cardId!==cardId);
-    let insertAtIdx=otherCards.length;
-    for(let i=0;i<otherCards.length;i++){
-      const r=otherCards[i].getBoundingClientRect();
-      if(dropY < r.top + r.height/2){insertAtIdx=i;break;}
-    }
-    // Update positions of all cards in this column
-    const dstCards=pipelineCards
-      .filter(c=>c.board_id===card.board_id && c.column_id===newColumnId && c.id!==cardId)
-      .sort((a,b)=>(a.position||0)-(b.position||0));
-    dstCards.splice(insertAtIdx,0,card);
-    dstCards.forEach((c,i)=>{
-      if(c.position!==i+1){
-        c.position=i+1;
-        savePipelineCard(c);
-      }
-    });
-  }
-  savePipelineCard(card);
-  renderPipeline();
-}
-
-function openPipeColDialog(){
-  // Only meaningful if we're on the pipeline view and have a board
-  if(mainView!=='pipe' || !activePipeBoardId){
-    if(!activePipeBoardId){alert('No pipeline board found. Run the pipeline schema migration first.');return;}
-  }
-  document.getElementById('pipeColModal').style.display='flex';
-  document.getElementById('pipeColName').value='';
-  pipePendingCol={color:PIPE_COLORS[0]};
-  const grid=document.getElementById('pipeColColorGrid');
-  grid.innerHTML='';
-  PIPE_COLORS.forEach((color,i)=>{
-    const sw=document.createElement('div');
-    sw.style.aspectRatio='1';
-    sw.style.borderRadius='4px';
-    sw.style.background=color;
-    sw.style.cursor='pointer';
-    sw.style.border=i===0?'2px solid var(--white)':'2px solid transparent';
-    sw.onclick=()=>{
-      grid.querySelectorAll('div').forEach(d=>d.style.border='2px solid transparent');
-      sw.style.border='2px solid var(--white)';
-      pipePendingCol.color=color;
-    };
-    grid.appendChild(sw);
-  });
-  setTimeout(()=>document.getElementById('pipeColName').focus(),60);
-}
-function closePipeColDialog(){
-  document.getElementById('pipeColModal').style.display='none';
-}
-// Wire add-column save after DOM is ready
-function _wirePipeColSave(){
-  const btn=document.getElementById('pipeColSaveBtn');
-  if(!btn || btn.dataset.wired) return;
-  btn.dataset.wired='1';
-  btn.addEventListener('click',()=>{
-    const name=document.getElementById('pipeColName').value.trim();
-    if(!name){alert('Column name required.');return;}
-    if(!activePipeBoardId){alert('No active board.');return;}
-    const existingCount=pipelineColumns.filter(c=>c.board_id===activePipeBoardId).length;
-    const newCol={
-      id:'pcl_'+Math.random().toString(36).slice(2,9)+Date.now().toString(36).slice(-4),
-      company_id:currentCompanyId,
-      board_id:activePipeBoardId,
-      name,
-      color:pipePendingCol.color||'#3b82f6',
-      position:existingCount+1,
-      created_at:new Date().toISOString(),
-      updated_at:new Date().toISOString(),
-    };
-    pipelineColumns.push(newCol);
-    savePipelineColumn(newCol);
-    closePipeColDialog();
-    renderPipeline();
-  });
-  const nameInp=document.getElementById('pipeColName');
-  if(nameInp){
-    nameInp.addEventListener('keydown',e=>{
-      if(e.key==='Enter') btn.click();
-      if(e.key==='Escape') closePipeColDialog();
-    });
-  }
-}
-// Wire on DOMContentLoaded — defensive in case this script section runs later
-if(document.readyState==='loading'){
-  document.addEventListener('DOMContentLoaded', _wirePipeColSave);
-} else {
-  _wirePipeColSave();
-}
-
 // ══════════════════════════════════════════════════════════════
-// END PIPELINE KANBAN UI
+// END PIPELINE
 // ══════════════════════════════════════════════════════════════
 
 // ══════════════════════════════════════════════════════════════
@@ -9139,10 +8839,20 @@ async function loadDocsRemote(){
       docsHaveCustomerId=Object.prototype.hasOwnProperty.call(rows[0],'customer_id');
       docsHaveStage=Object.prototype.hasOwnProperty.call(rows[0],'stage');
     }
-    const oldSigned=new Set(docs.filter(d=>d.signature).map(d=>d.id));
+    // Signed-doc ids we've already notified about, persisted across page
+    // loads. Without this, every boot started from an empty `docs` array,
+    // so EVERY signed doc counted as "newly signed" — the green toast fired
+    // with ancient signatures on every load, and duplicate "Signed by ..."
+    // lines piled up in the activity logs.
+    const SEEN_KEY='seen_signed_ids_v1';
+    let seen=null;
+    try{const raw=localStorage.getItem(SEEN_KEY);if(raw!=null)seen=new Set(JSON.parse(raw));}catch{}
+    const firstRun=(seen===null);           // key absent → seed silently, no toast
+    if(firstRun)seen=new Set();
     docs=rows.map(dbToDoc);
-    // Detect newly-signed docs
-    const newlySigned=docs.filter(d=>d.signature&&!oldSigned.has(d.id));
+    const signedNow=docs.filter(d=>d.signature);
+    // Detect newly-signed docs (skip announcements on the seeding run)
+    const newlySigned=firstRun?[]:signedNow.filter(d=>!seen.has(d.id));
     if(newlySigned.length){
       newlySigned.forEach(d=>{
         try{logDocActivity(d.id,`Signed by ${d.signatureName||'customer'}`);}catch{}
@@ -9150,6 +8860,9 @@ async function loadDocsRemote(){
       // Show a toast
       try{showSigToast(newlySigned);}catch{}
     }
+    // Remember every currently-signed id (ids only — a few KB at most)
+    signedNow.forEach(d=>seen.add(d.id));
+    try{localStorage.setItem(SEEN_KEY,JSON.stringify([...seen]));}catch{}
     return true;
   }catch(e){console.error('docs load failed:',e.message||e);return false;}
 }
@@ -9545,6 +9258,7 @@ async function setDocJobStage(docId,ns){
   saveDocs();saveDocSync(d);
   try{ await syncLeadStageFromDocs(docLead(d)); }catch(e){ console.error('lead stage sync:',e); }
   renderDocList();
+  if(mainView==='pipe'){try{renderPipeline();}catch(e){console.error(e);}}
   if(editDocId===docId) updateDocHotbarStage(d);
 }
 
