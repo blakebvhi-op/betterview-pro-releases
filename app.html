@@ -900,6 +900,8 @@ select.doc-finput option{background:var(--steel-mid);}
 .doc-total-val{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:1px;}
 
 /* ── MATERIALS ── */
+.mat-creds-btn{background:var(--steel-light);border:1px solid var(--iron);color:var(--muted);border-radius:7px;padding:7px 12px;font-size:11px;cursor:pointer;white-space:nowrap;flex-shrink:0;}
+.mat-creds-btn:hover{border-color:var(--amber);color:var(--amber);}
 .mat-view{display:flex;flex-direction:column;height:100%;overflow:hidden;}
 .mat-toolbar{display:flex;align-items:center;gap:8px;padding:8px 14px;background:var(--steel-mid);border-bottom:1px solid var(--iron);flex-shrink:0;flex-wrap:wrap;}
 .mat-search-wrap{display:flex;flex:1;min-width:180px;gap:6px;}
@@ -1439,6 +1441,7 @@ body:not(.role-owner):not(.role-manager) .role-financial-only{display:none!impor
       <button class="dtab" id="dtEst" onclick="switchMain('est')">📄 ESTIMATES</button>
       <button class="dtab" id="dtPipe" onclick="switchMain('pipe')">📋 PIPELINE</button>
       <button class="dtab" id="dtTasks" onclick="switchMain('tasks')">✓ TASKS <span class="dbadge" id="dtTasksBadge">0</span></button>
+      <button class="dtab" id="dtMat" onclick="switchMain('mat')">🏗 MATERIALS</button>
     </div>
     <button class="dadd btn-amber" id="daddBtn" style="border-radius:6px;font-size:12px;padding:6px 12px;">
       <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -1469,6 +1472,9 @@ body:not(.role-owner):not(.role-manager) .role-financial-only{display:none!impor
   <button class="bnbtn" id="bnTasks" onclick="switchMain('tasks')">
     <div class="bnicon">✓</div><div class="bnlbl">TASKS</div>
     <div class="bnbadge" id="bnTasksBadge"></div>
+  </button>
+  <button class="bnbtn" id="bnMat" onclick="switchMain('mat')">
+    <div class="bnicon">🏗</div><div class="bnlbl">MATERIALS</div>
   </button>
 </div>
 
@@ -1507,6 +1513,11 @@ body:not(.role-owner):not(.role-manager) .role-financial-only{display:none!impor
     </div>
     <!-- Sub-filter pills (rebuilt by JS for the active tab) -->
     <div class="sched-sub-filter" id="schedSubFilter"></div>
+    <!-- Crew filter. renderAssigneeFilters() has appended buttons into
+         #apptFilterBar since Phase 2.5, but the container itself was lost —
+         the whole filter-schedule-by-crew-member feature silently never
+         rendered. -->
+    <div class="sched-sub-filter" id="apptFilterBar" style="display:none"></div>
 
     <!-- MOBILE: Weather strip (between vtbar and calnav on mobile) -->
     <div class="wx-strip" id="wxStrip"><span class="wx-loading">Loading forecast…</span></div>
@@ -1615,6 +1626,12 @@ body:not(.role-owner):not(.role-manager) .role-financial-only{display:none!impor
           <span class="doc-filter-lbl">TO</span>
           <input type="date" class="doc-finput doc-filter-sel" id="docDateTo" onchange="setDocCustomRange()">
         </span>
+        <span class="doc-filter-lbl">SORT</span>
+        <select class="doc-finput doc-filter-sel" id="docSortSel" onchange="setDocSort(this.value)">
+          <option value="newest">Newest first</option>
+          <option value="oldest">Oldest first</option>
+          <option value="updated">Recently updated</option>
+        </select>
         <span class="doc-filter-lbl">JOB STATUS</span>
         <select class="doc-finput doc-filter-sel" id="docStageSel" onchange="setDocStage(this.value)"></select>
         <button class="btn btn-ghost btn-sm" id="docClearFilters" onclick="clearDocFilters()" style="display:none">✕ Clear</button>
@@ -1650,7 +1667,48 @@ body:not(.role-owner):not(.role-manager) .role-financial-only{display:none!impor
     </div>
   </div>
 
-  <!-- ═══ MATERIALS ═══ -->
+  <!-- ═══ MATERIALS ═══ (restored 2026-08-27 — the view markup was lost in the
+       SaaS merge; all its JS and CSS survived, so only the HTML was gone) -->
+  <div class="view" id="vMat">
+    <div class="mat-view" style="height:100%">
+      <div class="mat-toolbar">
+        <span style="font-family:'Bebas Neue',sans-serif;font-size:14px;letter-spacing:2px;color:var(--amber);flex-shrink:0;">🏗 MATERIALS</span>
+        <div class="mat-search-wrap">
+          <input class="mat-search" id="matSearch" type="text" placeholder="Search ABC Supply catalog…" oninput="debouncedMatSearch()"/>
+          <button class="btn btn-amber btn-sm" onclick="doMatSearch()">Search</button>
+        </div>
+        <button class="mat-creds-btn" id="abcCredsBtn" onclick="toggleAbcCreds()">🔑 ABC API</button>
+        <button class="mat-export-btn" onclick="exportMatList()">⬇ Export List</button>
+      </div>
+      <div class="mat-cat-tabs" id="matCatTabs">
+        <button class="mat-cat-tab active" onclick="setMatCat('all')">ALL</button>
+        <button class="mat-cat-tab" onclick="setMatCat('Roofing')">ROOFING</button>
+        <button class="mat-cat-tab" onclick="setMatCat('Siding')">SIDING</button>
+        <button class="mat-cat-tab" onclick="setMatCat('Gutters')">GUTTERS</button>
+        <button class="mat-cat-tab" onclick="setMatCat('Soffit')">SOFFIT & FASCIA</button>
+        <button class="mat-cat-tab" onclick="setMatCat('Underlayment')">UNDERLAYMENT</button>
+        <button class="mat-cat-tab" onclick="setMatCat('Flashing')">FLASHING</button>
+        <button class="mat-cat-tab" onclick="setMatCat('Fasteners')">FASTENERS</button>
+      </div>
+      <div class="mat-body">
+        <div class="mat-results" id="matResults"></div>
+        <div class="mat-cart" id="matCart">
+          <div class="mat-cart-hdr">
+            <span class="mat-cart-title">MATERIAL LIST</span>
+            <span style="font-size:10px;color:var(--muted)" id="matCartCount">0 items</span>
+          </div>
+          <div class="mat-cart-list" id="matCartList"></div>
+          <div class="mat-cart-footer">
+            <div class="mat-cart-total">
+              <span class="mat-cart-total-lbl">Subtotal</span>
+              <span class="mat-cart-total-val" id="matCartTotal">$0.00</span>
+            </div>
+            <button class="btn btn-amber" style="width:100%;justify-content:center;font-size:12px;" onclick="addMatListToEstimate()">+ Add to Estimate</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
   <!-- ═══ CRM ═══ -->
   <div class="view" id="vCRM">
     <div class="crmstats">
@@ -1824,8 +1882,6 @@ body:not(.role-owner):not(.role-manager) .role-financial-only{display:none!impor
     <button class="btn btn-ghost btn-sm" onclick="openEstMessages()">💬 Messages</button>
     <button class="btn btn-ghost btn-sm" onclick="openWorkOrder()">🔧 Work Order</button>
     <button class="btn btn-ghost btn-sm" onclick="openMaterialOrder()">📦 Material Order</button>
-    <button class="btn btn-ghost btn-sm" onclick="markDocOutcome('won')" id="docWonBtn" title="Mark this estimate as Won (closed/approved)">🏆 Won</button>
-    <button class="btn btn-ghost btn-sm" onclick="markDocOutcome('lost')" id="docLostBtn" title="Mark this estimate as Lost (didn't close)">✗ Lost</button>
     <button class="btn btn-danger btn-sm" onclick="deleteDoc()" title="Delete this document">🗑 Delete</button>
     <button class="btn btn-ghost btn-sm" id="docQbSyncBtn" onclick="syncDocWithQb()" title="Check QuickBooks for this invoice's payment status" style="display:none">🔄 Check QuickBooks</button>
     <button class="btn btn-ghost btn-sm" id="docQbPushBtn" onclick="pushDocToQb()" title="Create this invoice in QuickBooks" style="display:none">📤 Push to QB</button>
@@ -1906,26 +1962,9 @@ body:not(.role-owner):not(.role-manager) .role-financial-only{display:none!impor
           <textarea class="doc-finput" id="docNotes" rows="2" placeholder="Payment terms, warranty info, special conditions…"></textarea>
         </div>
       </div>
-      <div class="doc-field-group full profit-panel">
-        <div class="doc-field">
-          <label class="doc-flbl">💰 Profitability <span style="font-size:9px;color:var(--muted);font-weight:400;letter-spacing:0;text-transform:none;margin-left:6px;">(internal — never shown to customer)</span></label>
-          <div class="profit-grid">
-            <div class="profit-cell">
-              <div class="profit-cell-lbl">Materials Cost</div>
-              <input class="doc-finput profit-input" id="docMatCost" type="number" min="0" step="0.01" placeholder="0.00"/>
-            </div>
-            <div class="profit-cell">
-              <div class="profit-cell-lbl">Labor Cost</div>
-              <input class="doc-finput profit-input" id="docLaborCost" type="number" min="0" step="0.01" placeholder="0.00"/>
-            </div>
-            <div class="profit-cell">
-              <div class="profit-cell-lbl">Other Costs</div>
-              <input class="doc-finput profit-input" id="docOtherCost" type="number" min="0" step="0.01" placeholder="0.00"/>
-            </div>
-          </div>
-          <div class="profit-summary" id="docProfitSummary"></div>
-        </div>
-      </div>
+      <!-- Profitability panel removed 2026-08-27 (won/lost + P&L retired as UI
+           noise). The mat_cost / labor_cost / other_cost columns and any values
+           already entered are untouched in the database. -->
       <div class="doc-field-group full">
         <div class="doc-field">
           <label class="doc-flbl">Customer Signature</label>
@@ -1940,7 +1979,10 @@ body:not(.role-owner):not(.role-manager) .role-financial-only{display:none!impor
           </div>
         </div>
       </div>
-    </div>
+    <!-- (a stray closing div lived here since at least June - it closed
+         docFieldsPanel early, which cascaded outward until the totals bar
+         ended up OUTSIDE the editor, floating over other views as the
+         "$ auto" artifact.) -->
     <input type="hidden" id="docTax" value="0"/><input type="hidden" id="docDiscount" value="0"/>
     </div><!-- end docFieldsPanel -->
     </div><!-- end doc-fields-col -->
@@ -2313,7 +2355,8 @@ function applyRoleBasedUI(){
     crm:  ['bnCRM',  'dtCRM'],
     est:  ['bnEst',  'dtEst'],
     pipe: ['bnPipe', 'dtPipe'],
-    tasks:['bnTasks','dtTasks']
+    tasks:['bnTasks','dtTasks'],
+    mat:  ['bnMat',  'dtMat']
   };
   Object.entries(tabMap).forEach(([key,ids])=>{
     const visible=canSeeTab(key);
@@ -3359,27 +3402,11 @@ function renderReports(){
   const closeRate=winLeads.length>0?(wonLeads.length/winLeads.length*100):0;
   // ── Avg job value (won only) ────────────────────────────────
   const avgJob=wonEst.length>0?(revenue/wonEst.length):0;
-  // ── Cost-data warning if margin math is questionable ─────────
-  const warnEl=document.getElementById('rptCostWarn');
-  if(wonEst.length>0&&jobsWithCostData<wonEst.length){
-    const missing=wonEst.length-jobsWithCostData;
-    warnEl.style.display='block';
-    warnEl.textContent=`⚠ Profit margin assumes cost is entered on each estimate. ${missing} of ${wonEst.length} won estimate${wonEst.length===1?'':'s'} this ${reportRange} have no cost data — actual margin is likely lower than shown.`;
-  } else {
-    warnEl.style.display='none';
-  }
   // ── Render the cards ─────────────────────────────────────────
   const fmt$=v=>'$'+Math.round(v).toLocaleString('en-US');
   const fmtPct=v=>v.toFixed(1)+'%';
-  // Build the "X signature-signed · Y manually closed" sub-line
-  let breakdownTxt='';
-  if(sigSigned.length&&manualClosed.length) breakdownTxt=`${sigSigned.length} signed · ${manualClosed.length} marked won`;
-  else if(sigSigned.length) breakdownTxt=`${sigSigned.length} signed`;
-  else if(manualClosed.length) breakdownTxt=`${manualClosed.length} marked won`;
   document.getElementById('rptRevenue').textContent=fmt$(revenue);
-  document.getElementById('rptRevenueSub').textContent=`${wonEst.length} won estimate${wonEst.length===1?'':'s'}${breakdownTxt?' ('+breakdownTxt+')':''} · ${win.label}`;
-  document.getElementById('rptMargin').textContent=revenue>0?fmtPct(margin):'—';
-  document.getElementById('rptMarginSub').textContent=revenue>0?`${fmt$(profit)} profit on ${fmt$(totalCost)} cost`:'No revenue yet';
+  document.getElementById('rptRevenueSub').textContent=`${wonEst.length} signed estimate${wonEst.length===1?'':'s'} · ${win.label}`;
   document.getElementById('rptCloseRate').textContent=winLeads.length>0?fmtPct(closeRate):'—';
   document.getElementById('rptCloseRateSub').textContent=winLeads.length>0?`${wonLeads.length} won / ${winLeads.length} new lead${winLeads.length===1?'':'s'}`:'No leads in window';
   document.getElementById('rptAvgJob').textContent=wonEst.length>0?fmt$(avgJob):'—';
@@ -3407,17 +3434,10 @@ function renderReports(){
   // ── Raw numbers panel ────────────────────────────────────────
   const raw=[
     ['Revenue',fmt$(revenue)],
-    ['Material cost',fmt$(matCost)],
-    ['Labor cost',fmt$(laborCost)],
-    ['Other cost',fmt$(otherCost)],
-    ['Total cost',fmt$(totalCost)],
-    ['Profit',fmt$(profit)],
     ['Estimates created',String(winEst.length)],
-    ['Won (total)',String(wonEst.length)],
-    ['  Signature-signed',String(sigSigned.length)],
-    ['  Manually marked',String(manualClosed.length)],
+    ['Signed',String(wonEst.length)],
     ['New leads',String(winLeads.length)],
-    ['Leads won',String(wonLeads.length)],
+    ['Leads signed',String(wonLeads.length)],
   ];
   document.getElementById('rptRaw').innerHTML=raw.map(([k,v])=>
     `<div class="rpt-raw-item"><span class="rpt-raw-item-lbl">${k}</span><span class="rpt-raw-item-val">${v}</span></div>`
@@ -5021,7 +5041,7 @@ const setSS=(s,l)=>{
   document.getElementById('syncLbl').textContent=l;
 };
 const dbToJob=r=>({id:r.id,title:r.title,note:r.note||'',color:r.color||'amber',day:r.day||'backlog',endDay:r.end_day||'',leadId:r.lead_id||null,photos:safeParseArr(r.photos),checklist:safeParseArr(r.checklist),apptType:normalizeApptType(r.appt_type),startTime:r.start_time||'',endTime:r.end_time||'',assigneeId:r.assignee_id||null,assigneeIds:_normAssigneeIds(r),activity:safeParseArr(r.activity),linkedDocId:r.linked_doc_id||null,linkedMoId:r.linked_mo_id||null});
-const dbToLead=r=>({id:r.id,name:r.name,contact:r.contact||'',phone:r.phone||'',email:r.email||'',types:r.type?r.type.split(',').filter(Boolean):[],value:r.value||'',stage:r.stage||'new',address:r.address||'',notes:r.notes||'',color:r.color||'blue',estId:r.est_id||null,matList:safeParseArr(r.mat_list),source:r.source||'',activity:safeParseArr(r.activity),createdAt:r.created_at||null,assignedTo:r.assigned_to||null,customer_id:r.customer_id||null});
+const dbToLead=r=>({id:r.id,name:r.name,contact:r.contact||'',phone:r.phone||'',email:r.email||'',types:r.type?r.type.split(',').filter(Boolean):[],value:r.value||'',stage:r.stage||'new',address:r.address||'',notes:r.notes||'',color:r.color||'blue',estId:r.est_id||null,matList:safeParseArr(r.mat_list),source:r.source||'',activity:safeParseArr(r.activity),createdAt:r.created_at||r.created||null,assignedTo:r.assigned_to||null,customer_id:r.customer_id||null});
 const jobToDb=j=>({id:j.id,title:j.title,note:j.note,color:j.color,day:j.day,end_day:j.endDay||'',lead_id:j.leadId||null,photos:JSON.stringify(j.photos||[]),checklist:JSON.stringify(j.checklist||[]),appt_type:normalizeApptType(j.apptType),start_time:j.startTime||'',end_time:j.endTime||'',assignee_id:_firstAssigneeId(j),assignee_ids:getJobAssigneeIds(j),user_id:currentUser?.id||null,updated_at:new Date().toISOString(),activity:JSON.stringify(j.activity||[]),linked_doc_id:j.linkedDocId||null,linked_mo_id:j.linkedMoId||null});
 
 // ── ASSIGNEE HELPERS ────────────────────────────────────────
@@ -5221,13 +5241,13 @@ async function copyCrewLink(){
   const existing=document.getElementById('crewLinkPopup');if(existing)existing.remove();
   document.body.insertAdjacentHTML('beforeend',html);
 }
-function saveLead(l){setSS('syncing','Saving…');queueSave('leads',l);}
+function saveLead(l){_leadsVer++;setSS('syncing','Saving…');queueSave('leads',l);}
 function saveDocSync(d){setSS('syncing','Saving…');queueSave('docs',d);}
 function saveTmplSync(t){setSS('syncing','Saving…');queueSave('templates',t);}
 async function delDocRemote(id){try{await sb.del('docs',id);}catch(e){console.error('Doc delete failed:',e);}}
 async function delTmplRemote(id){try{await sb.del('templates',id);}catch(e){console.error('Template delete failed:',e);}}
 async function delJob(id){setSS('syncing','Deleting…');delete saveQueue.jobs[id];lsSet('jobs_cache',jobs.map(jobToDb));try{await sb.del('jobs',id);setSS('synced','Done ✓');setTimeout(()=>document.getElementById('syncLbl').textContent='',2000);}catch(e){setSS('error','Delete failed');}}
-async function delLead(id){setSS('syncing','Deleting…');delete saveQueue.leads[id];lsSet('leads_cache',leads.map(leadToDb));try{await sb.del('leads',id);setSS('synced','Done ✓');setTimeout(()=>document.getElementById('syncLbl').textContent='',2000);}catch(e){setSS('error','Delete failed');}}
+async function delLead(id){_leadsVer++;setSS('syncing','Deleting…');delete saveQueue.leads[id];lsSet('leads_cache',leads.map(leadToDb));try{await sb.del('leads',id);setSS('synced','Done ✓');setTimeout(()=>document.getElementById('syncLbl').textContent='',2000);}catch(e){setSS('error','Delete failed');}}
 
 // ── CUSTOMER / TAG DATA HELPERS (Phase 3) ────────────────────
 // ── CUSTOMER SPINE ────────────────────────────────────────────
@@ -5241,14 +5261,14 @@ async function delLead(id){setSS('syncing','Deleting…');delete saveQueue.leads
 //
 // NOTE this is deliberately MORE tolerant than extract_phone_smart() in
 // customers-backfill-real.sql, which required 10 CONSECUTIVE digits and so
-// returned NULL for any formatted number — "(414) 234-3700" produced no key
+// returned NULL for any formatted number — "(555) 010-1234" produced no key
 // at all. Those leads each became their own customer instead of clustering.
 // Comparisons here normalise BOTH sides, so a tolerant key still matches a
 // customer whose stored phone is bare digits.
 function normPhone10(raw){
   if(!raw) return '';
   const s=String(raw);
-  // Match a phone-SHAPED run first. `contact` is freeform ("Bob · 414-234-3700
+  // Match a phone-SHAPED run first. `contact` is freeform ("Bob · 555-010-1234
   // ext 5"), so simply stripping non-digits and taking the last ten would drag
   // in the extension. The trailing (?!\d) stops it biting into a longer run.
   const m=s.match(/(?:\+?1[\s._-]*)?\(?\s*(\d{3})\s*\)?[\s._-]*(\d{3})[\s._-]*(\d{4})(?!\d)/);
@@ -5543,11 +5563,11 @@ function switchMain(v){
   }
   mainView=v;
   document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));
-  const viewMap={sched:'vSched',crm:'vCRM',est:'vEst',tasks:'vTasks',pipe:'vPipe',msg:'vMsg'};
+  const viewMap={sched:'vSched',crm:'vCRM',est:'vEst',tasks:'vTasks',pipe:'vPipe',msg:'vMsg',mat:'vMat'};
   document.getElementById(viewMap[v]||'vSched').classList.add('active');
-  ['bnSched','bnCRM','bnEst','bnTasks','bnPipe','bnMsg'].forEach(id=>{const el=document.getElementById(id);if(el)el.classList.toggle('active',id==='bn'+v.charAt(0).toUpperCase()+v.slice(1));});
-  ['dtSched','dtCRM','dtEst','dtTasks','dtPipe','dtMsg'].forEach(id=>{const el=document.getElementById(id);if(el)el.classList.toggle('active',id==='dt'+v.charAt(0).toUpperCase()+v.slice(1));});
-  const lblMap={sched:'New Job',crm:'New Customer',est:'New Estimate',tasks:'New Task',pipe:'New Column',msg:'↻ Refresh'};
+  ['bnSched','bnCRM','bnEst','bnTasks','bnPipe','bnMsg','bnMat'].forEach(id=>{const el=document.getElementById(id);if(el)el.classList.toggle('active',id==='bn'+v.charAt(0).toUpperCase()+v.slice(1));});
+  ['dtSched','dtCRM','dtEst','dtTasks','dtPipe','dtMsg','dtMat'].forEach(id=>{const el=document.getElementById(id);if(el)el.classList.toggle('active',id==='dt'+v.charAt(0).toUpperCase()+v.slice(1));});
+  const lblMap={sched:'New Job',crm:'New Customer',est:'New Estimate',tasks:'New Task',pipe:'New Column',msg:'↻ Refresh',mat:'Search'};
   document.getElementById('daddLbl').textContent=lblMap[v]||'New';
   document.getElementById('daddBtn').onclick=
     v==='sched'?()=>openJobMov('backlog'):
@@ -5563,6 +5583,7 @@ function switchMain(v){
   else if(v==='tasks'){renderTaskList();filterTasks(taskFilter);}
   else if(v==='pipe')renderPipeline();
   else if(v==='msg')renderMsgInbox();
+  else if(v==='mat')renderMatView();
 }
 function handleFab(){
   if(mainView==='sched')openJobMov('backlog');
@@ -8721,11 +8742,6 @@ function enterBulkMode(which){
   const btnId=which==='docs'?'docBulkBtn':'leadBulkBtn';
   const btn=document.getElementById(btnId);
   if(btn){btn.textContent='✓ Done';btn.classList.add('active');}
-  // Outcome buttons only make sense for estimates (docs mode)
-  const wonBtn=document.getElementById('bulkWonBtn');
-  const lostBtn=document.getElementById('bulkLostBtn');
-  if(wonBtn)  wonBtn.style.display =(which==='docs')?'':'none';
-  if(lostBtn) lostBtn.style.display=(which==='docs')?'':'none';
   showBulkBar();
   rerenderForBulk();
 }
@@ -9274,9 +9290,22 @@ function startDocPolling(){
     // Only poll if there are unsigned estimates worth checking
     const hasUnsigned=docs.some(d=>d.type==='estimate'&&!d.signature&&d.status!=='paid'&&d.status!=='declined');
     if(!hasUnsigned) return;
-    loadDocsRemote().then(()=>{
-      if(mainView==='est'&&typeof renderDocList==='function') renderDocList();
-    }).catch(()=>{});
+    // Probe with a two-column query instead of re-downloading every document.
+    // Full doc rows carry base64 signature images and line items — the old
+    // poll pulled the entire table (easily multiple MB) every 30 seconds all
+    // day. This asks only "which estimates are signed" (~a few hundred bytes)
+    // and does the full refresh just when a signature we don't have appears.
+    sb.get('docs','select=id,signature_date&type=eq.estimate&signature_date=not.is.null')
+      .then(rows=>{
+        const newlySigned=rows.some(r=>{
+          const local=docs.find(d=>d.id===r.id);
+          return local&&!local.signature;
+        });
+        if(!newlySigned) return;
+        return loadDocsRemote().then(()=>{
+          if(mainView==='est'&&typeof renderDocList==='function') renderDocList();
+        });
+      }).catch(()=>{});
   },30000);
 }
 function stopDocPolling(){if(docPollTimer){clearInterval(docPollTimer);docPollTimer=null;}}
@@ -9357,13 +9386,49 @@ let docDateRange='all';   // all | week | month | last30 | quarter | custom
 let docDateFrom='';
 let docDateTo='';
 let docStageFilter='all'; // all | <stage id> | nolead
+// List sort. 'newest' uses the document's own date (falling back to created),
+// NOT updated_at — the old list reversed the server's updated_at order, so
+// anything recently touched (signing bumps updated_at, and so did the
+// signature poll) stuck to the top regardless of its actual date.
+let docSort=lsGet('doc_sort_v1','newest');
+if(typeof docSort!=='string') docSort='newest';
+function _docDateKey(d){
+  if(d.date){const t=Date.parse(String(d.date).slice(0,10)+'T12:00:00');if(!isNaN(t))return t;}
+  return d.created||0;
+}
+function sortDocsForList(list){
+  const a=list.slice();
+  if(docSort==='oldest')  return a.sort((x,y)=>_docDateKey(x)-_docDateKey(y)||(x.created||0)-(y.created||0));
+  if(docSort==='updated') return a.reverse();   // server order is updated_at asc
+  /* newest */            return a.sort((x,y)=>_docDateKey(y)-_docDateKey(x)||(y.created||0)-(x.created||0));
+}
+function setDocSort(v){
+  docSort=v||'newest';
+  lsSet('doc_sort_v1',docSort);
+  const sel=document.getElementById('docSortSel');
+  if(sel&&sel.value!==docSort) sel.value=docSort;
+  renderDocList();
+}
 // Set from the real row shape at load time, so the app can write customer_id
 // once the column exists without a hard ordering dependency on the migration.
 let docsHaveCustomerId=false;
 
 // Resolve the lead a document belongs to, most reliable link first.
+// Memoized per doc object: one render of the list calls this several times
+// per card (status badge + stage filter both resolve it). Keyed on the doc
+// OBJECT, and doc objects are replaced wholesale on every remote load and on
+// save, so entries die with their objects rather than going stale.
+const _docLeadMemo=new WeakMap();
+let _leadsVer=0;   // bumped on every lead save/delete so cached lookups expire
 function docLead(d){
   if(!d) return null;
+  const hit=_docLeadMemo.get(d);
+  if(hit&&hit.v===_leadsVer) return hit.lead;
+  const lead=_docLeadUncached(d);
+  _docLeadMemo.set(d,{v:_leadsVer,lead});
+  return lead;
+}
+function _docLeadUncached(d){
   // 1. Explicit customer link (populated by the docs.customer_id backfill)
   if(d.customerId){
     const byCust=leads.filter(l=>l.customer_id===d.customerId);
@@ -9677,6 +9742,8 @@ function renderDocList(){
   // Supabase. The init flow in loadAppData() handles the initial server load.
   const list=document.getElementById('docList');
   buildDocStageSelect();
+  const sortSel=document.getElementById('docSortSel');
+  if(sortSel&&sortSel.value!==docSort) sortSel.value=docSort;
   let filtered=docFilter==='all'?docs:docs.filter(d=>d.type===docFilter);
   // Date range + job-status (lead stage) filters
   filtered=filtered.filter(d=>docInDateRange(d)&&docMatchesStage(d));
@@ -9708,7 +9775,7 @@ function renderDocList(){
     list.innerHTML=`<div class="doc-empty"><div class="doc-empty-icon">📄</div><div class="doc-empty-txt">${msg}</div></div>`;
     return;
   }
-  list.innerHTML=filtered.slice().reverse().map(d=>{
+  list.innerHTML=sortDocsForList(filtered).map(d=>{
     const isWo=d.type==='workorder';
     const isMo=d.type==='matorder';
     const isInv=d.type==='invoice';
@@ -10062,9 +10129,11 @@ function collectDoc(base){
     signature:base.signature||'',
     signatureName:sigNameTyped||base.signatureName||'',
     signatureDate:base.signatureDate||'',
-    matCost:num(matCostEl),
-    laborCost:num(labCostEl),
-    otherCost:num(othCostEl),
+    // The profitability inputs no longer exist in the editor. Preserve any
+    // costs already stored on the document instead of blanking them on save.
+    matCost:matCostEl?num(matCostEl):(base.matCost!=null?base.matCost:''),
+    laborCost:labCostEl?num(labCostEl):(base.laborCost!=null?base.laborCost:''),
+    otherCost:othCostEl?num(othCostEl):(base.otherCost!=null?base.otherCost:''),
   };
 }
 
@@ -11632,6 +11701,50 @@ function emailMaterialOrder(){
 }
 
 let matCatFilter='all';
+// ABC Supply credentials UI — restored from the June copy alongside the
+// Materials view markup; the view's toolbar button calls toggleAbcCreds().
+let abcCredsVisible=false;
+
+function toggleAbcCreds(){
+  abcCredsVisible=!abcCredsVisible;
+  const el=document.getElementById('matResults');
+  if(!el)return;
+  if(abcCredsVisible){
+    const c=getAbcCreds();
+    el.innerHTML=`<div class="mat-creds-panel">
+      <h3>🔑 ABC SUPPLY API CREDENTIALS</h3>
+      <p style="font-size:12px;color:var(--muted);margin-bottom:14px;line-height:1.5">Enter your ABC Supply API credentials from the <a href="https://developer.abcsupply.com" target="_blank" style="color:var(--amber)">ABC Developer Portal</a>. You need an approved ABC Supply customer account to access the live API. Without credentials, the app uses a demo product catalog.</p>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <div class="doc-field"><label class="doc-flbl">Client ID</label><input class="doc-finput" id="abcClientId" value="${esc(c.clientId||'')}" placeholder="Your Okta client_id" autocomplete="off"/></div>
+        <div class="doc-field"><label class="doc-flbl">Client Secret</label><input class="doc-finput" id="abcClientSecret" type="password" value="${esc(c.clientSecret||'')}" placeholder="Your Okta client_secret" autocomplete="off"/></div>
+        <div class="doc-field"><label class="doc-flbl">Sold-To Account # (optional)</label><input class="doc-finput" id="abcSoldTo" value="${esc(c.soldTo||'')}" placeholder="Your ABC Supply account number" autocomplete="off"/></div>
+      </div>
+      <div style="display:flex;gap:8px;margin-top:14px;">
+        <button class="btn btn-amber btn-sm" onclick="saveAbcCreds()">Save & Connect</button>
+        ${c.clientId?'<button class="btn btn-danger btn-sm" onclick="clearAbcCreds()">Disconnect</button>':''}
+        <button class="btn btn-ghost btn-sm" onclick="toggleAbcCreds()">Cancel</button>
+      </div>
+    </div>`;
+  } else {
+    renderMatView();
+  }
+}
+
+function getAbcCreds(){
+  try{return JSON.parse(localStorage.getItem('abc_creds')||'{}');}catch{return {};}
+}
+
+function saveAbcCreds(){
+  const c={clientId:document.getElementById('abcClientId').value.trim(),clientSecret:document.getElementById('abcClientSecret').value.trim(),soldTo:document.getElementById('abcSoldTo').value.trim()};
+  setAbcCreds(c);abcCredsVisible=false;abcToken=null;abcTokenExp=0;
+  document.getElementById('abcCredsBtn').className='mat-creds-btn connected';
+  document.getElementById('abcCredsBtn').textContent='✓ ABC Connected';
+  renderMatView();
+}
+
+function clearAbcCreds(){localStorage.removeItem('abc_creds');abcToken=null;abcTokenExp=0;abcCredsVisible=false;renderMatView();
+  document.getElementById('abcCredsBtn').className='mat-creds-btn';document.getElementById('abcCredsBtn').textContent='🔑 ABC API';}
+
 let matSearchTimer=null;
 
 const DEMO_CATALOG=[
@@ -12396,16 +12509,14 @@ function removeTeamMember(idx){
 // Render assignee filter buttons in the appt filter bar
 function renderAssigneeFilters(){
   loadTeam();
-  // Remove existing assignee filter buttons
-  document.querySelectorAll('.assignee-filter-btn').forEach(b=>b.remove());
-  if(!teamRoster.length)return;
+  // Remove existing assignee filter buttons AND separators — the old code
+  // never removed .assignee-filter-sep, so repeat calls stacked separators.
+  document.querySelectorAll('.assignee-filter-btn,.assignee-filter-sep').forEach(b=>b.remove());
   const bar=document.getElementById('apptFilterBar');
   if(!bar)return;
-  // Add separator
-  const sep=document.createElement('div');
-  sep.style.cssText='width:1px;height:16px;background:var(--iron);flex-shrink:0;margin:0 2px;';
-  sep.className='assignee-filter-sep';
-  bar.appendChild(sep);
+  // The bar is its own strip now, so it hides entirely when there is no team.
+  bar.style.display=teamRoster.length?'':'none';
+  if(!teamRoster.length)return;
   teamRoster.forEach(m=>{
     const btn=document.createElement('button');
     btn.className='assignee-filter-btn'+(assigneeFilter===m.id?' active':'');
@@ -13663,17 +13774,11 @@ try{ _refreshPushBtn(); }catch(e){}
       </div>
     </div>
     <div class="tmpl-body" id="rptBody">
-      <div id="rptCostWarn" style="display:none;font-size:11px;background:rgba(245,158,11,.1);border:1px solid #f59e0b;color:#fbbf24;padding:8px 12px;border-radius:6px;margin-bottom:14px;line-height:1.5;"></div>
       <div class="rpt-cards">
         <div class="rpt-card">
           <div class="rpt-card-lbl">💰 Revenue (Signed)</div>
           <div class="rpt-card-val" id="rptRevenue">—</div>
           <div class="rpt-card-sub" id="rptRevenueSub"></div>
-        </div>
-        <div class="rpt-card">
-          <div class="rpt-card-lbl">📈 Profit Margin</div>
-          <div class="rpt-card-val" id="rptMargin">—</div>
-          <div class="rpt-card-sub" id="rptMarginSub"></div>
         </div>
         <div class="rpt-card">
           <div class="rpt-card-lbl">🎯 Close Rate</div>
@@ -13703,8 +13808,6 @@ try{ _refreshPushBtn(); }catch(e){}
   <span class="bulk-action-count" id="bulkActionCount">0 selected</span>
   <button class="btn btn-ghost btn-sm" onclick="bulkSelectAll()">Select All</button>
   <button class="btn btn-ghost btn-sm" onclick="bulkClear()">Clear</button>
-  <button class="btn btn-ghost btn-sm" onclick="bulkMarkOutcome('won')" id="bulkWonBtn" style="display:none">🏆 Mark Won</button>
-  <button class="btn btn-ghost btn-sm" onclick="bulkMarkOutcome('lost')" id="bulkLostBtn" style="display:none">✗ Mark Lost</button>
   <button class="btn btn-danger btn-sm" onclick="bulkDelete()">🗑 Delete Selected</button>
   <button class="btn btn-ghost btn-sm" onclick="exitBulkMode()">Cancel</button>
 </div>
