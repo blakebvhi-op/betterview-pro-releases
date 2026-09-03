@@ -5935,10 +5935,9 @@ function renderCRM(){
 // The columns ARE the job statuses. One card per estimate ("job"), placed by
 // the estimate's own stage. A change order rides inside its parent estimate's
 // card until someone gives it its own stage — then it gets its own card.
-// Leads with no estimate yet show as lead cards in their CRM stage column and
-// drop off as soon as an estimate exists for them. Dragging a card writes the
-// stage through setDocJobStage / moveLead — the same single write paths used
-// everywhere else, so the activity log and the CRM stay in step.
+// Estimates only — no lead cards (see the note in pipelineBuckets).
+// Dragging a card writes the stage through setDocJobStage — the same single
+// write path used everywhere else, so the activity log and CRM stay in step.
 // The old free-form kanban (pipeline_boards/columns/cards) is retired: its
 // tables are untouched in the DB, the app just no longer reads them.
 // ══════════════════════════════════════════════════════════════
@@ -5951,18 +5950,19 @@ function pipelineBuckets(){
   const buckets={none:[]};
   STAGES.forEach(st=>buckets[st.id]=[]);
   const put=(stage,card)=>{(buckets[stage]||buckets.none).push(card);};
-  const coveredLeads=new Set();
+  // ESTIMATES ONLY (2026-09-03 follow-up). Lead cards were originally shown
+  // for "leads with no estimate yet", but historically this app created one
+  // lead row per estimate, so most leads ARE an estimate under another name —
+  // showing them duplicated nearly every job on the board. The pipeline is
+  // now purely jobs: estimates, plus change orders given their own stage.
+  // Leads that truly have no estimate live in the Customers tab until an
+  // estimate is written for them.
   for(const d of docs){
     if(d.type==='estimate'){
-      const l=docLead(d); if(l) coveredLeads.add(l.id);
       put(docStageOf(d)||'none',{kind:'doc',obj:d});
     } else if(d.type==='changeorder'&&d.stage){
       put(d.stage,{kind:'doc',obj:d});
     }
-  }
-  for(const l of leads){
-    if(coveredLeads.has(l.id)) continue;
-    put(l.stage||'new',{kind:'lead',obj:l});
   }
   return buckets;
 }
@@ -5971,11 +5971,7 @@ function pipeCardValue(card){
   // calcDocTotal returns {sub,disc,tax,grand} — take grand, guard NaN so one
   // bad doc can't wipe the board total.
   let v=0;
-  if(card.kind==='doc'){
-    try{const t=calcDocTotal(card.obj);v=Number(t&&typeof t==='object'?t.grand:t);}catch{v=0;}
-  }else{
-    v=Number(card.obj.value||0);
-  }
+  try{const t=calcDocTotal(card.obj);v=Number(t&&typeof t==='object'?t.grand:t);}catch{v=0;}
   return isFinite(v)?v:0;
 }
 
@@ -6018,23 +6014,6 @@ function buildPipeStageCol(st,cards,droppable){
 }
 
 function renderPipeCard(card){
-  if(card.kind==='lead'){
-    const l=card.obj;
-    const val=Number(l.value||0);
-    const color=(COLORS.find(c=>c.id===l.color)||{}).hex||'#64748b';
-    return `
-      <div class="pipe-card" draggable="true" data-kind="lead" data-id="${esc(l.id)}" style="--card-color:${color}" onclick="openLeadMov('${esc(l.id)}')">
-        <div class="pipe-card-stripe">LEAD</div>
-        <div class="pipe-card-body">
-          <div class="pipe-card-name">${esc(l.name||'(no name)')}</div>
-          ${l.address?`<div class="pipe-card-addr">${esc(l.address)}</div>`:''}
-          <div class="pipe-card-row">
-            <div class="pipe-card-tags"><span class="pipe-card-tag" style="color:#94a3b8">No estimate yet</span></div>
-            ${val?`<div class="pipe-card-val">$${Math.round(val).toLocaleString()}</div>`:''}
-          </div>
-        </div>
-      </div>`;
-  }
   const d=card.obj;
   const isCO=d.type==='changeorder';
   const val=pipeCardValue(card);
@@ -6091,12 +6070,9 @@ function wirePipeDragDrop(){
       e.preventDefault();
       zone.classList.remove('drag-over');
       if(!pipeDragId) return;
-      const kind=pipeDragKind,id=pipeDragId,ns=zone.dataset.stage;
+      const id=pipeDragId,ns=zone.dataset.stage;
       pipeDragKind=null;pipeDragId=null;
-      try{
-        if(kind==='doc') await setDocJobStage(id,ns);
-        else if(kind==='lead') await moveLead(id,ns);
-      }catch(err){console.error('pipeline drop:',err);}
+      try{ await setDocJobStage(id,ns); }catch(err){console.error('pipeline drop:',err);}
       renderPipeline();
     });
   });
