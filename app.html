@@ -1682,8 +1682,14 @@ body:not(.role-owner):not(.role-manager) .role-financial-only{display:none!impor
     .tl-clip{flex-shrink:0;color:var(--muted);font-size:10px;font-weight:700;}
     .tl-resize{position:absolute;right:0;top:0;bottom:0;width:9px;cursor:ew-resize;background:linear-gradient(to right,transparent,rgba(255,255,255,.12));}
     .tl-empty{padding:26px 16px;color:var(--muted);font-size:12px;text-align:center;}
-    .tl-actionbar{position:fixed;left:0;right:0;bottom:64px;z-index:1100;display:flex;gap:8px;justify-content:center;padding:10px;background:rgba(10,14,20,.94);border-top:1px solid var(--iron);}
-    .tl-actionbar .tl-btn{font-size:12px;padding:8px 14px;}
+    .tl-actionbar{position:fixed;left:50%;transform:translateX(-50%);bottom:64px;z-index:1100;width:min(94vw,440px);background:var(--steel-mid);border:1px solid var(--iron);border-radius:10px;padding:12px 14px;box-shadow:0 8px 30px rgba(0,0,0,.5);}
+    @media(min-width:821px){.tl-actionbar{bottom:20px;}}
+    .tl-action-btns{display:flex;gap:6px;justify-content:flex-end;flex-wrap:wrap;margin-top:10px;}
+    .tl-actionbar .tl-btn{font-size:12px;padding:7px 12px;}
+    .tl-info-name{font-size:14px;font-weight:700;color:var(--white);margin-bottom:7px;}
+    .tl-info-row{display:flex;gap:10px;font-size:12px;padding:2px 0;}
+    .tl-info-k{color:var(--muted);flex:0 0 74px;font-size:10px;letter-spacing:.1em;text-transform:uppercase;padding-top:1px;}
+    .tl-info-v{color:var(--white);min-width:0;}
     .tl-hint{position:fixed;left:0;right:0;bottom:64px;z-index:1100;text-align:center;padding:10px;background:rgba(245,158,11,.95);color:#111;font-size:12px;font-weight:700;}
     </style>
     <div class="tl-wrap" id="tlWrap" style="display:none">
@@ -12513,16 +12519,36 @@ function tlOpenActions(jobId){
   const j=jobs.find(x=>x.id===jobId);if(!j)return;
   tlClearPlace();
   tlSelectedBar=jobId;
+  const t=normalizeApptType(j.apptType);
+  const trade=TL_TRADE[t]||{label:'Other',color:'#64748b'};
+  const dur=jobDurationDays(j);
+  const info=tlJobInfo(j);
+  const scheduled=j.day&&j.day!=='backlog';
+  const fmtDay=iso=>{if(!iso||iso==='backlog')return 'Not scheduled';
+    const d=new Date(iso+'T12:00:00');return DNF[(d.getDay()||7)-1]+', '+MOS[d.getMonth()]+' '+d.getDate();};
+  const row=(k,v)=>v?`<div class="tl-info-row"><span class="tl-info-k">${k}</span><span class="tl-info-v">${esc(v)}</span></div>`:'';
   const bar=document.createElement('div');
   bar.className='tl-actionbar';bar.id='tlActionBar';
-  const scheduled=j.day&&j.day!=='backlog';
-  bar.innerHTML=
-    `<button class="tl-btn" onclick="tlClearPlace();openJobMov('${esc(jobId)}')">Open</button>`+
-    (tlCanEdit()?`<button class="tl-btn" onclick="tlStartPlace('${esc(jobId)}')">Move</button>`:'')+
-    (tlCanEdit()&&scheduled?`<button class="tl-btn" onclick="tlResizeTo('${esc(jobId)}',jobDurationDays(jobs.find(x=>x.id==='${esc(jobId)}'))+1)">+1 day</button>
-      <button class="tl-btn" onclick="tlResizeTo('${esc(jobId)}',jobDurationDays(jobs.find(x=>x.id==='${esc(jobId)}'))-1)">−1 day</button>
-      <button class="tl-btn" onclick="tlUnassign('${esc(jobId)}')">Unassign</button>`:'')+
-    `<button class="tl-btn" onclick="tlClearPlace();renderInstallTimeline()">✕</button>`;
+  bar.innerHTML=`
+    <div class="tl-info">
+      <div class="tl-info-name" style="border-left:3px solid ${trade.color};padding-left:8px">${esc(info.name)}</div>
+      ${row('Job',info.titleExtra)}
+      ${row('Trade',trade.label+(dur>1?' · '+dur+' days':''))}
+      ${row('When',fmtDay(j.day)+(j.startTime?' · '+j.startTime:''))}
+      ${row('Address',info.addr)}
+      ${row('Phone',info.phone)}
+      ${row('Crew',info.crewName||(scheduled?'No crew assigned':''))}
+      ${row('Materials',j.materialsDelivered?'✓ Delivered':'Not delivered')}
+      ${row('Note',j.note)}
+    </div>
+    <div class="tl-action-btns">
+      <button class="tl-btn" onclick="tlClearPlace();openJobMov('${esc(jobId)}')">✎ Open</button>
+      ${tlCanEdit()?`<button class="tl-btn" onclick="tlStartPlace('${esc(jobId)}')">Move</button>`:''}
+      ${tlCanEdit()&&scheduled?`<button class="tl-btn" onclick="tlResizeTo('${esc(jobId)}',jobDurationDays(jobs.find(x=>x.id==='${esc(jobId)}'))+1)">+1 day</button>
+        <button class="tl-btn" onclick="tlResizeTo('${esc(jobId)}',jobDurationDays(jobs.find(x=>x.id==='${esc(jobId)}'))-1)">−1 day</button>
+        <button class="tl-btn" onclick="tlUnassign('${esc(jobId)}')">Unassign</button>`:''}
+      <button class="tl-btn" onclick="tlClearPlace();renderInstallTimeline()">✕</button>
+    </div>`;
   document.getElementById('tlWrap').appendChild(bar);
   renderInstallTimeline();
 }
@@ -12574,6 +12600,29 @@ function tlPackLanes(list,conflictSet){
   return Math.max(1,lanes.length);
 }
 
+// Pull the linked customer's details onto the bar/card. A job knows its
+// lead via leadId; the lead carries name, address and phone. Without this,
+// bars showed only the typed job title — a job with a thin title told you
+// nothing, and linked-customer info never reached the timeline at all.
+function tlJobInfo(j){
+  const lead=j.leadId?(leads||[]).find(l=>l.id===j.leadId):null;
+  const name=(lead&&lead.name)||j.title||'(untitled)';
+  // If the title already IS the customer name, don't repeat it as detail
+  const titleExtra=(j.title&&lead&&j.title.toLowerCase()!==String(lead.name||'').toLowerCase())?j.title:'';
+  const addr=(lead&&lead.address)||'';
+  const phone=(lead&&lead.phone)||'';
+  const crewName=(id=>{const c=(crews||[]).find(x=>x.id===id);return c?c.name:'';})(j.crewId);
+  return {lead,name,titleExtra,addr,phone,crewName};
+}
+function tlJobTooltip(j,info,trade,dur){
+  return [info.name,info.titleExtra,info.addr,info.phone,
+    trade.label+(dur>1?' · '+dur+' days':''),
+    j.startTime?('Start '+j.startTime):'',
+    info.crewName,
+    j.materialsDelivered?'Materials delivered':'Materials NOT delivered',
+    j.note?('Note: '+j.note):''].filter(Boolean).join('\n');
+}
+
 function tlBarHtml(j,colW,conflict){
   const t=normalizeApptType(j.apptType);
   const trade=TL_TRADE[t]||{label:'Other',color:'#64748b'};
@@ -12586,12 +12635,18 @@ function tlBarHtml(j,colW,conflict){
   const left=sIdx*colW+3,width=(eIdx-sIdx+1)*colW-7;
   const mat=!!j.materialsDelivered;
   const sel=tlSelectedBar===j.id||tlPlaceJobId===j.id;
+  const info=tlJobInfo(j);
+  // Compact by design (Blake 2026-09-16): just who + what + how long.
+  // Everything else shows when the bar is clicked (and in the hover tooltip).
+  const subBits=[trade.label];
+  if(dur>1)subBits.push(dur+'d');
   return `<div class="tl-bar${conflict?' tl-conflict':''}${sel?' selected':''}" ${tlCanEdit()&&!isMobile()?'draggable="true"':''} data-job="${esc(j.id)}"
+      title="${esc(tlJobTooltip(j,info,trade,dur))}"
       style="left:${left}px;width:${width}px;top:${5+(j._tlLane||0)*46}px;--bar-c:${trade.color}">
     ${clipL?'<span class="tl-clip">‹</span>':''}
     <div class="tl-bar-main">
-      <div class="tl-bar-name">${esc(j.title||'(untitled)')}</div>
-      <div class="tl-bar-sub">${esc(trade.label)}${dur>1?` · ${dur}d`:''}</div>
+      <div class="tl-bar-name">${esc(info.name)}</div>
+      <div class="tl-bar-sub">${esc(subBits.join(' · '))}</div>
     </div>
     <span class="tl-mat ${mat?'ok':'no'}" data-mat="${esc(j.id)}" title="${mat?'Materials delivered — tap to clear':'Materials NOT delivered — tap to mark delivered'}">📦</span>
     ${clipR?'<span class="tl-clip">›</span>':''}
@@ -12604,8 +12659,10 @@ function tlCardHtml(j){
   const trade=TL_TRADE[t]||{label:'Other',color:'#64748b'};
   const dur=jobDurationDays(j);
   const sel=tlPlaceJobId===j.id;
-  return `<div class="tl-card${sel?' selected':''}" ${tlCanEdit()&&!isMobile()?'draggable="true"':''} data-job="${esc(j.id)}" style="--card-c:${trade.color}">
-    <span>${esc(j.title||'(untitled)')}</span>
+  const info=tlJobInfo(j);
+  return `<div class="tl-card${sel?' selected':''}" ${tlCanEdit()&&!isMobile()?'draggable="true"':''} data-job="${esc(j.id)}" style="--card-c:${trade.color}"
+      title="${esc(tlJobTooltip(j,info,trade,dur))}">
+    <span>${esc(info.name)}</span>
     <span class="tl-card-sub">${esc(trade.label)} · ${dur}d</span>
     <span class="tl-mat ${j.materialsDelivered?'ok':'no'}" data-mat="${esc(j.id)}">📦</span>
   </div>`;
@@ -12706,9 +12763,7 @@ function tlWireEvents(colW){
   canvas.querySelectorAll('.tl-bar,.tl-card').forEach(el=>{
     el.addEventListener('click',e=>{
       if(e.target.closest('.tl-mat')||e.target.closest('.tl-resize'))return;
-      const id=el.dataset.job;
-      if(isMobile())tlOpenActions(id);
-      else openJobMov(id);
+      tlOpenActions(el.dataset.job);
     });
     if(tlCanEdit()&&!isMobile()){
       el.addEventListener('dragstart',e=>{
