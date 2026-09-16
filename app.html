@@ -377,7 +377,7 @@ header{position:fixed;top:0;left:0;right:0;z-index:50;height:var(--hh);display:f
   width:100%; max-width:560px; max-height:92vh;
   overflow-y:auto;
 }
-.stage-new{--sc:#3b82f6;}.stage-contact{--sc:#a855f7;}.stage-quote{--sc:#f59e0b;}.stage-accepted{--sc:#22c55e;}.stage-invoiced{--sc:#0ea5e9;}.stage-paid{--sc:#10b981;}.stage-declined{--sc:#ef4444;}.stage-done{--sc:#14b8a6;}
+.stage-new{--sc:#3b82f6;}.stage-contact{--sc:#a855f7;}.stage-quote{--sc:#f59e0b;}.stage-accepted{--sc:#22c55e;}.stage-invoiced{--sc:#0ea5e9;}.stage-paid{--sc:#10b981;}.stage-declined{--sc:#ef4444;}.stage-done{--sc:#14b8a6;}.stage-inprogress{--sc:#f97316;}
 /* Invoiced/Paid badges — independent of stage so a card can show both */
 .invoiced-badge{background:rgba(14,165,233,.12)!important;color:#0ea5e9!important;border:1px solid rgba(14,165,233,.4)!important;font-weight:700;}
 .invoiced-badge.paid-badge{background:rgba(16,185,129,.12)!important;color:#10b981!important;border-color:rgba(16,185,129,.4)!important;}
@@ -1435,13 +1435,13 @@ body:not(.role-owner):not(.role-manager) .role-financial-only{display:none!impor
     <div class="sync-dot" id="syncDot"></div>
     <span class="sync-lbl" id="syncLbl" onclick="manualResync()" title="Tap to resync"></span>
     <div class="dtabs" id="dtabs">
-      <button class="dtab active" id="dtSched" onclick="switchMain('sched')">📅 SCHEDULE <span class="dbadge" id="dtBlBadge">0</span></button>
+      <button class="dtab active" id="dtHome" onclick="switchMain('home')">🏠 HOME</button>
+      <button class="dtab" id="dtSched" onclick="switchMain('sched')">📅 SCHEDULE <span class="dbadge" id="dtBlBadge">0</span></button>
       <button class="dtab" id="dtCRM" onclick="switchMain('crm')">👥 CUSTOMERS <span class="dbadge" id="dtCrmBadge">0</span></button>
       <button class="dtab" id="dtMsg" onclick="switchMain('msg')">💬 MESSAGES <span class="dbadge" id="dtMsgBadge">0</span></button>
       <button class="dtab" id="dtEst" onclick="switchMain('est')">📄 ESTIMATES</button>
       <button class="dtab" id="dtPipe" onclick="switchMain('pipe')">📋 PIPELINE</button>
       <button class="dtab" id="dtTasks" onclick="switchMain('tasks')">✓ TASKS <span class="dbadge" id="dtTasksBadge">0</span></button>
-      <button class="dtab" id="dtMat" onclick="switchMain('mat')">🏗 MATERIALS</button>
     </div>
     <button class="dadd btn-amber" id="daddBtn" style="border-radius:6px;font-size:12px;padding:6px 12px;">
       <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
@@ -1451,7 +1451,10 @@ body:not(.role-owner):not(.role-manager) .role-financial-only{display:none!impor
 </header>
 
 <div class="bnav">
-  <button class="bnbtn active" id="bnSched" onclick="switchMain('sched')">
+  <button class="bnbtn active" id="bnHome" onclick="switchMain('home')">
+    <div class="bnicon">🏠</div><div class="bnlbl">HOME</div>
+  </button>
+  <button class="bnbtn" id="bnSched" onclick="switchMain('sched')">
     <div class="bnicon">📅</div><div class="bnlbl">SCHEDULE</div>
     <div class="bnbadge" id="bnBlBadge"></div>
   </button>
@@ -1473,14 +1476,52 @@ body:not(.role-owner):not(.role-manager) .role-financial-only{display:none!impor
     <div class="bnicon">✓</div><div class="bnlbl">TASKS</div>
     <div class="bnbadge" id="bnTasksBadge"></div>
   </button>
-  <button class="bnbtn" id="bnMat" onclick="switchMain('mat')">
-    <div class="bnicon">🏗</div><div class="bnlbl">MATERIALS</div>
-  </button>
 </div>
 
 <button class="fab" id="fabBtn" onclick="handleFab()">+</button>
 
+
+
 <div class="abody">
+
+  <!-- ═══ HOME ═══ -->
+  <style>
+  #vHome.active{display:block;overflow-y:auto;}
+  .home-wrap{max-width:1100px;margin:0 auto;padding:18px 16px 90px;}
+  .home-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;gap:10px;}
+  .home-title{font-size:18px;font-weight:700;color:var(--white);letter-spacing:-.01em;}
+  .home-date{font-size:10px;color:var(--muted);letter-spacing:.14em;text-transform:uppercase;margin-top:2px;font-weight:600;}
+  .home-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:14px;}
+  .home-w{background:var(--steel-mid);border:1px solid var(--iron);border-radius:8px;overflow:hidden;display:flex;flex-direction:column;}
+  .home-w-head{display:flex;align-items:center;justify-content:space-between;padding:11px 14px;border-bottom:1px solid var(--iron);cursor:pointer;gap:8px;}
+  .home-w-title{font-size:10px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--white);}
+  .home-w-meta{font-size:10px;color:var(--muted);font-variant-numeric:tabular-nums;letter-spacing:.06em;white-space:nowrap;}
+  .home-w-body{padding:8px 14px 12px;}
+  .home-row{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.04);font-size:13px;color:var(--white);cursor:pointer;min-width:0;}
+  .home-row:last-child{border-bottom:none;}
+  .home-row-sub{font-size:11px;color:var(--muted);}
+  .home-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+  .home-val{margin-left:auto;font-weight:700;color:var(--amber);font-variant-numeric:tabular-nums;font-size:12px;white-space:nowrap;flex-shrink:0;}
+  .home-empty{color:var(--muted);font-size:12px;padding:10px 0;}
+  .home-cust-overlay{position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:1200;display:flex;align-items:center;justify-content:center;}
+  .home-cust{background:var(--steel-mid);border:1px solid var(--iron);border-radius:8px;padding:18px;width:min(92vw,360px);}
+  .home-cust-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.05);color:var(--white);font-size:13px;}
+  .home-cust-row:last-child{border-bottom:none;}
+  .home-cust-row button{background:var(--steel);border:1px solid var(--iron);color:var(--white);border-radius:4px;cursor:pointer;font-size:12px;padding:2px 8px;}
+  .home-cust-row button:disabled{opacity:.3;cursor:default;}
+  </style>
+  <div class="view" id="vHome">
+    <div class="home-wrap">
+      <div class="home-head">
+        <div>
+          <div class="home-title" id="homeGreeting">Home</div>
+          <div class="home-date" id="homeDate"></div>
+        </div>
+        <button class="btn btn-ghost btn-sm" onclick="openHomeCustomize()">⚙ Customize</button>
+      </div>
+      <div class="home-grid" id="homeGrid"></div>
+    </div>
+  </div>
 
   <!-- ═══ SCHEDULER ═══ -->
   <div class="view active" id="vSched">
@@ -1579,6 +1620,89 @@ body:not(.role-owner):not(.role-manager) .role-financial-only{display:none!impor
         <input type="range" class="year-zoom-slider" id="yearZoomSlider" min="1" max="6" value="3" step="1"/>
         <span class="year-zoom-val" id="yearZoomVal">3 cols</span>
       </div>
+    </div>
+    <!-- ═══ INSTALL TIMELINE (replaces the week grid when the Install tab is active) ═══ -->
+    <style>
+    /* Timeline mode must beat the desktop layout rules that pin the week
+       grid open with display:flex!important (.dtopbar/.dsched-body etc.).
+       body.tl-mode + !important out-specifies them in both cascades. */
+    body.tl-mode .dtopbar,body.tl-mode .vtbar,body.tl-mode .dsched-body,
+    body.tl-mode .dsidebar,body.tl-mode .dcal,body.tl-mode .cgrid,
+    body.tl-mode .month-wrap,body.tl-mode .year-wrap,body.tl-mode .wx-strip,
+    body.tl-mode .calnav,body.tl-mode .bltog,body.tl-mode .bldrawer,
+    body.tl-mode .daystrip,body.tl-mode .daycontent,
+    body.tl-mode #resizerSidebar,body.tl-mode .wx-bar-desktop{display:none!important;}
+    .tl-wrap{display:flex;flex-direction:column;flex:1;min-height:0;}
+    .tl-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:10px 14px;border-bottom:1px solid var(--iron);flex-wrap:wrap;}
+    .tl-title{font-size:13px;font-weight:700;color:var(--white);letter-spacing:.02em;white-space:nowrap;}
+    .tl-range{font-size:11px;color:var(--muted);margin-left:8px;font-variant-numeric:tabular-nums;}
+    .tl-controls{display:flex;align-items:center;gap:6px;flex-wrap:wrap;}
+    .tl-btn{background:var(--steel);border:1px solid var(--iron);color:var(--white);border-radius:4px;cursor:pointer;font-family:inherit;font-size:11px;font-weight:600;padding:5px 10px;}
+    .tl-btn:hover{border-color:var(--amber);}
+    .tl-pill{background:transparent;border:1px solid var(--iron);color:var(--muted);border-radius:99px;cursor:pointer;font-family:inherit;font-size:10px;font-weight:700;letter-spacing:.08em;padding:4px 10px;}
+    .tl-pill.active{border-color:var(--amber);color:var(--amber);}
+    .tl-banner{margin:10px 14px 0;padding:9px 12px;border:1px solid #f59e0b66;background:#f59e0b14;color:#fbbf24;font-size:11px;border-radius:6px;}
+    .tl-scroll{flex:1;overflow:auto;min-height:0;max-height:calc(100vh - 230px);position:relative;}
+    .tl-canvas{position:relative;}
+    .tl-row{display:flex;align-items:stretch;border-bottom:1px solid var(--iron);}
+    .tl-crewcell{position:sticky;left:0;z-index:3;background:var(--steel-mid);border-right:1px solid var(--iron);display:flex;align-items:center;gap:6px;padding:6px 10px;font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--white);flex-shrink:0;}
+    .tl-crewcell .tl-crew-edit{background:transparent;border:none;color:var(--muted);cursor:pointer;font-size:11px;padding:1px 3px;}
+    .tl-crewcell .tl-crew-edit:hover{color:var(--amber);}
+    .tl-hdr{position:sticky;top:0;z-index:5;background:var(--steel-mid);}
+    .tl-hdr .tl-crewcell{z-index:6;background:var(--steel-mid);}
+    .tl-day{flex-shrink:0;border-right:1px solid rgba(255,255,255,.05);padding:5px 4px 4px;text-align:center;background:var(--steel-mid);}
+    .tl-day.we{background:rgba(0,0,0,.18);}
+    .tl-day.today{background:rgba(245,158,11,.12);box-shadow:inset 0 -2px 0 var(--amber);}
+    .tl-day-dow{font-size:8px;font-weight:700;letter-spacing:.16em;color:var(--muted);}
+    .tl-day.today .tl-day-dow{color:var(--amber);}
+    .tl-day-date{font-size:11px;font-weight:700;color:var(--white);font-variant-numeric:tabular-nums;}
+    .tl-wx{font-size:9px;color:var(--muted);margin-top:2px;min-height:12px;white-space:nowrap;overflow:hidden;}
+    .tl-wx.warn{color:#fbbf24;}
+    .tl-wx-rain{color:#60a5fa;}
+    .tl-un{position:sticky;z-index:4;background:var(--steel);}
+    .tl-un .tl-crewcell{background:var(--steel);color:var(--muted);}
+    .tl-unzone{flex:1;display:flex;align-items:center;gap:8px;padding:8px 10px;overflow-x:auto;min-height:46px;}
+    .tl-unzone.drag-over{background:rgba(245,158,11,.08);}
+    .tl-card{flex-shrink:0;display:flex;align-items:center;gap:7px;background:var(--steel-mid);border:1px solid var(--iron);border-left:3px solid var(--card-c,#64748b);border-radius:4px;padding:6px 10px;font-size:11px;color:var(--white);cursor:grab;white-space:nowrap;}
+    .tl-card.selected{border-color:var(--amber);box-shadow:0 0 0 1px var(--amber);}
+    .tl-card-sub{color:var(--muted);font-size:10px;}
+    .tl-track{position:relative;flex:1;min-height:52px;}
+    .tl-track.drag-over{background:rgba(245,158,11,.05);}
+    .tl-today-col{position:absolute;top:0;bottom:0;background:rgba(245,158,11,.06);pointer-events:none;}
+    .tl-bar{position:absolute;height:40px;display:flex;align-items:center;gap:4px;background:var(--steel);border:1px solid var(--bar-c,#3b82f6);border-left:4px solid var(--bar-c,#3b82f6);border-radius:4px;padding:0 4px 0 7px;cursor:grab;overflow:hidden;z-index:1;}
+    .tl-bar:hover{z-index:2;box-shadow:0 2px 10px rgba(0,0,0,.4);}
+    .tl-bar.selected{box-shadow:0 0 0 2px var(--amber);z-index:2;}
+    .tl-bar.tl-conflict{outline:2px dashed #ff3b3b;outline-offset:2px;box-shadow:0 0 0 4px rgba(239,68,68,.25);}
+    .tl-bar-main{min-width:0;flex:1;}
+    .tl-bar-name{font-size:11px;font-weight:700;color:var(--white);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.25;}
+    .tl-bar-sub{font-size:9px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;line-height:1.2;}
+    .tl-mat{flex-shrink:0;font-size:10px;border-radius:3px;padding:1px 3px;cursor:pointer;border:1px solid transparent;}
+    .tl-mat.ok{border-color:#22c55e88;background:#22c55e1a;}
+    .tl-mat.no{border-color:#ef444488;background:#ef44441a;filter:grayscale(.6);}
+    .tl-clip{flex-shrink:0;color:var(--muted);font-size:10px;font-weight:700;}
+    .tl-resize{position:absolute;right:0;top:0;bottom:0;width:9px;cursor:ew-resize;background:linear-gradient(to right,transparent,rgba(255,255,255,.12));}
+    .tl-empty{padding:26px 16px;color:var(--muted);font-size:12px;text-align:center;}
+    .tl-actionbar{position:fixed;left:0;right:0;bottom:64px;z-index:1100;display:flex;gap:8px;justify-content:center;padding:10px;background:rgba(10,14,20,.94);border-top:1px solid var(--iron);}
+    .tl-actionbar .tl-btn{font-size:12px;padding:8px 14px;}
+    .tl-hint{position:fixed;left:0;right:0;bottom:64px;z-index:1100;text-align:center;padding:10px;background:rgba(245,158,11,.95);color:#111;font-size:12px;font-weight:700;}
+    </style>
+    <div class="tl-wrap" id="tlWrap" style="display:none">
+      <div class="tl-head">
+        <div class="tl-title">🔨 Crew Timeline<span class="tl-range" id="tlRangeLbl"></span></div>
+        <div class="tl-controls">
+          <button class="tl-btn" onclick="tlShift(-7)" title="Back one week">‹</button>
+          <button class="tl-btn" onclick="tlGoToday()">Today</button>
+          <button class="tl-btn" onclick="tlShift(7)" title="Forward one week">›</button>
+          <span style="width:6px"></span>
+          <button class="tl-pill" id="tlWin7"  onclick="tlSetWindow(7)">1W</button>
+          <button class="tl-pill" id="tlWin14" onclick="tlSetWindow(14)">2W</button>
+          <button class="tl-pill" id="tlWin28" onclick="tlSetWindow(28)">4W</button>
+          <span style="width:6px"></span>
+          <button class="tl-btn" id="tlAddCrewBtn" onclick="tlAddCrew()">+ Crew</button>
+        </div>
+      </div>
+      <div id="tlBanner"></div>
+      <div class="tl-scroll" id="tlScroll"><div class="tl-canvas" id="tlCanvas"></div></div>
     </div>
   </div><!-- end vSched -->
 
@@ -2107,8 +2231,9 @@ body:not(.role-owner):not(.role-manager) .role-financial-only{display:none!impor
         <select class="finput" id="lStage">
           <option value="new">🔵 New Lead</option><option value="contact">🟣 Contacted</option>
           <option value="quote">🟡 Quote Sent</option><option value="accepted">🟢 Accepted</option>
-          <option value="invoiced">🟦 Invoiced</option><option value="paid">💚 Paid</option>
-          <option value="declined">🔴 Declined</option><option value="done">🩵 Completed</option>
+          <option value="declined">🔴 Declined</option><option value="inprogress">🟠 In Progress</option>
+          <option value="done">🩵 Completed</option><option value="invoiced">🟦 Invoiced</option>
+          <option value="paid">💚 Paid</option>
         </select>
       </div>
       <div><label class="flbl">Color Tag</label><div class="cprow" id="lCP" style="padding-top:5px"></div></div>
@@ -2278,11 +2403,11 @@ function canSeeTab(tab){
   if(!currentRole) return true; // pre-auth or no profile yet — show everything
   if(isLaborer()){
     // Laborers only see schedule + their assigned tasks + materials
-    return ['sched','tasks','mat'].includes(tab);
+    return ['home','sched','tasks'].includes(tab);
   }
   if(isSalesman()){
     // Salesmen see most things except templates management
-    return ['sched','crm','est','pipe','tasks','mat'].includes(tab);
+    return ['home','sched','crm','est','pipe','tasks'].includes(tab);
   }
   return true; // owner & manager see everything
 }
@@ -2328,12 +2453,12 @@ function clearProfile(){currentRole=null;currentCompanyId=null;currentCompany=nu
 function applyRoleBasedUI(){
   // Two parallel nav strips: bottom-nav (mobile) and top-tabs (desktop)
   const tabMap={
+    home: ['bnHome', 'dtHome'],
     sched:['bnSched','dtSched'],
     crm:  ['bnCRM',  'dtCRM'],
     est:  ['bnEst',  'dtEst'],
     pipe: ['bnPipe', 'dtPipe'],
     tasks:['bnTasks','dtTasks'],
-    mat:  ['bnMat',  'dtMat']
   };
   Object.entries(tabMap).forEach(([key,ids])=>{
     const visible=canSeeTab(key);
@@ -2344,7 +2469,7 @@ function applyRoleBasedUI(){
   });
   // If the current tab is hidden for this role, switch to a visible one
   if(typeof mainView!=='undefined'&&mainView&&!canSeeTab(mainView)){
-    const fallback=isLaborer()?'sched':isSalesman()?'crm':'sched';
+    const fallback='home';  // every role can see Home
     if(typeof switchMain==='function') switchMain(fallback);
   }
   // Body class so CSS can hide things by role (profitability, etc.)
@@ -4050,10 +4175,10 @@ function lsSet(key,val){try{localStorage.setItem(key,JSON.stringify(val));}catch
 // ── DEBOUNCED SAVE QUEUE ──────────────────────────────────────
 const saveQueue={jobs:{},leads:{},docs:{},templates:{},tasks:{},
   customers:{},customer_addresses:{},tags:{},customer_tags:{},estimate_tags:{},
-  pipeline_boards:{},pipeline_columns:{},pipeline_cards:{}};
+  pipeline_boards:{},pipeline_columns:{},pipeline_cards:{},crews:{}};
 const saveTimers={jobs:{},leads:{},docs:{},templates:{},tasks:{},
   customers:{},customer_addresses:{},tags:{},customer_tags:{},estimate_tags:{},
-  pipeline_boards:{},pipeline_columns:{},pipeline_cards:{}};
+  pipeline_boards:{},pipeline_columns:{},pipeline_cards:{},crews:{}};
 // Persistent queue of saves that haven't reached Supabase yet. Survives
 // reload. Each entry = {table, id, item, attempts, firstQueued}.
 // Stored as an array (not keyed) so multiple edits to the same id over
@@ -4103,6 +4228,7 @@ function _toDb(table,item){
   if(table==='tags') return item;
   if(table==='customer_tags') return item;
   if(table==='estimate_tags') return item;
+  if(table==='crews') return item;
   // Pipeline kanban
   if(table==='pipeline_boards') return item;
   if(table==='pipeline_columns') return item;
@@ -4160,6 +4286,7 @@ function flushSaveQueue(){
   flush('tags',{...saveQueue.tags});
   flush('customer_tags',{...saveQueue.customer_tags});
   flush('estimate_tags',{...saveQueue.estimate_tags});
+  flush('crews',{...saveQueue.crews});
   // Pipeline kanban
   flush('pipeline_boards',{...saveQueue.pipeline_boards});
   flush('pipeline_columns',{...saveQueue.pipeline_columns});
@@ -4244,6 +4371,7 @@ async function loadAllRemote(){
     sb.get('tasks').catch(()=>[]),         // tasks may not exist for everyone
     sb.get('templates').catch(()=>[]),     // templates likewise
   ]);
+  if(j.length)jobsHaveCrewCols=Object.prototype.hasOwnProperty.call(j[0],'crew_id');
   jobs=j.map(dbToJob);
   leads=l.map(dbToLead);
   docs=d.map(dbToDoc);
@@ -4290,15 +4418,18 @@ const COLORS=[
   {id:'purple',hex:'#a855f7'},{id:'pink',hex:'#ec4899'},{id:'teal',hex:'#14b8a6'},
   {id:'orange',hex:'#f97316'},{id:'red',hex:'#ef4444'},
 ];
+// Board order set by Blake 2026-09-16:
+// New → Contacted → Quoting → Accepted → Declined → In Progress → Done → Invoiced → Paid
 const STAGES=[
   {id:'new',label:'New',color:'#3b82f6',cls:'stage-new'},
   {id:'contact',label:'Contacted',color:'#a855f7',cls:'stage-contact'},
   {id:'quote',label:'Quoting',color:'#f59e0b',cls:'stage-quote'},
   {id:'accepted',label:'Accepted',color:'#22c55e',cls:'stage-accepted'},
+  {id:'declined',label:'Declined',color:'#ef4444',cls:'stage-declined'},
+  {id:'inprogress',label:'In Progress',color:'#f97316',cls:'stage-inprogress'},
+  {id:'done',label:'Done',color:'#14b8a6',cls:'stage-done'},
   {id:'invoiced',label:'Invoiced',color:'#0ea5e9',cls:'stage-invoiced'},
   {id:'paid',label:'Paid',color:'#10b981',cls:'stage-paid'},
-  {id:'declined',label:'Declined',color:'#ef4444',cls:'stage-declined'},
-  {id:'done',label:'Done',color:'#14b8a6',cls:'stage-done'},
 ];
 const JOB_TYPES=['Roofing','Siding','Gutters','Soffit & Fascia'];
 const TC={Roofing:'#f59e0b',Siding:'#3b82f6',Gutters:'#22c55e','Soffit & Fascia':'#a855f7'};
@@ -4309,6 +4440,10 @@ const MOS=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','De
 
 // ── STATE ────────────────────────────────────────────────────
 let jobs=[],leads=[];
+// Install timeline (2026-09-08): crews + column-presence flags
+let crews=[];                 // [{id,name,position,company_id}]
+let jobsHaveCrewCols=false;   // jobs.crew_id/materials_delivered/duration_days exist
+let crewsTableMissing=false;  // public.crews not migrated yet
 // Customer entity (added in Phase 3 refactor) — leads still exist but
 // now reference customers via leads.customer_id. customers is the spine.
 let customers=[];          // {id, name, phone, phone_normalized, email, notes, source, archived_at, ...}
@@ -5015,9 +5150,12 @@ const setSS=(s,l)=>{
   document.getElementById('syncDot').className='sync-dot '+s;
   document.getElementById('syncLbl').textContent=l;
 };
-const dbToJob=r=>({id:r.id,title:r.title,note:r.note||'',color:r.color||'amber',day:r.day||'backlog',endDay:r.end_day||'',leadId:r.lead_id||null,photos:safeParseArr(r.photos),checklist:safeParseArr(r.checklist),apptType:normalizeApptType(r.appt_type),startTime:r.start_time||'',endTime:r.end_time||'',assigneeId:r.assignee_id||null,assigneeIds:_normAssigneeIds(r),activity:safeParseArr(r.activity),linkedDocId:r.linked_doc_id||null,linkedMoId:r.linked_mo_id||null});
+const dbToJob=r=>({id:r.id,title:r.title,note:r.note||'',color:r.color||'amber',day:r.day||'backlog',endDay:r.end_day||'',leadId:r.lead_id||null,photos:safeParseArr(r.photos),checklist:safeParseArr(r.checklist),apptType:normalizeApptType(r.appt_type),startTime:r.start_time||'',endTime:r.end_time||'',assigneeId:r.assignee_id||null,assigneeIds:_normAssigneeIds(r),activity:safeParseArr(r.activity),linkedDocId:r.linked_doc_id||null,linkedMoId:r.linked_mo_id||null,crewId:r.crew_id||null,materialsDelivered:!!r.materials_delivered,durationDays:r.duration_days||null});
 const dbToLead=r=>({id:r.id,name:r.name,contact:r.contact||'',phone:r.phone||'',email:r.email||'',types:r.type?r.type.split(',').filter(Boolean):[],value:r.value||'',stage:r.stage||'new',address:r.address||'',notes:r.notes||'',color:r.color||'blue',estId:r.est_id||null,matList:safeParseArr(r.mat_list),source:r.source||'',activity:safeParseArr(r.activity),createdAt:r.created_at||r.created||null,assignedTo:r.assigned_to||null,customer_id:r.customer_id||null});
-const jobToDb=j=>({id:j.id,title:j.title,note:j.note,color:j.color,day:j.day,end_day:j.endDay||'',lead_id:j.leadId||null,photos:JSON.stringify(j.photos||[]),checklist:JSON.stringify(j.checklist||[]),appt_type:normalizeApptType(j.apptType),start_time:j.startTime||'',end_time:j.endTime||'',assignee_id:_firstAssigneeId(j),assignee_ids:getJobAssigneeIds(j),user_id:currentUser?.id||null,updated_at:new Date().toISOString(),activity:JSON.stringify(j.activity||[]),linked_doc_id:j.linkedDocId||null,linked_mo_id:j.linkedMoId||null});
+const jobToDb=j=>({id:j.id,title:j.title,note:j.note,color:j.color,day:j.day,end_day:j.endDay||'',lead_id:j.leadId||null,photos:JSON.stringify(j.photos||[]),checklist:JSON.stringify(j.checklist||[]),appt_type:normalizeApptType(j.apptType),start_time:j.startTime||'',end_time:j.endTime||'',assignee_id:_firstAssigneeId(j),assignee_ids:getJobAssigneeIds(j),user_id:currentUser?.id||null,updated_at:new Date().toISOString(),activity:JSON.stringify(j.activity||[]),linked_doc_id:j.linkedDocId||null,linked_mo_id:j.linkedMoId||null,
+  // Only sent once the columns exist (detected on load) so deploying this
+  // before the migration can't 400 every job save.
+  ...(jobsHaveCrewCols?{crew_id:j.crewId||null,materials_delivered:!!j.materialsDelivered,duration_days:j.durationDays?parseInt(j.durationDays):null}:{})});
 
 // ── ASSIGNEE HELPERS ────────────────────────────────────────
 // A job can have multiple assignees. The first id in assigneeIds is the
@@ -5076,6 +5214,23 @@ const dbToTmpl=r=>({id:r.id,name:r.name,scope:r.scope||'',lineItems:safeParseArr
 const tmplToDb=t=>({id:t.id,name:t.name,scope:t.scope||'',line_items:JSON.stringify(t.lineItems||[]),tax:parseFloat(t.tax)||0,discount:parseFloat(t.discount)||0,notes:t.notes||'',created:t.created||Date.now(),user_id:currentUser?.id||null,updated_at:new Date().toISOString()});
 function safeParseArr(v){try{const p=typeof v==='string'?JSON.parse(v):v;return Array.isArray(p)?p:[];}catch{return[];}}
 function saveJob(j){setSS('syncing','Saving…');queueSave('jobs',j);}
+
+// ── CREWS (install timeline) ─────────────────────────────────
+function saveCrew(c){setSS('syncing','Saving…');queueSave('crews',c);}
+async function delCrewRemote(id){
+  try{await sb.del('crews',id);}catch(e){console.error('delCrewRemote:',e);}
+}
+async function loadCrewsRemote(){
+  try{
+    crews=await sb.req('GET','crews?order=position.asc');
+    crewsTableMissing=false;
+    return true;
+  }catch(e){
+    // Table not migrated yet — the timeline shows a banner instead of breaking
+    crewsTableMissing=true;crews=[];
+    return false;
+  }
+}
 
 // ── Create WO / MO from a Job ───────────────────────────────────────
 // The existing openWorkOrder/openMaterialOrder flow expects to be invoked
@@ -5444,6 +5599,7 @@ async function loadAppData(){
   setSS('syncing','Syncing…');
   try{
     const[j,l]=await Promise.all([sb.get('jobs'),sb.get('leads')]);
+    if(j.length)jobsHaveCrewCols=Object.prototype.hasOwnProperty.call(j[0],'crew_id');
     jobs=j.map(dbToJob);leads=l.map(dbToLead);
     lsSet('jobs_cache',j);lsSet('leads_cache',l);
     setSS('synced','Synced');setTimeout(()=>document.getElementById('syncLbl').textContent='',3000);
@@ -5465,7 +5621,8 @@ async function loadAppData(){
   loadDocs();loadTemplates();loadTasks();loadTeam();
   Promise.all([loadDocsRemote(),loadTemplatesRemote(),loadTasksRemote(),
                loadCustomersRemote(),loadCustomerAddressesRemote(),
-               loadTagsRemote(),loadCustomerTagsRemote(),loadEstimateTagsRemote()
+               loadTagsRemote(),loadCustomerTagsRemote(),loadEstimateTagsRemote(),
+               loadCrewsRemote()
   ]).then(([dOk,tOk,tasksOk])=>{
     // Always re-render the estimates list when docs come back from the server,
     // even if the user isn't on the Estimates view yet. switchMain('est') won't
@@ -5478,13 +5635,21 @@ async function loadAppData(){
     if(dOk&&mainView==='pipe'&&typeof renderPipeline==='function'){
       try{renderPipeline();}catch(e){console.error('renderPipeline failed:',e);}
     }
+    // Home is the landing view — refresh its widgets once remote data lands
+    if(mainView==='home'&&typeof renderHome==='function'){
+      try{renderHome();}catch(e){console.error('renderHome failed:',e);}
+    }
+    // Install timeline needs the crews rows once they arrive
+    if(mainView==='sched'&&scheduleGroup==='install'){
+      try{renderSched();}catch(e){console.error('timeline rerender failed:',e);}
+    }
     if(tasksOk&&mainView==='tasks'&&typeof renderTaskList==='function')renderTaskList();
     if(tasksOk) updateTaskBadge();
     // Start background polling for newly signed estimates
     try{startDocPolling();}catch(e){console.error('polling start failed:',e);}
   }).catch(()=>{});
   applyLayout();
-  switchMain('sched');
+  switchMain('home');
   if(calView==='week')fetchWeather();
   renderAssigneeFilters();
   initResizers();
@@ -5502,13 +5667,14 @@ function switchMain(v){
   }
   mainView=v;
   document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));
-  const viewMap={sched:'vSched',crm:'vCRM',est:'vEst',tasks:'vTasks',pipe:'vPipe',msg:'vMsg',mat:'vMat'};
+  const viewMap={home:'vHome',sched:'vSched',crm:'vCRM',est:'vEst',tasks:'vTasks',pipe:'vPipe',msg:'vMsg',mat:'vMat'};
   document.getElementById(viewMap[v]||'vSched').classList.add('active');
-  ['bnSched','bnCRM','bnEst','bnTasks','bnPipe','bnMsg','bnMat'].forEach(id=>{const el=document.getElementById(id);if(el)el.classList.toggle('active',id==='bn'+v.charAt(0).toUpperCase()+v.slice(1));});
-  ['dtSched','dtCRM','dtEst','dtTasks','dtPipe','dtMsg','dtMat'].forEach(id=>{const el=document.getElementById(id);if(el)el.classList.toggle('active',id==='dt'+v.charAt(0).toUpperCase()+v.slice(1));});
-  const lblMap={sched:'New Job',crm:'New Customer',est:'New Estimate',tasks:'New Task',pipe:'New Estimate',msg:'↻ Refresh',mat:'Search'};
+  ['bnHome','bnSched','bnCRM','bnEst','bnTasks','bnPipe','bnMsg'].forEach(id=>{const el=document.getElementById(id);if(el)el.classList.toggle('active',id==='bn'+v.charAt(0).toUpperCase()+v.slice(1));});
+  ['dtHome','dtSched','dtCRM','dtEst','dtTasks','dtPipe','dtMsg'].forEach(id=>{const el=document.getElementById(id);if(el)el.classList.toggle('active',id==='dt'+v.charAt(0).toUpperCase()+v.slice(1));});
+  const lblMap={home:'New Job',sched:'New Job',crm:'New Customer',est:'New Estimate',tasks:'New Task',pipe:'New Estimate',msg:'↻ Refresh',mat:'Search'};
   document.getElementById('daddLbl').textContent=lblMap[v]||'New';
   document.getElementById('daddBtn').onclick=
+    v==='home'?()=>openJobMov('backlog'):
     v==='sched'?()=>openJobMov('backlog'):
     v==='crm'?()=>openCustomerMov():
     v==='est'?()=>openDocEditor():
@@ -5516,7 +5682,8 @@ function switchMain(v){
     v==='pipe'?()=>openDocEditor():
     v==='msg'?()=>renderMsgInbox():
     ()=>document.getElementById('matSearch')?.focus();
-  if(v==='crm')renderCustomers();
+  if(v==='home')renderHome();
+  else if(v==='crm')renderCustomers();
   else if(v==='sched')renderSched();
   else if(v==='est')renderDocList();
   else if(v==='tasks'){renderTaskList();filterTasks(taskFilter);}
@@ -5525,7 +5692,8 @@ function switchMain(v){
   else if(v==='mat')renderMatView();
 }
 function handleFab(){
-  if(mainView==='sched')openJobMov('backlog');
+  if(mainView==='home')openJobMov('backlog');
+  else if(mainView==='sched')openJobMov('backlog');
   else if(mainView==='crm')openCustomerMov();
   else if(mainView==='est')openDocEditor();
   else if(mainView==='tasks')openTaskMov();
@@ -5568,6 +5736,14 @@ function setCalView(v){
 
 // ── RENDER SCHEDULER ─────────────────────────────────────────
 function renderSched(){
+  if(scheduleGroup==='install'){
+    // Install tab = crew timeline, not the calendar grid (2026-09-08)
+    applyInstallMode(true);
+    renderInstallTimeline();
+    updateBadges();
+    return;
+  }
+  applyInstallMode(false);
   if(calView==='week') renderWeek();
   else if(calView==='month') renderMonth();
   else renderYear();
@@ -6037,6 +6213,7 @@ function renderPipeCard(card){
           <div class="pipe-card-tags">${chips.join('')}</div>
           ${val?`<div class="pipe-card-val">$${Math.round(val).toLocaleString()}</div>`:''}
         </div>
+        <div class="pipe-card-row" style="margin-top:7px">${docStatusControl(d)}</div>
       </div>
     </div>`;
 }
@@ -6080,6 +6257,191 @@ function wirePipeDragDrop(){
 // ══════════════════════════════════════════════════════════════
 // END PIPELINE
 // ══════════════════════════════════════════════════════════════
+
+// ══════════════════════════════════════════════════════════════
+// HOME — customizable widget dashboard (added 2026-09-04)
+// The landing view. Each widget is a quick peek at one part of the app and
+// clicks through to the full tab. Show/hide + order live in localStorage
+// (ids only), so every device can arrange its own home screen.
+// ══════════════════════════════════════════════════════════════
+const HOME_WIDGETS=[
+  {id:'sched',label:"Today's Schedule",fin:false},
+  {id:'pipe', label:'Pipeline',        fin:true},
+  {id:'tasks',label:"Today's Tasks",   fin:false},
+  {id:'money',label:'Money & Signatures',fin:true},
+];
+const HOME_PREFS_KEY='home_widgets_v1';
+function homePrefs(){
+  let st=lsGet(HOME_PREFS_KEY,null);
+  if(!Array.isArray(st)) st=[];
+  const out=[];
+  for(const p of st){
+    if(p&&HOME_WIDGETS.find(w=>w.id===p.id)&&!out.find(x=>x.id===p.id)) out.push({id:p.id,on:p.on!==false});
+  }
+  for(const w of HOME_WIDGETS) if(!out.find(x=>x.id===w.id)) out.push({id:w.id,on:true});
+  return out;
+}
+function saveHomePrefs(p){lsSet(HOME_PREFS_KEY,p);}
+
+function renderHome(){
+  const grid=document.getElementById('homeGrid');
+  if(!grid) return;
+  const g=document.getElementById('homeGreeting');
+  if(g){
+    const h=new Date().getHours();
+    const first=String(currentDisplayName||currentUser?.name||'').split(' ')[0];
+    g.textContent=(h<12?'Good morning':h<17?'Good afternoon':'Good evening')+(first?', '+first:'');
+  }
+  const dEl=document.getElementById('homeDate');
+  if(dEl){const n=new Date();dEl.textContent=DNF[(n.getDay()||7)-1]+', '+MO[n.getMonth()]+' '+n.getDate();}
+  const builders={sched:homeWSched,pipe:homeWPipe,tasks:homeWTasks,money:homeWMoney};
+  grid.innerHTML='';
+  for(const p of homePrefs()){
+    if(!p.on) continue;
+    const def=HOME_WIDGETS.find(w=>w.id===p.id);
+    if(!def||(def.fin&&!canSeeFinancials())) continue;
+    // One broken widget must never take down the whole home screen
+    try{grid.appendChild(builders[p.id]());}catch(e){console.error('home widget '+p.id+':',e);}
+  }
+  if(!grid.children.length)
+    grid.innerHTML='<div class="home-empty">All widgets are hidden — tap ⚙ Customize to turn some on.</div>';
+}
+
+function _homeW(title,meta,bodyHtml,go){
+  const el=document.createElement('div');el.className='home-w';
+  el.innerHTML=`<div class="home-w-head"><span class="home-w-title">${esc(title)}</span><span class="home-w-meta">${meta||''}</span></div><div class="home-w-body">${bodyHtml}</div>`;
+  el.querySelector('.home-w-head').onclick=go;
+  return el;
+}
+
+function homeWSched(){
+  const active=day=>jobs.filter(j=>{
+    if(!j.day||j.day==='backlog') return false;
+    const end=j.endDay||j.day;
+    return j.day<=day&&end>=day;
+  }).sort((a,b)=>(a.startTime||'99:99').localeCompare(b.startTime||'99:99'));
+  const today=active(_isoLocal(new Date()));
+  const tomorrow=active(_isoLocal(new Date(Date.now()+86400000)));
+  const crew=j=>(getJobAssigneeIds(j)||[]).map(id=>{
+    const m=(teamRoster||[]).find(x=>x.id===id);
+    return m?String(m.name||'').split(' ')[0]:'';
+  }).filter(Boolean).join(', ');
+  const rows=today.slice(0,6).map(j=>{
+    const c=crew(j);
+    const dot=(COLORS.find(x=>x.id===j.color)||{}).hex||'#f59e0b';
+    return `<div class="home-row" onclick="switchMain('sched')">
+      <span class="home-dot" style="background:${dot}"></span>
+      <span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(j.title||'(untitled)')}${c?` <span class="home-row-sub">· ${esc(c)}</span>`:''}</span>
+      <span class="home-val" style="color:var(--muted);font-weight:500">${esc(j.startTime||'')}</span>
+    </div>`;
+  }).join('');
+  const more=today.length>6?`<div class="home-row-sub" style="padding:6px 0">+ ${today.length-6} more</div>`:'';
+  const body=(rows||'<div class="home-empty">Nothing scheduled today.</div>')+more+
+    `<div class="home-row-sub" style="padding-top:8px">Tomorrow: ${tomorrow.length} job${tomorrow.length===1?'':'s'}</div>`;
+  return _homeW("Today's Schedule",today.length+' today',body,()=>switchMain('sched'));
+}
+
+function homeWPipe(){
+  const buckets=pipelineBuckets();
+  let total=0,cnt=0;
+  const rows=[];
+  const addRow=(label,color,arr)=>{
+    if(!arr.length) return;
+    const v=arr.reduce((s,c)=>s+pipeCardValue(c),0);
+    cnt+=arr.length;total+=v;
+    rows.push(`<div class="home-row" onclick="switchMain('pipe')">
+      <span class="home-dot" style="background:${color}"></span><span>${esc(label)}</span>
+      <span class="home-val">${arr.length}${v>0?` · $${Math.round(v).toLocaleString()}`:''}</span></div>`);
+  };
+  if(buckets.none.length) addRow('No status','#64748b',buckets.none);
+  STAGES.forEach(st=>addRow(st.label,st.color,buckets[st.id]));
+  return _homeW('Pipeline',cnt+' job'+(cnt===1?'':'s')+(total>0?` · $${Math.round(total).toLocaleString()}`:''),
+    rows.join('')||'<div class="home-empty">No jobs yet.</div>',()=>switchMain('pipe'));
+}
+
+function homeWTasks(){
+  const board=tasks.filter(exOnBoard);
+  const open=board.filter(t=>!t.done);
+  const doneToday=board.length-open.length;
+  const must=open.filter(t=>t.pri===1).length;
+  const rows=open.slice(0,6).map(t=>`<div class="home-row" onclick="switchMain('tasks')">
+    <span class="home-dot" style="background:${t.pri===1?'#ef4444':'#3b82f6'}"></span>
+    <span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(t.title||'(untitled)')}</span>
+    ${t.pri===1?'<span class="home-row-sub" style="flex-shrink:0">must-do</span>':''}
+  </div>`).join('');
+  const more=open.length>6?`<div class="home-row-sub" style="padding:6px 0">+ ${open.length-6} more</div>`:'';
+  const streak=exState.streak||0;
+  const meta=`${open.length} open${must?` · ${must} must-do`:''}${streak?` · 🔥 ${streak}`:''}`;
+  const body=(rows||`<div class="home-empty">${doneToday?'Board cleared — nice.':'Nothing on the board today.'}</div>`)+more;
+  return _homeW("Today's Tasks",meta,body,()=>switchMain('tasks'));
+}
+
+function homeWMoney(){
+  const est=docs.filter(d=>d.type==='estimate');
+  const val=d=>pipeCardValue({kind:'doc',obj:d});
+  const sum=arr=>arr.reduce((s,d)=>s+val(d),0);
+  const invoiced=est.filter(d=>docStageOf(d)==='invoiced');
+  const paid=est.filter(d=>docStageOf(d)==='paid');
+  const signed=est.filter(d=>d.signature)
+    .sort((a,b)=>String(b.signatureDate||'').localeCompare(String(a.signatureDate||''))).slice(0,3);
+  const money=`
+    <div class="home-row" onclick="switchMain('pipe')"><span class="home-dot" style="background:#0ea5e9"></span><span>Invoiced — awaiting payment</span><span class="home-val">${invoiced.length} · $${Math.round(sum(invoiced)).toLocaleString()}</span></div>
+    <div class="home-row" onclick="switchMain('pipe')"><span class="home-dot" style="background:#10b981"></span><span>Marked paid</span><span class="home-val">${paid.length} · $${Math.round(sum(paid)).toLocaleString()}</span></div>`;
+  const sigs=signed.map(d=>`<div class="home-row" onclick="openDocEditor('${esc(d.id)}')">
+    <span class="home-dot" style="background:#22c55e"></span>
+    <span style="min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">✍ ${esc(d.clientName||'(no name)')} <span class="home-row-sub">${esc(d.num||'')}</span></span>
+    <span class="home-val" style="color:var(--muted);font-weight:500">${d.signatureDate?new Date(d.signatureDate).toLocaleDateString():''}</span>
+  </div>`).join('');
+  return _homeW('Money & Signatures','',money+(sigs||'<div class="home-empty">No signed estimates yet.</div>'),()=>switchMain('est'));
+}
+
+function openHomeCustomize(){
+  closeHomeCustomize();
+  const fin=canSeeFinancials();
+  const ov=document.createElement('div');
+  ov.className='home-cust-overlay';ov.id='homeCustOv';
+  ov.addEventListener('click',e=>{if(e.target===ov)closeHomeCustomize();});
+  ov.innerHTML=`<div class="home-cust">
+    <div style="font-size:11px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--white);margin-bottom:10px;">Home Widgets</div>
+    <div id="homeCustList"></div>
+    <div style="display:flex;justify-content:flex-end;margin-top:12px;"><button class="btn btn-amber btn-sm" onclick="closeHomeCustomize()">Done</button></div>
+  </div>`;
+  document.body.appendChild(ov);
+  const paint=()=>{
+    const list=ov.querySelector('#homeCustList');
+    const prefs=homePrefs();
+    list.innerHTML=prefs.map((p,i)=>{
+      const def=HOME_WIDGETS.find(w=>w.id===p.id);
+      if(!def||(def.fin&&!fin)) return '';
+      return `<div class="home-cust-row">
+        <input type="checkbox" ${p.on?'checked':''} data-tgl="${p.id}"/>
+        <span style="flex:1">${esc(def.label)}</span>
+        <button data-up="${i}" ${i===0?'disabled':''}>↑</button>
+        <button data-dn="${i}" ${i===prefs.length-1?'disabled':''}>↓</button>
+      </div>`;
+    }).join('');
+    list.querySelectorAll('[data-tgl]').forEach(cb=>cb.addEventListener('change',()=>{
+      const prefs=homePrefs();
+      const p=prefs.find(x=>x.id===cb.dataset.tgl);
+      if(p){p.on=cb.checked;saveHomePrefs(prefs);renderHome();paint();}
+    }));
+    const move=(i,dir)=>{
+      const prefs=homePrefs(),j=i+dir;
+      if(j<0||j>=prefs.length) return;
+      [prefs[i],prefs[j]]=[prefs[j],prefs[i]];
+      saveHomePrefs(prefs);renderHome();paint();
+    };
+    list.querySelectorAll('[data-up]').forEach(b=>b.addEventListener('click',()=>move(+b.dataset.up,-1)));
+    list.querySelectorAll('[data-dn]').forEach(b=>b.addEventListener('click',()=>move(+b.dataset.dn,1)));
+  };
+  paint();
+}
+function closeHomeCustomize(){const o=document.getElementById('homeCustOv');if(o)o.remove();}
+// ══════════════════════════════════════════════════════════════
+// END HOME
+// ══════════════════════════════════════════════════════════════
+
+
 
 // ══════════════════════════════════════════════════════════════
 // CUSTOMER / TAG UI BLOCK — ported from June 15 known-good
@@ -9161,7 +9523,7 @@ function _docLeadUncached(d){
 // Invoices, work orders, material orders and lien waivers have no stage of
 // their own — they display the stage of the estimate they came from.
 const DOC_STAGE_TYPES=['estimate','changeorder'];
-const STAGE_RANK={declined:0,new:1,contact:2,quote:3,accepted:4,invoiced:5,paid:6,done:7};
+const STAGE_RANK={declined:0,new:1,contact:2,quote:3,accepted:4,inprogress:5,done:6,invoiced:7,paid:8};
 const docCarriesStage=d=>d&&DOC_STAGE_TYPES.includes(d.type);
 // Set from the row shape at load, so the app can write `stage` once the column
 // exists without any deploy ordering.
@@ -11989,6 +12351,448 @@ function initApptTypePicker(currentType){
   });
 }
 
+
+// ══════════════════════════════════════════════════════════════
+// INSTALL TIMELINE — crew resource view (added 2026-09-08)
+// Replaces the week-grid calendar when the Install schedule tab is active.
+// Rows are crews, the horizontal axis is dates. Jobs render as bars spanning
+// their duration; sold-but-unscheduled work sits in a pinned Unassigned lane.
+// Desktop: drag a card/bar to (re)assign crew + start date in one gesture,
+// drag the right edge to change duration. Mobile: tap-to-select then
+// tap-to-place. Overlaps on one crew get a red outline but are ALLOWED —
+// double-booking is sometimes intentional.
+// Data: jobs.crew_id / materials_delivered / duration_days (columns added by
+// claude/install-timeline-MIGRATION.sql) + a new public.crews table. Until
+// the migration runs, the view still renders read-only-ish and a banner says
+// crew assignments won't persist (jobToDb only sends the columns once
+// detected on load, same pattern as docs.customer_id).
+// ══════════════════════════════════════════════════════════════
+const TL_TRADE={
+  roof_replace:  {label:'Roofing', color:'#dc2626'},
+  siding_replace:{label:'Siding',  color:'#ca8a04'},
+  gutter_replace:{label:'Gutters', color:'#0891b2'},
+  repair:        {label:'Repair',  color:'#f97316'},
+};
+let tlWindowDays=parseInt(lsGet('tl_window_days',14))||14;
+let tlStart=null;                 // ISO date of the leftmost column
+let tlDragJobId=null,tlDragGrab=0;// desktop drag state
+let tlPlaceJobId=null;            // mobile tap-to-place state
+let tlSelectedBar=null;           // mobile: selected job id (action bar open)
+let tlWx=null,tlWxTime=0;
+
+function tlColW(){return isMobile()?74:96;}
+function tlCrewW(){return isMobile()?96:150;}
+function tlTodayIso(){return _isoLocal(new Date());}
+function tlAddDays(iso,n){const d=new Date(iso+'T12:00:00');d.setDate(d.getDate()+n);return _isoLocal(d);}
+function tlDiffDays(a,b){return Math.round((new Date(b+'T12:00:00')-new Date(a+'T12:00:00'))/864e5);}
+function tlCanEdit(){return isOwnerOrManager();}
+
+function jobDurationDays(j){
+  if(j.day&&j.day!=='backlog'&&j.endDay&&j.endDay>=j.day) return tlDiffDays(j.day,j.endDay)+1;
+  return Math.max(1,parseInt(j.durationDays)||1);
+}
+
+// Install-group jobs, honoring the type sub-filter pills.
+function tlInstallJobs(){
+  const sub=apptSubFilter.install;
+  return jobs.filter(j=>{
+    const t=normalizeApptType(j.apptType);
+    const def=APPT_TYPES[t];
+    if(!def||def.group!=='install') return false;
+    if(sub&&sub!=='all'&&t!==sub) return false;
+    return true;
+  });
+}
+
+function tlSetWindow(n){tlWindowDays=n;lsSet('tl_window_days',n);renderInstallTimeline();}
+function tlShift(n){tlStart=tlAddDays(tlStart||tlTodayIso(),n);renderInstallTimeline();}
+function tlGoToday(){tlStart=tlTodayIso();renderInstallTimeline();}
+
+// Toggle the schedule chrome between calendar mode and timeline mode.
+let _tlModeOn=false;
+function applyInstallMode(on){
+  const was=_tlModeOn;_tlModeOn=on;
+  document.body.classList.toggle('tl-mode',on);
+  const tl=document.getElementById('tlWrap');
+  if(on){
+    ['dtopbar','vtbar','wxStrip','calnav','bltog','bldrawer','daystrip','dayContent','dschedBody','monthWrap','yearWrap']
+      .forEach(id=>{const el=document.getElementById(id);if(el)el.style.display='none';});
+    const wx=document.getElementById('wxBarDesktop');if(wx)wx.classList.remove('visible');
+    if(tl)tl.style.display='flex';
+  } else {
+    if(tl)tl.style.display='none';
+    tlClearPlace();
+    if(was){
+      // Restore the calendar chrome exactly once when leaving timeline mode.
+      // setCalView re-renders; its renderSched lands in the sales branch where
+      // applyInstallMode(false) is a no-op (was=false), so no recursion.
+      try{applyLayout();}catch(e){}
+      try{setCalView(calView);}catch(e){}
+    }
+  }
+}
+
+// ── single write paths ───────────────────────────────────────
+function tlAssign(jobId,crewId,newStart){
+  const j=jobs.find(x=>x.id===jobId);if(!j)return;
+  const dur=jobDurationDays(j);
+  j.crewId=crewId||null;
+  j.day=newStart;
+  j.endDay=dur>1?tlAddDays(newStart,dur-1):'';
+  j.durationDays=dur;
+  saveJob(j);tlClearPlace();renderInstallTimeline();updateBadges();
+}
+function tlUnassign(jobId){
+  const j=jobs.find(x=>x.id===jobId);if(!j)return;
+  j.durationDays=jobDurationDays(j);   // remember length for when it comes back
+  j.crewId=null;j.day='backlog';j.endDay='';
+  saveJob(j);tlClearPlace();renderInstallTimeline();updateBadges();
+}
+function tlResizeTo(jobId,dur){
+  const j=jobs.find(x=>x.id===jobId);
+  if(!j||!j.day||j.day==='backlog')return;
+  dur=Math.max(1,Math.min(60,dur));
+  if(dur===jobDurationDays(j))return;
+  j.endDay=dur>1?tlAddDays(j.day,dur-1):'';
+  j.durationDays=dur;
+  saveJob(j);renderInstallTimeline();
+}
+function tlToggleMat(jobId){
+  if(!tlCanEdit())return;
+  const j=jobs.find(x=>x.id===jobId);if(!j)return;
+  j.materialsDelivered=!j.materialsDelivered;
+  saveJob(j);renderInstallTimeline();
+}
+
+// ── crews CRUD ───────────────────────────────────────────────
+function tlAddCrew(){
+  if(!tlCanEdit()){alert('Only owners and managers can manage crews.');return;}
+  if(crewsTableMissing){alert('Run claude/install-timeline-MIGRATION.sql in Supabase first — the crews table does not exist yet.');return;}
+  const name=prompt('Crew name (e.g. "Crew 1 — Miguel"):');
+  if(!name||!name.trim())return;
+  const c={id:'crew_'+Math.random().toString(36).slice(2,9)+Date.now().toString(36).slice(-4),
+    name:name.trim(),position:crews.length+1,company_id:currentCompanyId,
+    created_at:new Date().toISOString(),updated_at:new Date().toISOString()};
+  crews.push(c);saveCrew(c);renderInstallTimeline();
+}
+function tlRenameCrew(id){
+  if(!tlCanEdit())return;
+  const c=crews.find(x=>x.id===id);if(!c)return;
+  const name=prompt('Crew name:',c.name);
+  if(!name||!name.trim())return;
+  c.name=name.trim();c.updated_at=new Date().toISOString();
+  saveCrew(c);renderInstallTimeline();
+}
+function tlDeleteCrew(id){
+  if(!tlCanEdit())return;
+  const c=crews.find(x=>x.id===id);if(!c)return;
+  const n=tlInstallJobs().filter(j=>j.crewId===id).length;
+  if(!confirm(`Delete "${c.name}"?${n?` Its ${n} job${n>1?'s':''} will move to the No Crew row (dates kept).`:''}`))return;
+  crews=crews.filter(x=>x.id!==id);
+  delCrewRemote(id);
+  renderInstallTimeline();
+}
+
+// ── mobile tap-to-place ──────────────────────────────────────
+function tlClearPlace(){
+  tlPlaceJobId=null;tlSelectedBar=null;
+  const h=document.getElementById('tlHint');if(h)h.remove();
+  const a=document.getElementById('tlActionBar');if(a)a.remove();
+}
+function tlStartPlace(jobId){
+  const j=jobs.find(x=>x.id===jobId);if(!j)return;
+  tlClearPlace();
+  tlPlaceJobId=jobId;
+  const h=document.createElement('div');
+  h.className='tl-hint';h.id='tlHint';
+  h.innerHTML=`Tap a day on a crew row to place “${esc(j.title||'job')}” &nbsp; <button class="tl-btn" onclick="tlClearPlace();renderInstallTimeline()">Cancel</button>`;
+  document.getElementById('tlWrap').appendChild(h);
+  renderInstallTimeline();
+}
+function tlOpenActions(jobId){
+  const j=jobs.find(x=>x.id===jobId);if(!j)return;
+  tlClearPlace();
+  tlSelectedBar=jobId;
+  const bar=document.createElement('div');
+  bar.className='tl-actionbar';bar.id='tlActionBar';
+  const scheduled=j.day&&j.day!=='backlog';
+  bar.innerHTML=
+    `<button class="tl-btn" onclick="tlClearPlace();openJobMov('${esc(jobId)}')">Open</button>`+
+    (tlCanEdit()?`<button class="tl-btn" onclick="tlStartPlace('${esc(jobId)}')">Move</button>`:'')+
+    (tlCanEdit()&&scheduled?`<button class="tl-btn" onclick="tlResizeTo('${esc(jobId)}',jobDurationDays(jobs.find(x=>x.id==='${esc(jobId)}'))+1)">+1 day</button>
+      <button class="tl-btn" onclick="tlResizeTo('${esc(jobId)}',jobDurationDays(jobs.find(x=>x.id==='${esc(jobId)}'))-1)">−1 day</button>
+      <button class="tl-btn" onclick="tlUnassign('${esc(jobId)}')">Unassign</button>`:'')+
+    `<button class="tl-btn" onclick="tlClearPlace();renderInstallTimeline()">✕</button>`;
+  document.getElementById('tlWrap').appendChild(bar);
+  renderInstallTimeline();
+}
+
+// ── weather for the header (16-day open-meteo, same source as week view) ──
+async function tlFetchWeather(){
+  if(tlWx&&(Date.now()-tlWxTime)<30*60*1000){tlPaintWeather();return;}
+  try{
+    let lat=41.85,lon=-87.65;
+    try{const geo=await fetch('https://ipapi.co/json/');
+      if(geo.ok){const g=await geo.json();if(g.latitude){lat=g.latitude;lon=g.longitude;}}}catch{}
+    const r=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=weathercode,temperature_2m_max,precipitation_probability_max&temperature_unit=fahrenheit&timezone=auto&forecast_days=16`);
+    if(!r.ok)throw new Error('wx');
+    tlWx=await r.json();tlWxTime=Date.now();
+    tlPaintWeather();
+  }catch(e){/* forecast strip just stays blank */}
+}
+function tlPaintWeather(){
+  if(!tlWx||!tlWx.daily)return;
+  document.querySelectorAll('#tlCanvas .tl-wx').forEach(cell=>{
+    const i=tlWx.daily.time.indexOf(cell.dataset.date);
+    if(i<0){cell.innerHTML='';return;}
+    const code=tlWx.daily.weathercode[i];
+    const hi=Math.round(tlWx.daily.temperature_2m_max[i]);
+    const pop=tlWx.daily.precipitation_probability_max[i];
+    cell.innerHTML=`${WX_ICONS[code]||''} ${hi}°${pop>=40?` <span class="tl-wx-rain">💧${pop}%</span>`:''}`;
+    cell.classList.toggle('warn',WX_WARN.includes(code)||pop>=60);
+  });
+}
+
+// Stack overlapping bars within one crew row; marks conflicts.
+function tlPackLanes(list,conflictSet){
+  const sorted=list.slice().sort((a,b)=>String(a.day).localeCompare(String(b.day)));
+  const lanes=[]; // last occupied end-date per lane
+  for(let i=0;i<sorted.length;i++){
+    const j=sorted[i];
+    const end=tlAddDays(j.day,jobDurationDays(j)-1);
+    let li=lanes.findIndex(e=>e<j.day);
+    if(li<0){li=lanes.length;lanes.push(end);}
+    else lanes[li]=end;
+    j._tlLane=li;
+    // conflict check against every earlier job in this crew
+    for(let k=0;k<i;k++){
+      const o=sorted[k];
+      const oEnd=tlAddDays(o.day,jobDurationDays(o)-1);
+      if(j.day<=oEnd&&o.day<=end){conflictSet.add(j.id);conflictSet.add(o.id);}
+    }
+  }
+  return Math.max(1,lanes.length);
+}
+
+function tlBarHtml(j,colW,conflict){
+  const t=normalizeApptType(j.apptType);
+  const trade=TL_TRADE[t]||{label:'Other',color:'#64748b'};
+  const dur=jobDurationDays(j);
+  const startIdx=tlDiffDays(tlStart,j.day);
+  const endIdx=startIdx+dur-1;
+  if(endIdx<0||startIdx>=tlWindowDays) return '';
+  const clipL=startIdx<0,clipR=endIdx>=tlWindowDays;
+  const sIdx=Math.max(0,startIdx),eIdx=Math.min(tlWindowDays-1,endIdx);
+  const left=sIdx*colW+3,width=(eIdx-sIdx+1)*colW-7;
+  const mat=!!j.materialsDelivered;
+  const sel=tlSelectedBar===j.id||tlPlaceJobId===j.id;
+  return `<div class="tl-bar${conflict?' tl-conflict':''}${sel?' selected':''}" ${tlCanEdit()&&!isMobile()?'draggable="true"':''} data-job="${esc(j.id)}"
+      style="left:${left}px;width:${width}px;top:${5+(j._tlLane||0)*46}px;--bar-c:${trade.color}">
+    ${clipL?'<span class="tl-clip">‹</span>':''}
+    <div class="tl-bar-main">
+      <div class="tl-bar-name">${esc(j.title||'(untitled)')}</div>
+      <div class="tl-bar-sub">${esc(trade.label)}${dur>1?` · ${dur}d`:''}</div>
+    </div>
+    <span class="tl-mat ${mat?'ok':'no'}" data-mat="${esc(j.id)}" title="${mat?'Materials delivered — tap to clear':'Materials NOT delivered — tap to mark delivered'}">📦</span>
+    ${clipR?'<span class="tl-clip">›</span>':''}
+    ${tlCanEdit()&&!isMobile()?`<span class="tl-resize" data-resize="${esc(j.id)}" title="Drag to change duration"></span>`:''}
+  </div>`;
+}
+
+function tlCardHtml(j){
+  const t=normalizeApptType(j.apptType);
+  const trade=TL_TRADE[t]||{label:'Other',color:'#64748b'};
+  const dur=jobDurationDays(j);
+  const sel=tlPlaceJobId===j.id;
+  return `<div class="tl-card${sel?' selected':''}" ${tlCanEdit()&&!isMobile()?'draggable="true"':''} data-job="${esc(j.id)}" style="--card-c:${trade.color}">
+    <span>${esc(j.title||'(untitled)')}</span>
+    <span class="tl-card-sub">${esc(trade.label)} · ${dur}d</span>
+    <span class="tl-mat ${j.materialsDelivered?'ok':'no'}" data-mat="${esc(j.id)}">📦</span>
+  </div>`;
+}
+
+function renderInstallTimeline(){
+  const canvas=document.getElementById('tlCanvas');
+  if(!canvas)return;
+  if(!tlStart)tlStart=tlTodayIso();
+  const colW=tlColW(),crewW=tlCrewW();
+  const days=[];for(let i=0;i<tlWindowDays;i++)days.push(tlAddDays(tlStart,i));
+  const todayIso=tlTodayIso();
+  const todayIdx=days.indexOf(todayIso);
+  // window pills + range label
+  [7,14,28].forEach(n=>{const b=document.getElementById('tlWin'+n);if(b)b.classList.toggle('active',tlWindowDays===n);});
+  const s=new Date(days[0]+'T12:00:00'),e=new Date(days[days.length-1]+'T12:00:00');
+  const rl=document.getElementById('tlRangeLbl');
+  if(rl)rl.textContent=`${MOS[s.getMonth()]} ${s.getDate()} – ${MOS[e.getMonth()]} ${e.getDate()}`;
+  // banner when the migration hasn't run
+  const banner=document.getElementById('tlBanner');
+  if(banner)banner.innerHTML=(crewsTableMissing||!jobsHaveCrewCols)
+    ?'<div class="tl-banner">⚠ The install-timeline migration has not run on Supabase yet — crew assignments and materials flags will NOT save until it does. Run claude/install-timeline-MIGRATION.sql.</div>':'';
+  const addBtn=document.getElementById('tlAddCrewBtn');
+  if(addBtn)addBtn.style.display=tlCanEdit()?'':'none';
+
+  const all=tlInstallJobs();
+  const unassigned=all.filter(j=>!j.day||j.day==='backlog');
+  const dated=all.filter(j=>j.day&&j.day!=='backlog');
+  const crewList=crews.slice().sort((a,b)=>(a.position||0)-(b.position||0));
+  const noCrew=dated.filter(j=>!j.crewId||!crewList.find(c=>c.id===j.crewId));
+
+  const trackW=tlWindowDays*colW;
+  const dayCells=days.map((d,i)=>{
+    const dt=new Date(d+'T12:00:00');
+    const dow=dt.getDay(); // 0=Sun
+    const we=dow===0||dow===6;
+    return `<div class="tl-day${we?' we':''}${d===todayIso?' today':''}" style="width:${colW}px">
+      <div class="tl-day-dow">${d===todayIso?'TODAY':DN[(dow||7)-1]}</div>
+      <div class="tl-day-date">${dt.getMonth()+1}/${dt.getDate()}</div>
+      <div class="tl-wx" data-date="${d}"></div>
+    </div>`;
+  }).join('');
+
+  const gridBg=`background-image:repeating-linear-gradient(to right,rgba(255,255,255,.05) 0 1px,transparent 1px ${colW}px);background-size:${colW}px 100%;`;
+  const todayCol=todayIdx>=0?`<div class="tl-today-col" style="left:${todayIdx*colW}px;width:${colW}px"></div>`:'';
+
+  const rowHtml=(crewId,label,list,deletable)=>{
+    const conflicts=new Set();
+    const laneCount=list.length?tlPackLanes(list,conflicts):1;
+    const h=Math.max(52,10+laneCount*46);
+    const bars=list.map(j=>tlBarHtml(j,colW,conflicts.has(j.id))).join('');
+    return `<div class="tl-row">
+      <div class="tl-crewcell" style="width:${crewW}px">
+        <span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(label)}</span>
+        ${deletable&&tlCanEdit()?`<button class="tl-crew-edit" onclick="tlRenameCrew('${esc(crewId)}')" title="Rename">✎</button>
+        <button class="tl-crew-edit" onclick="tlDeleteCrew('${esc(crewId)}')" title="Delete">×</button>`:''}
+      </div>
+      <div class="tl-track" data-crew="${esc(crewId||'')}" style="width:${trackW}px;height:${h}px;${gridBg}">
+        ${todayCol}${bars}
+      </div>
+    </div>`;
+  };
+
+  let html=`<div class="tl-row tl-hdr">
+      <div class="tl-crewcell" style="width:${crewW}px">CREWS</div>
+      <div style="display:flex">${dayCells}</div>
+    </div>
+    <div class="tl-row tl-un" id="tlUnRow">
+      <div class="tl-crewcell" style="width:${crewW}px">UNASSIGNED (${unassigned.length})</div>
+      <div class="tl-unzone" id="tlUnZone" style="width:${trackW}px">
+        ${unassigned.map(tlCardHtml).join('')||'<span class="tl-card-sub" style="color:var(--muted)">Nothing waiting — sold jobs with no crew or date land here.</span>'}
+      </div>
+    </div>`;
+  if(noCrew.length) html+=rowHtml('','⚠ No Crew',noCrew,false);
+  if(crewList.length){
+    html+=crewList.map(c=>rowHtml(c.id,c.name,dated.filter(j=>j.crewId===c.id),true)).join('');
+  } else {
+    html+=`<div class="tl-empty">No crews yet.${tlCanEdit()?' Tap <b>+ Crew</b> above to add your first crew — then drag jobs from the Unassigned lane onto its row.':''}</div>`;
+  }
+  canvas.innerHTML=html;
+  canvas.style.width=(crewW+trackW)+'px';
+  // pin the unassigned lane right below the header
+  const hdr=canvas.querySelector('.tl-hdr');
+  const un=document.getElementById('tlUnRow');
+  if(hdr&&un)un.style.top=hdr.offsetHeight+'px';
+
+  tlWireEvents(colW);
+  tlFetchWeather();
+}
+
+function tlWireEvents(colW){
+  const canvas=document.getElementById('tlCanvas');
+  // materials toggle (both platforms)
+  canvas.querySelectorAll('.tl-mat').forEach(el=>{
+    el.addEventListener('click',e=>{e.stopPropagation();tlToggleMat(el.dataset.mat);});
+  });
+  // bars + cards: click behavior
+  canvas.querySelectorAll('.tl-bar,.tl-card').forEach(el=>{
+    el.addEventListener('click',e=>{
+      if(e.target.closest('.tl-mat')||e.target.closest('.tl-resize'))return;
+      const id=el.dataset.job;
+      if(isMobile())tlOpenActions(id);
+      else openJobMov(id);
+    });
+    if(tlCanEdit()&&!isMobile()){
+      el.addEventListener('dragstart',e=>{
+        tlDragJobId=el.dataset.job;
+        const r=el.getBoundingClientRect();
+        tlDragGrab=el.classList.contains('tl-bar')?Math.floor((e.clientX-r.left)/colW):0;
+        e.dataTransfer.effectAllowed='move';
+        try{e.dataTransfer.setData('text/plain',tlDragJobId);}catch(_){}
+      });
+      el.addEventListener('dragend',()=>{
+        tlDragJobId=null;
+        canvas.querySelectorAll('.drag-over').forEach(z=>z.classList.remove('drag-over'));
+        const uz=document.getElementById('tlUnZone');if(uz)uz.classList.remove('drag-over');
+      });
+    }
+  });
+  // crew tracks: drop targets (desktop) + tap-to-place (mobile)
+  canvas.querySelectorAll('.tl-track').forEach(zone=>{
+    zone.addEventListener('dragover',e=>{
+      if(!tlDragJobId)return;
+      e.preventDefault();e.dataTransfer.dropEffect='move';
+      zone.classList.add('drag-over');
+    });
+    zone.addEventListener('dragleave',e=>{if(e.target===zone)zone.classList.remove('drag-over');});
+    zone.addEventListener('drop',e=>{
+      if(!tlDragJobId)return;
+      e.preventDefault();zone.classList.remove('drag-over');
+      const rect=zone.getBoundingClientRect();
+      let idx=Math.floor((e.clientX-rect.left)/colW)-tlDragGrab;
+      idx=Math.max(0,Math.min(tlWindowDays-1,idx));
+      const crewId=zone.dataset.crew||null;
+      tlAssign(tlDragJobId,crewId,tlAddDays(tlStart,idx));
+      tlDragJobId=null;
+    });
+    zone.addEventListener('click',e=>{
+      if(!tlPlaceJobId)return;
+      if(e.target.closest('.tl-bar'))return;
+      const rect=zone.getBoundingClientRect();
+      const idx=Math.max(0,Math.min(tlWindowDays-1,Math.floor((e.clientX-rect.left)/colW)));
+      tlAssign(tlPlaceJobId,zone.dataset.crew||null,tlAddDays(tlStart,idx));
+    });
+  });
+  // unassigned lane as a drop target (clears crew + date)
+  const uz=document.getElementById('tlUnZone');
+  if(uz){
+    uz.addEventListener('dragover',e=>{if(!tlDragJobId)return;e.preventDefault();uz.classList.add('drag-over');});
+    uz.addEventListener('dragleave',e=>{if(e.target===uz)uz.classList.remove('drag-over');});
+    uz.addEventListener('drop',e=>{
+      if(!tlDragJobId)return;
+      e.preventDefault();uz.classList.remove('drag-over');
+      tlUnassign(tlDragJobId);tlDragJobId=null;
+    });
+  }
+  // right-edge resize (desktop, pointer-based)
+  canvas.querySelectorAll('.tl-resize').forEach(h=>{
+    h.addEventListener('pointerdown',e=>{
+      e.preventDefault();e.stopPropagation();
+      const id=h.dataset.resize;
+      const j=jobs.find(x=>x.id===id);if(!j)return;
+      const bar=h.closest('.tl-bar');
+      const barRect=bar.getBoundingClientRect();
+      const startLeft=barRect.left;
+      const move=ev=>{
+        const w=Math.max(colW*0.5,ev.clientX-startLeft);
+        bar.style.width=(Math.max(1,Math.round(w/colW))*colW-7)+'px';
+      };
+      const up=ev=>{
+        document.removeEventListener('pointermove',move);
+        document.removeEventListener('pointerup',up);
+        const startIdx=tlDiffDays(tlStart,j.day);
+        const visStart=Math.max(0,startIdx);
+        const clippedLeft=visStart-startIdx; // days hidden off the left edge
+        const dur=clippedLeft+Math.max(1,Math.round((ev.clientX-startLeft)/colW));
+        tlResizeTo(id,dur);
+      };
+      document.addEventListener('pointermove',move);
+      document.addEventListener('pointerup',up);
+    });
+    h.addEventListener('dragstart',e=>e.preventDefault());
+  });
+}
+// ══════════════════════════════════════════════════════════════
+// END INSTALL TIMELINE
+// ══════════════════════════════════════════════════════════════
 
 // ── TEAM ROSTER & ASSIGNEE ───────────────────────────────────
 // teamRoster is now backed by the public.profiles table (Phase 2 / 2.5).
