@@ -1686,6 +1686,7 @@ body:not(.role-owner):not(.role-manager) .role-financial-only{display:none!impor
     @media(min-width:821px){.tl-actionbar{bottom:20px;}}
     .tl-action-btns{display:flex;gap:6px;justify-content:flex-end;flex-wrap:wrap;margin-top:10px;}
     .tl-actionbar .tl-btn{font-size:12px;padding:7px 12px;}
+    .tl-btn-go{border-color:var(--amber)!important;color:var(--amber)!important;font-weight:700;}
     .tl-info-name{font-size:14px;font-weight:700;color:var(--white);margin-bottom:7px;}
     .tl-info-row{display:flex;gap:10px;font-size:12px;padding:2px 0;}
     .tl-info-k{color:var(--muted);flex:0 0 74px;font-size:10px;letter-spacing:.1em;text-transform:uppercase;padding-top:1px;}
@@ -12542,6 +12543,8 @@ function tlOpenActions(jobId){
       ${row('Note',j.note)}
     </div>
     <div class="tl-action-btns">
+      ${info.addr?`<button class="tl-btn tl-btn-go" onclick="tlOpenMaps('${esc(jobId)}')">🧭 Directions</button>`:''}
+      ${info.phone?`<button class="tl-btn" onclick="tlCallJob('${esc(jobId)}')">📞 Call</button>`:''}
       <button class="tl-btn" onclick="tlClearPlace();openJobMov('${esc(jobId)}')">✎ Open</button>
       ${tlCanEdit()?`<button class="tl-btn" onclick="tlStartPlace('${esc(jobId)}')">Move</button>`:''}
       ${tlCanEdit()&&scheduled?`<button class="tl-btn" onclick="tlResizeTo('${esc(jobId)}',jobDurationDays(jobs.find(x=>x.id==='${esc(jobId)}'))+1)">+1 day</button>
@@ -12551,6 +12554,24 @@ function tlOpenActions(jobId){
     </div>`;
   document.getElementById('tlWrap').appendChild(bar);
   renderInstallTimeline();
+}
+
+// Directions + call — available to EVERY role (this is the button the crew
+// taps in the truck). iPhone gets Apple Maps (always installed); everything
+// else gets Google Maps. Both accept a plain street address.
+function tlOpenMaps(jobId){
+  const j=jobs.find(x=>x.id===jobId);if(!j)return;
+  const addr=tlJobInfo(j).addr;
+  if(!addr){alert('No address on this job — open it and link the customer (the address comes from the customer file).');return;}
+  const q=encodeURIComponent(addr);
+  const ios=/iPad|iPhone|iPod/.test(navigator.userAgent);
+  window.open(ios?('https://maps.apple.com/?daddr='+q):('https://www.google.com/maps/dir/?api=1&destination='+q),'_blank');
+}
+function tlCallJob(jobId){
+  const j=jobs.find(x=>x.id===jobId);if(!j)return;
+  const ph=tlJobInfo(j).phone;
+  if(!ph)return;
+  window.location.href='tel:'+String(ph).replace(/[^0-9+]/g,'');
 }
 
 // ── weather for the header (16-day open-meteo, same source as week view) ──
@@ -12580,8 +12601,24 @@ function tlPaintWeather(){
 }
 
 // Stack overlapping bars within one crew row; marks conflicts.
+// Do two jobs on the SAME crew and overlapping days actually collide?
+// Time-aware (Blake 2026-09-30): stacking several jobs on one crew in one
+// day is normal — the red flag used to fire on ANY same-day overlap, which
+// made every stacked day look like a mistake. The rule now:
+//   • neither job has a start time  → conflict (nothing sequences them)
+//   • exactly one has a start time  → NO conflict (you sequenced on purpose)
+//   • both have start times         → conflict only if the time windows
+//     overlap (window = start → end time; no end time = just the start)
+function tlTimeConflict(a,b){
+  const at=a.startTime||'',bt=b.startTime||'';
+  if(!at&&!bt) return true;
+  if(!at||!bt) return false;
+  const endOf=x=>(x.endTime&&x.endTime>x.startTime)?x.endTime:x.startTime;
+  return at<=endOf(b)&&bt<=endOf(a);
+}
+
 function tlPackLanes(list,conflictSet){
-  const sorted=list.slice().sort((a,b)=>String(a.day).localeCompare(String(b.day)));
+  const sorted=list.slice().sort((a,b)=>String(a.day).localeCompare(String(b.day))||String(a.startTime||'').localeCompare(String(b.startTime||'')));
   const lanes=[]; // last occupied end-date per lane
   for(let i=0;i<sorted.length;i++){
     const j=sorted[i];
@@ -12594,7 +12631,7 @@ function tlPackLanes(list,conflictSet){
     for(let k=0;k<i;k++){
       const o=sorted[k];
       const oEnd=tlAddDays(o.day,jobDurationDays(o)-1);
-      if(j.day<=oEnd&&o.day<=end){conflictSet.add(j.id);conflictSet.add(o.id);}
+      if(j.day<=oEnd&&o.day<=end&&tlTimeConflict(j,o)){conflictSet.add(j.id);conflictSet.add(o.id);}
     }
   }
   return Math.max(1,lanes.length);
@@ -12638,8 +12675,11 @@ function tlBarHtml(j,colW,conflict){
   const info=tlJobInfo(j);
   // Compact by design (Blake 2026-09-16): just who + what + how long.
   // Everything else shows when the bar is clicked (and in the hover tooltip).
+  // Exception (2026-09-30): the start time shows when set, because times are
+  // now what sequences multiple jobs on one crew in one day.
   const subBits=[trade.label];
   if(dur>1)subBits.push(dur+'d');
+  if(j.startTime)subBits.push('🕐'+j.startTime);
   return `<div class="tl-bar${conflict?' tl-conflict':''}${sel?' selected':''}" ${tlCanEdit()&&!isMobile()?'draggable="true"':''} data-job="${esc(j.id)}"
       title="${esc(tlJobTooltip(j,info,trade,dur))}"
       style="left:${left}px;width:${width}px;top:${5+(j._tlLane||0)*46}px;--bar-c:${trade.color}">
