@@ -1117,6 +1117,47 @@ select.doc-finput option{background:var(--steel-mid);}
 .tmpl-overlay.open{opacity:1;pointer-events:all;}
 .tmpl-overlay:not(.open) *{pointer-events:none!important;}
 
+/* Walkthrough (photo estimate) overlay */
+.wt-overlay{position:fixed;inset:0;background:var(--steel);z-index:285;display:none;flex-direction:column;}
+.wt-overlay.open{display:flex;}
+.wt-hdr{display:flex;align-items:center;gap:8px;padding:10px 14px;background:var(--steel-mid);border-bottom:1px solid var(--iron);flex-shrink:0;}
+.wt-hdr-txt{flex:1;min-width:0;}
+.wt-hdr-title{font-family:'Bebas Neue',sans-serif;font-size:18px;letter-spacing:2px;color:var(--amber);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.wt-hdr-sub{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.wt-list{flex:1;overflow-y:auto;padding:12px 14px 120px;-webkit-overflow-scrolling:touch;}
+.wt-empty{text-align:center;color:var(--muted);font-size:13px;padding:50px 20px;line-height:1.6;}
+.wt-item{display:flex;gap:10px;padding:10px;border:1px solid var(--iron);border-radius:10px;background:var(--bg-card,#1a1c20);margin-bottom:8px;align-items:flex-start;}
+.wt-item-img{width:72px;height:72px;border-radius:8px;object-fit:cover;flex-shrink:0;background:var(--steel-light);cursor:pointer;}
+.wt-item-noimg{width:72px;height:72px;border-radius:8px;flex-shrink:0;background:var(--steel-light);display:flex;align-items:center;justify-content:center;font-size:24px;color:var(--muted);}
+.wt-item-body{flex:1;min-width:0;}
+.wt-item-num{font-size:10px;color:var(--amber);font-weight:700;letter-spacing:1px;text-transform:uppercase;}
+.wt-item-desc{font-size:14px;line-height:1.4;word-break:break-word;}
+.wt-item-del{background:none;border:none;color:var(--muted);font-size:20px;line-height:1;cursor:pointer;padding:0 2px;}
+.wt-bar{position:absolute;left:0;right:0;bottom:0;padding:10px 14px calc(12px + env(safe-area-inset-bottom,0));background:var(--steel-mid);border-top:1px solid var(--iron);display:grid;grid-template-columns:2fr 1fr;gap:8px;}
+.wt-bar .btn{justify-content:center;padding:14px;font-size:15px;}
+.wt-sheet{position:absolute;inset:0;background:var(--steel);z-index:2;display:none;flex-direction:column;}
+.wt-sheet.open{display:flex;}
+.wt-sheet-body{flex:1;overflow-y:auto;padding:14px;}
+.wt-sheet-img{width:100%;max-height:42vh;object-fit:contain;border-radius:10px;background:#000;display:block;margin-bottom:12px;}
+.wt-sheet-bar{padding:10px 14px calc(12px + env(safe-area-inset-bottom,0));border-top:1px solid var(--iron);background:var(--steel-mid);display:grid;grid-template-columns:1fr 2fr;gap:8px;}
+.wt-sheet-bar .btn{justify-content:center;padding:14px;font-size:15px;}
+.wt-busy{position:absolute;inset:0;background:rgba(0,0,0,.55);z-index:5;display:none;align-items:center;justify-content:center;color:#fff;font-size:15px;font-weight:600;flex-direction:column;gap:10px;}
+.wt-busy.open{display:flex;}
+/* Line-item photo strip (estimate editor) */
+.li-photos{display:flex;gap:6px;flex-wrap:wrap;padding:2px 0 4px 31px;}
+.li-photo{position:relative;width:44px;height:44px;}
+.li-photo img{width:44px;height:44px;object-fit:cover;border-radius:6px;border:1px solid var(--iron);cursor:pointer;display:block;}
+.li-photo-x{position:absolute;top:-6px;right:-6px;width:18px;height:18px;border-radius:50%;background:#ef4444;color:#fff;border:none;font-size:11px;line-height:18px;text-align:center;cursor:pointer;padding:0;}
+.li-photo-add{width:44px;height:44px;border:1px dashed var(--iron);border-radius:6px;background:none;color:var(--muted);font-size:18px;cursor:pointer;}
+/* Photo thumbs on WO checklist */
+.wo-cl-photos{display:flex;gap:5px;flex-wrap:wrap;margin-top:4px;}
+.wo-cl-photos img{width:40px;height:40px;object-fit:cover;border-radius:5px;border:1px solid var(--iron);cursor:pointer;}
+.wo-doc-cl-photos{display:flex;gap:4px;flex-wrap:wrap;margin:3px 0 4px;}
+.wo-doc-cl-photos img{width:64px;height:64px;object-fit:cover;border-radius:4px;border:1px solid #cbd5e1;}
+/* Lightbox */
+.bv-lightbox{position:fixed;inset:0;background:rgba(0,0,0,.92);z-index:9999;display:flex;align-items:center;justify-content:center;cursor:zoom-out;}
+.bv-lightbox img{max-width:100%;max-height:100%;object-fit:contain;}
+
 /* Work Order overlay */
 .wo-overlay{position:fixed;inset:0;background:var(--steel);z-index:280;display:none;flex-direction:column;}
 .wo-overlay.open{display:flex;}
@@ -8182,6 +8223,9 @@ function openJobQuickView(jobId){
             ? `<a href="${mapsUrl}" target="_blank" rel="noopener" class="btn btn-amber" style="text-align:center;text-decoration:none;padding:12px;font-size:14px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:6px">📍 Open in Maps</a>`
             : `<button class="btn btn-amber" disabled style="padding:12px;font-size:14px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:6px;opacity:.5;cursor:not-allowed" title="No address on file">📍 No Address</button>`
           }
+          ${isOwnerOrManager()||isSalesman()
+            ? `<button class="btn btn-amber" onclick="checkInWalkthrough('${j.id}')" style="grid-column:1/-1;padding:12px;font-size:14px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:6px">📸 Check In · Photo Walkthrough</button>`
+            : ''}
         </div>
       </div>
     </div>
@@ -10153,6 +10197,7 @@ function collectDoc(base){
       desc:row.querySelector('.li-desc')?.value||'',
       qty:parseFloat(row.querySelector('.li-qty')?.value)||0,
       price:parseFloat(row.querySelector('.li-price')?.value)||0,
+      ...(Array.isArray(row._photos)&&row._photos.length?{photos:row._photos}:{}),
     });
   });
   // Keep all items in storage (including zero-qty placeholders)
@@ -10342,6 +10387,10 @@ function addLI(cat,prefill){
   // Live update on input
   const refresh=()=>{updateDocTotals();updateDocPreview(collectDoc(docs.find(x=>x.id===editDocId)||{}));};
   [descInp,qtyInp,priceInp].forEach(inp=>inp.addEventListener('input',refresh));
+
+  // Walkthrough photos ride on the row element; collectDoc() reads row._photos
+  row._photos=Array.isArray(prefill?.photos)?prefill.photos.slice():[];
+  renderLiPhotos(row);
 
   // Drag-to-reorder wiring (handle is the drag source; row is the target)
   handle.addEventListener('dragstart',e=>{
@@ -10684,6 +10733,251 @@ function generateCustomerLink(){
   }
 }
 
+// ── WALKTHROUGH (PHOTO ESTIMATE) ─────────────────────────────
+// Flow: Check In on a scheduled appointment → walk the property with
+// the customer → each photo + description becomes an estimate line item
+// (lineItems[].photos = [{path,url}]). The draft estimate is created up
+// front (so photo paths have a doc id) and saved after every add, so
+// nothing is lost if the phone dies mid-walkthrough. "Build Estimate"
+// opens the normal estimate editor for pricing. Photos later ride along
+// onto the work order checklist (openWorkOrder) and the crew page.
+//
+// Storage: Supabase bucket `job-photos` (public-read, company-scoped
+// write — see claude/walkthrough-photos-STORAGE.sql).
+// Path: <company_id>/<doc_id>/<uid>.jpg
+const PHOTO_BUCKET='job-photos';
+let wtDocId=null;        // estimate being built
+let wtJobId=null;        // appointment we checked in from
+let wtPendingBlob=null;  // resized JPEG awaiting description
+
+function photoPublicUrl(path){
+  return SB_URL+'/storage/v1/object/public/'+PHOTO_BUCKET+'/'+path.split('/').map(encodeURIComponent).join('/');
+}
+
+// Downscale a camera photo to max 1600px JPEG (~200-400 KB). Uses
+// createImageBitmap with EXIF orientation so portrait shots stay upright.
+async function resizePhoto(file,maxPx=1600,quality=0.82){
+  let bmp;
+  try{ bmp=await createImageBitmap(file,{imageOrientation:'from-image'}); }
+  catch{ bmp=await createImageBitmap(file); }
+  const scale=Math.min(1,maxPx/Math.max(bmp.width,bmp.height));
+  const w=Math.round(bmp.width*scale),h=Math.round(bmp.height*scale);
+  const cv=document.createElement('canvas');cv.width=w;cv.height=h;
+  cv.getContext('2d').drawImage(bmp,0,0,w,h);
+  if(bmp.close) bmp.close();
+  return new Promise(res=>cv.toBlob(b=>res(b),'image/jpeg',quality));
+}
+
+// Upload a blob to the bucket. Returns {path,url}. Throws on failure.
+async function uploadJobPhoto(docId,blob){
+  if(!currentCompanyId) throw new Error('No company loaded — sign in again.');
+  if(!authAccessToken) throw new Error('Not signed in.');
+  const path=currentCompanyId+'/'+docId+'/'+uid()+'.jpg';
+  const r=await fetch(SB_URL+'/storage/v1/object/'+PHOTO_BUCKET+'/'+path,{
+    method:'POST',
+    headers:{apikey:SB_KEY,Authorization:'Bearer '+authAccessToken,'Content-Type':'image/jpeg','x-upsert':'false'},
+    body:blob
+  });
+  if(!r.ok){const t=await r.text();throw new Error('Upload failed: '+r.status+' '+t.slice(0,160));}
+  return {path,url:photoPublicUrl(path)};
+}
+
+// Best-effort delete from storage (the line item reference is removed regardless).
+async function deleteJobPhoto(path){
+  try{
+    await fetch(SB_URL+'/storage/v1/object/'+PHOTO_BUCKET+'/'+path,{
+      method:'DELETE',headers:{apikey:SB_KEY,Authorization:'Bearer '+(authAccessToken||SB_KEY)}
+    });
+  }catch(e){console.warn('photo delete failed',e);}
+}
+
+function openLightbox(url){
+  const el=document.createElement('div');
+  el.className='bv-lightbox';
+  el.innerHTML='<img src="'+esc(url)+'" alt=""/>';
+  el.onclick=()=>el.remove();
+  document.body.appendChild(el);
+}
+
+// Entry point from the job quick view. Finds (or creates) the draft
+// estimate for this appointment's lead, stamps the check-in, opens the
+// walkthrough overlay.
+function checkInWalkthrough(jobId){
+  const j=jobs.find(x=>x.id===jobId);
+  if(!j){alert('Job not found.');return;}
+  if(!currentCompanyId||!authAccessToken){alert('Sign in before checking in — photos need an authenticated upload.');return;}
+  loadDocs();
+  const lead=j.leadId?leads.find(l=>l.id===j.leadId):null;
+  // Reuse the lead's estimate only while it's still a draft; otherwise start fresh.
+  let est=lead&&lead.estId?docs.find(d=>d.id===lead.estId&&d.type==='estimate'&&d.status==='draft'):null;
+  if(!est){
+    est={id:uid(),type:'estimate',status:'draft',num:nextDocNum('estimate'),
+      clientName:lead?.name||j.title||'',
+      clientContact:lead?[lead.contact,lead.phone].filter(Boolean).join(' · '):'',
+      clientAddr:lead?.address||'',
+      date:new Date().toISOString().split('T')[0],dueDate:'',scope:'',lineItems:[],tax:0,discount:0,notes:'',
+      customerId:lead?.customer_id||null,created:Date.now(),
+      activity:[{ts:new Date().toISOString(),msg:'Started from on-site walkthrough'}]};
+    docs.push(est);saveDocs();saveDocSync(est);
+    if(lead){lead.estId=est.id;if(lead.stage==='new')lead.stage='contact';saveLead(lead);}
+  }
+  // Stamp the check-in on the appointment
+  if(!Array.isArray(j.activity)) j.activity=[];
+  j.activity.push({ts:new Date().toISOString(),msg:'Checked in · walkthrough started ('+est.num+')'});
+  saveJob(j);
+  closeJobQuickView();
+  wtDocId=est.id;wtJobId=j.id;
+  document.getElementById('wtTitle').textContent='📸 WALKTHROUGH · '+(est.num||'');
+  document.getElementById('wtSub').textContent=[est.clientName,est.clientAddr].filter(Boolean).join(' · ');
+  renderWalkthroughList();
+  document.getElementById('wtOverlay').classList.add('open');
+}
+
+function closeWalkthrough(){
+  wtCloseSheet();
+  document.getElementById('wtOverlay').classList.remove('open');
+  wtDocId=null;wtJobId=null;
+}
+
+function finishWalkthrough(){
+  const id=wtDocId;
+  closeWalkthrough();
+  if(id) openDocEditor(id);
+}
+
+function renderWalkthroughList(){
+  const est=docs.find(d=>d.id===wtDocId);
+  const el=document.getElementById('wtList');
+  const items=(est?.lineItems||[]);
+  if(!items.length){
+    el.innerHTML='<div class="wt-empty">Walk the property with the customer.<br>Tap <b>Take Photo</b> for each area, describe the work, and it becomes a line on the estimate.</div>';
+    return;
+  }
+  el.innerHTML=items.map((li,i)=>{
+    const p=(li.photos||[])[0];
+    const img=p?'<img class="wt-item-img" src="'+esc(p.url||photoPublicUrl(p.path))+'" onclick="openLightbox(this.src)" alt=""/>':'<div class="wt-item-noimg">✏️</div>';
+    return '<div class="wt-item">'+img+
+      '<div class="wt-item-body"><div class="wt-item-num">Item '+(i+1)+(li.qty&&li.qty!==1?' · qty '+esc(li.qty):'')+'</div>'+
+      '<div class="wt-item-desc">'+esc(li.desc||'(no description)')+'</div></div>'+
+      '<button class="wt-item-del" onclick="wtDeleteItem('+i+')" title="Remove">×</button></div>';
+  }).join('');
+}
+
+function wtPickPhoto(){
+  const inp=document.getElementById('wtFile');
+  inp.value='';
+  inp.onchange=async()=>{
+    const f=inp.files&&inp.files[0];
+    if(!f) return;
+    wtShowBusy('Preparing photo…');
+    try{ wtPendingBlob=await resizePhoto(f); }
+    catch(e){ wtHideBusy(); alert('Could not read that photo: '+e.message); return; }
+    wtHideBusy();
+    wtOpenSheet(wtPendingBlob);
+  };
+  inp.click();
+}
+
+function wtOpenSheet(blob){
+  wtPendingBlob=blob||null;
+  const img=document.getElementById('wtSheetImg');
+  if(blob){ img.src=URL.createObjectURL(blob); img.style.display='block'; }
+  else { img.removeAttribute('src'); img.style.display='none'; }
+  document.getElementById('wtArea').value='';
+  document.getElementById('wtDesc').value='';
+  document.getElementById('wtQty').value='1';
+  document.getElementById('wtCat').value='labor';
+  document.getElementById('wtSheet').classList.add('open');
+  setTimeout(()=>document.getElementById('wtDesc').focus(),50);
+}
+
+function wtCloseSheet(){
+  document.getElementById('wtSheet').classList.remove('open');
+  const img=document.getElementById('wtSheetImg');
+  if(img.src&&img.src.startsWith('blob:')) URL.revokeObjectURL(img.src);
+  wtPendingBlob=null;
+}
+
+function wtShowBusy(t){document.getElementById('wtBusyTxt').textContent=t||'Working…';document.getElementById('wtBusy').classList.add('open');}
+function wtHideBusy(){document.getElementById('wtBusy').classList.remove('open');}
+
+async function wtAddItem(){
+  const est=docs.find(d=>d.id===wtDocId);
+  if(!est){alert('Estimate not found. Close and check in again.');return;}
+  const area=document.getElementById('wtArea').value.trim();
+  const work=document.getElementById('wtDesc').value.trim();
+  if(!work&&!area){alert('Describe the work for this area.');return;}
+  const qty=parseFloat(document.getElementById('wtQty').value);
+  const cat=document.getElementById('wtCat').value||'labor';
+  const desc=area&&work?area+': '+work:(area||work);
+  const photos=[];
+  if(wtPendingBlob){
+    const btn=document.getElementById('wtAddBtn');btn.disabled=true;
+    wtShowBusy('Uploading photo…');
+    try{ photos.push(await uploadJobPhoto(est.id,wtPendingBlob)); }
+    catch(e){ wtHideBusy(); btn.disabled=false; alert(e.message+'\n\nCheck your connection and tap Add again.'); return; }
+    wtHideBusy();btn.disabled=false;
+  }
+  if(!Array.isArray(est.lineItems)) est.lineItems=[];
+  est.lineItems.push({cat,desc,qty:isNaN(qty)?1:qty,price:0,photos});
+  saveDocs();saveDocSync(est);
+  wtCloseSheet();
+  renderWalkthroughList();
+  document.getElementById('wtList').scrollTop=1e9;
+}
+
+function wtDeleteItem(i){
+  const est=docs.find(d=>d.id===wtDocId);
+  if(!est||!est.lineItems||!est.lineItems[i]) return;
+  if(!confirm('Remove this item and its photo?')) return;
+  const [li]=est.lineItems.splice(i,1);
+  (li.photos||[]).forEach(p=>deleteJobPhoto(p.path));
+  saveDocs();saveDocSync(est);
+  renderWalkthroughList();
+}
+
+// Estimate editor: photo strip under a line-item row. `row._photos` holds
+// the array; collectDoc() reads it back so photos survive edits/saves.
+function renderLiPhotos(row){
+  let strip=row.querySelector('.li-photos');
+  if(!strip){strip=document.createElement('div');strip.className='li-photos';row.appendChild(strip);}
+  const photos=row._photos||[];
+  strip.innerHTML=photos.map((p,i)=>{
+    const url=p.url||photoPublicUrl(p.path);
+    return '<div class="li-photo"><img src="'+esc(url)+'" onclick="openLightbox(this.src)" alt=""/><button type="button" class="li-photo-x" data-i="'+i+'" title="Remove photo">×</button></div>';
+  }).join('')+'<button type="button" class="li-photo-add" title="Add photo">📷</button>';
+  strip.querySelectorAll('.li-photo-x').forEach(b=>b.onclick=()=>{
+    const i=parseInt(b.dataset.i);
+    const [p]=row._photos.splice(i,1);
+    if(p&&p.path) deleteJobPhoto(p.path);
+    renderLiPhotos(row);
+  });
+  strip.querySelector('.li-photo-add').onclick=()=>liAddPhoto(row);
+}
+
+function liAddPhoto(row){
+  if(!editDocId){alert('Save the document first.');return;}
+  if(!currentCompanyId||!authAccessToken){alert('Sign in to upload photos.');return;}
+  const inp=document.createElement('input');
+  inp.type='file';inp.accept='image/*';inp.capture='environment';
+  inp.onchange=async()=>{
+    const f=inp.files&&inp.files[0];if(!f)return;
+    const addBtn=row.querySelector('.li-photo-add');if(addBtn){addBtn.textContent='⏳';addBtn.disabled=true;}
+    try{
+      const blob=await resizePhoto(f);
+      const p=await uploadJobPhoto(editDocId,blob);
+      row._photos=row._photos||[];row._photos.push(p);
+    }catch(e){alert(e.message);}
+    renderLiPhotos(row);
+  };
+  inp.click();
+}
+
+function photoThumbsHtml(photos,cls){
+  if(!Array.isArray(photos)||!photos.length) return '';
+  return '<div class="'+cls+'">'+photos.map(p=>'<img src="'+esc(p.url||photoPublicUrl(p.path))+'" onclick="openLightbox(this.src)" alt=""/>').join('')+'</div>';
+}
+
 // ── WORK ORDERS ──────────────────────────────────────────────
 // Work orders are stored as docs with type='workorder'.
 // They share the same docs table — no schema changes needed.
@@ -10739,7 +11033,9 @@ function openWorkOrder(woId){
           desc:li.desc||'',
           qty:li.qty||1,
           cat:li.cat||'other',
-          done:false
+          done:false,
+          // walkthrough photos travel with the task so the crew sees them
+          ...(Array.isArray(li.photos)&&li.photos.length?{photos:li.photos}:{})
         })),
         extras:[],          // additional items added during the job
         notes:'',
@@ -10821,7 +11117,7 @@ function renderWoChecklist(items){
     const c=catColors[it.cat]||'#94a3b8';
     return `<div class="wo-checklist-item" data-idx="${i}" style="border-left-color:${c}">
       <div class="wo-cl-cb${it.done?' checked':''}" onclick="toggleWoCheck(${i})">${it.done?'✓':''}</div>
-      <div class="wo-cl-text${it.done?' done':''}">${esc(it.desc)}</div>
+      <div class="wo-cl-text${it.done?' done':''}">${esc(it.desc)}${photoThumbsHtml(it.photos,'wo-cl-photos')}</div>
       ${it.qty>1?`<div class="wo-cl-qty">×${it.qty}</div>`:''}
     </div>`;
   }).join('');
@@ -11079,7 +11375,7 @@ function updateWoPreview(){
   const items=[...(wo.checklist||[]),...(wo.extras||[]).filter(e=>(e.desc||'').trim())];
   const cklist=items.length?items.map(it=>{
     const qty=it.qty&&it.qty>1?`<span class="wo-doc-cl-qty">×${it.qty}</span>`:'';
-    return `<div class="wo-doc-cl-item"><div class="wo-doc-cl-box">${it.done?'✓':''}</div><div class="wo-doc-cl-text">${esc(it.desc||'')}${qty}</div></div>`;
+    return `<div class="wo-doc-cl-item"><div class="wo-doc-cl-box">${it.done?'✓':''}</div><div class="wo-doc-cl-text">${esc(it.desc||'')}${qty}${photoThumbsHtml(it.photos,'wo-doc-cl-photos')}</div></div>`;
   }).join(''):'<div style="color:#94a3b8;font-style:italic;font-size:11px;padding:8px 0;">No items.</div>';
   const arrivalDisplay=wo.arrival?(()=>{
     try{const[h,m]=wo.arrival.split(':');const hr=parseInt(h);const ampm=hr>=12?'PM':'AM';const h12=hr%12||12;return h12+':'+m+' '+ampm;}catch{return wo.arrival;}
@@ -14166,6 +14462,44 @@ try{ _refreshPushBtn(); }catch(e){}
       </div>
     </div>
   </div>
+</div>
+
+<!-- ═══ WALKTHROUGH (PHOTO ESTIMATE) OVERLAY ═══ -->
+<div class="wt-overlay" id="wtOverlay">
+  <div class="wt-hdr">
+    <div class="wt-hdr-txt">
+      <div class="wt-hdr-title" id="wtTitle">📸 WALKTHROUGH</div>
+      <div class="wt-hdr-sub" id="wtSub"></div>
+    </div>
+    <button class="btn btn-amber btn-sm" onclick="finishWalkthrough()">Build Estimate →</button>
+    <button class="btn btn-ghost btn-sm" onclick="closeWalkthrough()">✕</button>
+  </div>
+  <div class="wt-list" id="wtList"></div>
+  <div class="wt-bar">
+    <button class="btn btn-amber" onclick="wtPickPhoto()">📷 Take Photo</button>
+    <button class="btn btn-ghost" onclick="wtOpenSheet(null)">✏️ Note</button>
+  </div>
+  <!-- hidden camera input; capture=environment opens the rear camera on phones -->
+  <input type="file" id="wtFile" accept="image/*" capture="environment" style="display:none"/>
+  <!-- Describe-this-photo sheet -->
+  <div class="wt-sheet" id="wtSheet">
+    <div class="wt-sheet-body">
+      <img id="wtSheetImg" class="wt-sheet-img" alt="" style="display:none"/>
+      <div class="fg"><label class="flbl">Area / Location</label><input class="finput" id="wtArea" placeholder="e.g. Chimney flashing, North gable, Rear gutter" autocomplete="off"/></div>
+      <div class="fg"><label class="flbl">Work to be done</label><textarea class="finput" id="wtDesc" rows="4" placeholder="Describe the repair for this area…"></textarea></div>
+      <div class="frow">
+        <div><label class="flbl">Qty</label><input class="finput" id="wtQty" type="number" min="0" step="0.5" value="1"/></div>
+        <div><label class="flbl">Category</label>
+          <select class="finput" id="wtCat"><option value="labor">Labor</option><option value="material">Material</option><option value="other">Other</option></select>
+        </div>
+      </div>
+    </div>
+    <div class="wt-sheet-bar">
+      <button class="btn btn-ghost" onclick="wtCloseSheet()">Cancel</button>
+      <button class="btn btn-amber" id="wtAddBtn" onclick="wtAddItem()">✓ Add to Estimate</button>
+    </div>
+  </div>
+  <div class="wt-busy" id="wtBusy"><div>⏳</div><div id="wtBusyTxt">Uploading photo…</div></div>
 </div>
 
 <!-- ═══ WORK ORDER OVERLAY ═══ -->

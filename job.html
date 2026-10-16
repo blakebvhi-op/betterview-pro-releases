@@ -7,8 +7,8 @@
 <meta name="apple-mobile-web-app-capable" content="yes" />
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
 <title>Better View · Jobsite</title>
-<!-- BUILD: 2026-06-11 GEOTAG-V2 — if you see this comment in view-source, the new file is live -->
-<meta name="bv-build" content="2026-06-11-geotag-v2">
+<!-- BUILD: 2026-10-16 WALKTHROUGH-PHOTOS — if you see this comment in view-source, the new file is live -->
+<meta name="bv-build" content="2026-10-16-walkthrough-photos">
 <!-- Cache control: this file changes often during development. Tell browsers
      to always re-fetch from the network, never serve a cached copy. Without
      this, mobile browsers (especially iOS Safari) hold onto old versions
@@ -205,6 +205,12 @@
     .crew-chip{background:#fff;color:#000;border-color:#888}
   }
 
+  /* ── Walkthrough photos on scope / work order items ── */
+  .item-photos{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+  .item-photos img{width:64px;height:64px;object-fit:cover;border-radius:6px;border:1px solid var(--line2);display:block}
+  .lightbox{position:fixed;inset:0;background:rgba(0,0,0,.94);z-index:100;display:flex;align-items:center;justify-content:center}
+  .lightbox img{max-width:100%;max-height:100%;object-fit:contain}
+  @media print{.item-photos img{width:110px;height:110px;border-color:#888}.lightbox{display:none!important}}
   .loading{padding:40px;text-align:center;color:var(--muted)}
   .error-box{padding:20px;border:1px solid var(--rose);background:rgba(239,68,68,.08);border-radius:6px;color:var(--rose);font-size:13px;margin:14px}
 </style>
@@ -480,6 +486,7 @@ function renderOverviewTab({job,estimate,changeOrders,crew,viewerId}){
         if(li.qty && Number(li.qty)>0){
           html+=' <span style="color:var(--muted);font-size:11px;">(qty '+esc(li.qty)+')</span>';
         }
+        html+=photoThumbs(li.photos);
         html+='</div></div>';
       });
     });
@@ -520,6 +527,7 @@ function renderWorkOrderTab({job,workOrder,viewerId}){
       if(li.qty && Number(li.qty)>0){
         html+=' <span style="color:var(--muted);font-size:11px;">(qty '+esc(li.qty)+')</span>';
       }
+      html+=photoThumbs(li.photos);
       html+='</div></div>';
     });
   }
@@ -905,6 +913,24 @@ function fmtDateShort(d){
 }
 
 // ── Generic check toggle (used by both scope-items and mat-items) ──
+// ── Walkthrough photos ───────────────────────────────────
+// Line items / checklist items may carry photos:[{path,url}] taken during
+// the on-site walkthrough. Bucket is public-read, so a plain <img> works.
+function photoThumbs(photos){
+  if(!Array.isArray(photos)||!photos.length) return '';
+  return '<div class="item-photos">'+photos.map(p=>{
+    const url=p.url||(SB_URL+'/storage/v1/object/public/job-photos/'+String(p.path||'').split('/').map(encodeURIComponent).join('/'));
+    return '<img src="'+esc(url)+'" alt="" onclick="event.stopPropagation();openLightbox(this.src)"/>';
+  }).join('')+'</div>';
+}
+function openLightbox(url){
+  const el=document.createElement('div');
+  el.className='lightbox';
+  el.innerHTML='<img src="'+esc(url)+'" alt=""/>';
+  el.onclick=()=>el.remove();
+  document.body.appendChild(el);
+}
+
 function toggleCheck(el){
   const key=el.dataset.key;
   if(el.classList.contains('checked')){
