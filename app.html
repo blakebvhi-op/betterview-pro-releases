@@ -9239,6 +9239,14 @@ async function loadDocsRemote(){
     const firstRun=(seen===null);           // key absent → seed silently, no toast
     if(firstRun)seen=new Set();
     docs=rows.map(dbToDoc);
+    // Don't drop docs created locally that haven't reached the server yet
+    // (debounced saveQueue or offline pending). Without this, a reload that
+    // lands between "create" and "upsert" silently loses the new doc.
+    try{
+      const local=[...Object.values(saveQueue.docs||{}),..._loadPending().filter(p=>p.table==='docs').map(p=>p.item)];
+      local.forEach(ld=>{if(!ld||!ld.id)return;const i=docs.findIndex(d=>d.id===ld.id);if(i>=0)docs[i]=ld;else docs.push(ld);});
+    }catch(e){console.warn('pending-doc merge skipped:',e);}
+    docsLoaded=true;
     const signedNow=docs.filter(d=>d.signature);
     // Detect newly-signed docs (skip announcements on the seeding run)
     const newlySigned=firstRun?[]:signedNow.filter(d=>!seen.has(d.id));
@@ -9514,6 +9522,7 @@ function setDocSort(v){
 // Set from the real row shape at load time, so the app can write customer_id
 // once the column exists without a hard ordering dependency on the migration.
 let docsHaveCustomerId=false;
+let docsLoaded=false; // true once loadDocsRemote() has succeeded at least once
 
 // Resolve the lead a document belongs to, most reliable link first.
 // Memoized per doc object: one render of the list calls this several times
@@ -10802,11 +10811,18 @@ function openLightbox(url){
 // Entry point from the job quick view. Finds (or creates) the draft
 // estimate for this appointment's lead, stamps the check-in, opens the
 // walkthrough overlay.
-function checkInWalkthrough(jobId){
+async function checkInWalkthrough(jobId){
   const j=jobs.find(x=>x.id===jobId);
   if(!j){alert('Job not found.');return;}
   if(!currentCompanyId||!authAccessToken){alert('Sign in before checking in — photos need an authenticated upload.');return;}
   loadDocs();
+  // Numbering and estimate lookup both read the docs array — never run
+  // against an empty one (boot fetch still in flight, or failed).
+  if(!docsLoaded){
+    setSS('syncing','Loading documents…');
+    const ok=await loadDocsRemote();
+    if(!ok){alert('Could not load documents from the server. Check your connection and try again.');return;}
+  }
   const lead=j.leadId?leads.find(l=>l.id===j.leadId):null;
   // Reuse the lead's estimate only while it's still a draft; otherwise start fresh.
   let est=lead&&lead.estId?docs.find(d=>d.id===lead.estId&&d.type==='estimate'&&d.status==='draft'):null;
@@ -10839,10 +10855,17 @@ function closeWalkthrough(){
   wtDocId=null;wtJobId=null;
 }
 
-function finishWalkthrough(){
+async function finishWalkthrough(){
   const id=wtDocId;
   closeWalkthrough();
-  if(id) openDocEditor(id);
+  if(!id) return;
+  if(!docs.find(d=>d.id===id)){
+    // In-memory copy was replaced by a reload — push anything queued and refetch.
+    try{flushSaveQueue();}catch{}
+    await loadDocsRemote();
+    if(!docs.find(d=>d.id===id)){alert('Walkthrough estimate not found after reload. Open it from the Estimates list.');return;}
+  }
+  openDocEditor(id);
 }
 
 function renderWalkthroughList(){
