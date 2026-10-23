@@ -1125,12 +1125,12 @@ select.doc-finput option{background:var(--steel-mid);}
 #vSnow.active{display:block;overflow-y:auto;}
 .jobs-sec{margin:14px 0 6px;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:700;display:flex;align-items:center;gap:8px;}
 .jobs-sec .cnt{background:var(--iron);color:var(--ink,#334155);border-radius:10px;padding:1px 8px;font-size:10px;}
-.job-card{display:flex;gap:12px;align-items:center;padding:12px 14px;border:1px solid var(--iron);border-left:4px solid var(--amber);border-radius:10px;background:var(--bg-card,#1a1c20);margin-bottom:8px;cursor:pointer;transition:border-color .12s;}
-.job-card:active{border-color:var(--amber);}
-.job-card-main{flex:1;min-width:0;}
-.job-card-name{font-weight:700;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.job-card-sub{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px;}
-.job-card-meta{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;}
+.jobs-card{display:flex;gap:12px;align-items:center;padding:12px 14px;border:1px solid var(--iron);border-left:4px solid var(--amber);border-radius:10px;background:var(--bg-card,#1a1c20);margin-bottom:8px;cursor:pointer;transition:border-color .12s;}
+.jobs-card:active{border-color:var(--amber);}
+.jobs-card-main{flex:1;min-width:0;}
+.jobs-card-name{font-weight:700;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.jobs-card-sub{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px;}
+.jobs-card-meta{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;}
 .job-pill{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:2px 8px;border-radius:10px;background:var(--iron);color:var(--muted);}
 .job-pill.st-unassigned{background:rgba(249,115,22,.15);color:#f97316;}
 .job-pill.st-scheduled{background:rgba(59,130,246,.15);color:#3b82f6;}
@@ -4357,11 +4357,11 @@ function lsSet(key,val){try{localStorage.setItem(key,JSON.stringify(val));}catch
 const saveQueue={jobs:{},leads:{},docs:{},templates:{},tasks:{},
   customers:{},customer_addresses:{},tags:{},customer_tags:{},estimate_tags:{},
   pipeline_boards:{},pipeline_columns:{},pipeline_cards:{},crews:{},
-  snow_accounts:{},snow_routes:{},snow_visits:{}};
+  snow_accounts:{},snow_routes:{},snow_route_runs:{},snow_visits:{}};
 const saveTimers={jobs:{},leads:{},docs:{},templates:{},tasks:{},
   customers:{},customer_addresses:{},tags:{},customer_tags:{},estimate_tags:{},
   pipeline_boards:{},pipeline_columns:{},pipeline_cards:{},crews:{},
-  snow_accounts:{},snow_routes:{},snow_visits:{}};
+  snow_accounts:{},snow_routes:{},snow_route_runs:{},snow_visits:{}};
 // Persistent queue of saves that haven't reached Supabase yet. Survives
 // reload. Each entry = {table, id, item, attempts, firstQueued}.
 // Stored as an array (not keyed) so multiple edits to the same id over
@@ -4415,6 +4415,7 @@ function _toDb(table,item){
   // Snow plowing — stored shape-equivalent
   if(table==='snow_accounts') return item;
   if(table==='snow_routes') return item;
+  if(table==='snow_route_runs') return item;
   if(table==='snow_visits') return item;
   // Pipeline kanban
   if(table==='pipeline_boards') return item;
@@ -4476,6 +4477,7 @@ function flushSaveQueue(){
   flush('crews',{...saveQueue.crews});
   flush('snow_accounts',{...saveQueue.snow_accounts});
   flush('snow_routes',{...saveQueue.snow_routes});
+  flush('snow_route_runs',{...saveQueue.snow_route_runs});
   flush('snow_visits',{...saveQueue.snow_visits});
   // Pipeline kanban
   flush('pipeline_boards',{...saveQueue.pipeline_boards});
@@ -10984,11 +10986,11 @@ function renderJobsView(){
     const crew=jobCrewName(j);
     const t=normalizeApptType(j.apptType);
     const typeLbl=APPT_TYPES[t]?APPT_TYPES[t].emoji+' '+APPT_TYPES[t].label:'';
-    return `<div class="job-card" style="border-left-color:${APPT_TYPES[t]?.color||'var(--amber)'}" onclick="openJobPage('${j.id}')">
-      <div class="job-card-main">
-        <div class="job-card-name">${esc(jobCustomerName(j))}</div>
-        <div class="job-card-sub">${esc(jobAddress(j)||j.note||'')}</div>
-        <div class="job-card-meta">
+    return `<div class="jobs-card" style="border-left-color:${APPT_TYPES[t]?.color||'var(--amber)'}" onclick="openJobPage('${j.id}')">
+      <div class="jobs-card-main">
+        <div class="jobs-card-name">${esc(jobCustomerName(j))}</div>
+        <div class="jobs-card-sub">${esc(jobAddress(j)||j.note||'')}</div>
+        <div class="jobs-card-meta">
           <span class="job-pill st-${st}">${JOB_STATUS[st]?.label||st}</span>
           <span class="job-pill">${esc(jobDateLabel(j))}</span>
           ${crew?`<span class="job-pill">👷 ${esc(crew)}</span>`:''}
@@ -14982,15 +14984,15 @@ try{ startMessageAlerts(); }catch(e){ console.error('alerts init',e); }
 // ════════════════════════════════════════════════════════════════════
 // SNOW PLOWING MODULE (seasonal)
 // ════════════════════════════════════════════════════════════════════
-// Tables: snow_accounts, snow_routes, snow_visits (see snow-plowing-MIGRATION.sql)
+// Tables: snow_accounts, snow_routes (saved routes), snow_route_runs (route on a day),
+//         snow_visits (see snow-plowing-MIGRATION.sql)
 // Docs:   snowestimate / snowinvoice live in the normal `docs` table but are
 //         hidden from the Estimates tab and numbered separately (SNE-/SNI-).
 // Access: companies.snow_enabled (owner toggle) AND
 //         (owner | manager | profiles.snow_access).
-let snowAccounts=[],snowRoutes=[],snowVisits=[];
+let snowAccounts=[],snowRoutes=[],snowRuns=[],snowVisits=[];
 let snowTableMissing=false;
 let snowSub='routes';          // routes | accounts | billing
-let snowOpenRouteId=null;      // route page open inside the Snow view
 // function declaration (hoisted) — renderDocList/updateDocPreview can run before this block is reached
 function isSnowDocType(t){return t==='snowestimate'||t==='snowinvoice';}
 
@@ -15002,31 +15004,34 @@ function canSeeSnow(){
 }
 
 async function loadSnowRemote(){
-  if(!snowEnabled()){snowAccounts=[];snowRoutes=[];snowVisits=[];return true;}
+  if(!snowEnabled()){snowAccounts=[];snowRoutes=[];snowRuns=[];snowVisits=[];return true;}
   try{
-    const [a,r,v]=await Promise.all([
+    const [a,r,rr,v]=await Promise.all([
       sb.req('GET','snow_accounts?order=sort_order.asc,created_at.asc'),
-      sb.req('GET','snow_routes?order=route_date.desc,created_at.desc'),
+      sb.req('GET','snow_routes?order=created_at.asc'),
+      sb.req('GET','snow_route_runs?order=run_date.desc,created_at.desc'),
       sb.req('GET','snow_visits?order=created_at.desc')
     ]);
-    snowAccounts=a;snowRoutes=r.map(x=>({...x,stop_ids:Array.isArray(x.stop_ids)?x.stop_ids:safeParseArr(x.stop_ids)}));snowVisits=v;
+    const fixStops=x=>({...x,stop_ids:Array.isArray(x.stop_ids)?x.stop_ids:safeParseArr(x.stop_ids)});
+    snowAccounts=a;snowRoutes=r.map(fixStops);snowRuns=rr.map(fixStops);snowVisits=v;
     snowTableMissing=false;
     if(mainView==='snow') renderSnowView();
     return true;
   }catch(e){
     console.error('loadSnowRemote:',e);
-    snowTableMissing=true;snowAccounts=[];snowRoutes=[];snowVisits=[];
+    snowTableMissing=true;snowAccounts=[];snowRoutes=[];snowRuns=[];snowVisits=[];
     if(mainView==='snow') renderSnowView();
     return false;
   }
 }
 function saveSnowAccount(a){a.updated_at=new Date().toISOString();setSS('syncing','Saving…');queueSave('snow_accounts',a);}
-function saveSnowRoute(r){
+function saveSnowRoute(r){r.updated_at=new Date().toISOString();setSS('syncing','Saving…');queueSave('snow_routes',r);}
+function saveSnowRun(r){
   r.updated_at=new Date().toISOString();setSS('syncing','Saving…');
-  // Drivers can't INSERT routes (RLS), and the save queue upserts via POST,
+  // Drivers can't INSERT runs (RLS), and the save queue upserts via POST,
   // so a driver's status change goes out as a PATCH instead.
-  if(canManageSnow()) queueSave('snow_routes',r);
-  else snowPatch('snow_routes',r.id,{status:r.status,updated_at:r.updated_at});
+  if(canManageSnow()) queueSave('snow_route_runs',r);
+  else snowPatch('snow_route_runs',r.id,{status:r.status,updated_at:r.updated_at});
 }
 async function snowPatch(table,id,fields){
   try{
@@ -15049,7 +15054,7 @@ function snowDriverName(uid_){const m=teamRoster.find(t=>t.id===uid_);return m?m
 function snowFmtTs(ts){if(!ts)return'';const d=new Date(ts);return d.toLocaleDateString('en-US',{month:'short',day:'numeric'})+' '+d.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});}
 function snowFmtMoney(v){return '$'+(parseFloat(v)||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});}
 function snowToday(){return new Date().toISOString().split('T')[0];}
-function snowVisitFor(routeId,accountId){return snowVisits.find(v=>v.route_id===routeId&&v.account_id===accountId);}
+function snowVisitFor(runId,accountId){return snowVisits.find(v=>v.run_id===runId&&v.account_id===accountId);}
 function snowPrimaryAddress(customerId){
   const addrs=addressesForCustomer(customerId);
   const a=addrs.find(x=>x.is_primary)||addrs[0];
@@ -15086,62 +15091,88 @@ function renderSnowView(){
     body.innerHTML=`<div class="lempty">❄ Snow tables not found.<br><br>Run <b>snow-plowing-MIGRATION.sql</b> in the Supabase SQL editor, then tap Resync.</div>`;
     return;
   }
-  if(snowOpenRouteId){renderSnowRoutePage(snowOpenRouteId);return;}
+  if(snowOpenRunId){renderSnowRunPage(snowOpenRunId);return;}
   if(snowSub==='accounts') renderSnowAccounts();
   else if(snowSub==='billing') renderSnowBilling();
   else renderSnowRoutes();
 }
-function setSnowSub(k){snowSub=k;snowOpenRouteId=null;renderSnowView();}
+function setSnowSub(k){snowSub=k;snowOpenRunId=null;renderSnowView();}
 
 // ── ROUTES ───────────────────────────────────────────────────────────
-function snowRouteProgress(r){
-  const ids=r.stop_ids||[];
-  const done=ids.filter(id=>{const v=snowVisitFor(r.id,id);return v&&v.left_at;}).length;
+// A ROUTE is a saved, ordered list of stops (snow_routes).
+// A RUN is that route dispatched to a date + driver (snow_route_runs).
+// Visits are logged against the run.
+let snowOpenRunId=null;
+function snowRunById(id){return snowRuns.find(r=>r.id===id);}
+function snowRunProgress(run){
+  const ids=snowRunStopIds(run);
+  const done=ids.filter(id=>{const v=snowVisitFor(run.id,id);return v&&v.left_at;}).length;
   return {done,total:ids.length};
+}
+// Stops are snapshotted onto the run when it's created, so editing the
+// saved route later doesn't change a run that's already in progress.
+function snowRunStopIds(run){
+  if(Array.isArray(run.stop_ids)&&run.stop_ids.length) return run.stop_ids;
+  const r=snowRouteById(run.route_id);return r?(r.stop_ids||[]):[];
 }
 function renderSnowRoutes(){
   const body=document.getElementById('snowBody');
   const manage=canManageSnow();
-  let list=manage?snowRoutes:snowRoutes.filter(r=>r.assigned_to===currentUser?.id);
-  const active=list.filter(r=>r.status!=='done');
-  const done=list.filter(r=>r.status==='done');
-  const card=r=>{
-    const p=snowRouteProgress(r);
-    const st=r.status==='done'?'#22c55e':r.status==='active'?'#f59e0b':'#94a3b8';
-    return `<div class="lead-card" style="cursor:pointer" onclick="openSnowRoute('${r.id}')">
+  const myRuns=manage?snowRuns:snowRuns.filter(r=>r.assigned_to===currentUser?.id);
+  const open=myRuns.filter(r=>r.status!=='done').sort((a,b)=>(a.run_date||'').localeCompare(b.run_date||''));
+  const done=myRuns.filter(r=>r.status==='done').sort((a,b)=>(b.run_date||'').localeCompare(a.run_date||''));
+  const runCard=run=>{
+    const p=snowRunProgress(run);const rt=snowRouteById(run.route_id);
+    const st=run.status==='done'?'#22c55e':run.status==='active'?'#f59e0b':'#94a3b8';
+    return `<div class="lead-card" style="cursor:pointer" onclick="openSnowRun('${run.id}')">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
-        <div class="lead-name">❄ ${esc(r.name||'Route')}</div>
-        <span class="lbadge" style="background:${st};color:#fff">${(r.status||'planned').toUpperCase()}</span>
+        <div class="lead-name">❄ ${esc(run.run_date||'no date')} · ${esc(rt?rt.name:'(route deleted)')}</div>
+        <span class="lbadge" style="background:${st};color:#fff">${(run.status||'planned').toUpperCase()}</span>
       </div>
-      <div style="font-size:12px;color:var(--muted);margin-top:4px">${esc(r.route_date||'no date')} · ${esc(snowDriverName(r.assigned_to))} · ${p.done}/${p.total} stops done</div>
+      <div style="font-size:12px;color:var(--muted);margin-top:4px">${esc(snowDriverName(run.assigned_to))} · ${p.done}/${p.total} stops done</div>
     </div>`;
   };
+  const routeCard=r=>`<div class="lead-card">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">
+        <div style="min-width:0;flex:1;cursor:pointer" onclick="openSnowRouteEditor('${r.id}')">
+          <div class="lead-name">🛣 ${esc(r.name||'Route')}</div>
+          <div style="font-size:12px;color:var(--muted)">${(r.stop_ids||[]).length} stops${r.notes?' · '+esc(r.notes):''}</div>
+        </div>
+        <div style="display:flex;gap:6px;flex-shrink:0">
+          <button class="btn btn-ghost btn-sm" onclick="openSnowRouteEditor('${r.id}')">Edit</button>
+          <button class="btn btn-amber btn-sm" onclick="openSnowRunEditor('${r.id}')">Assign to day</button>
+        </div>
+      </div></div>`;
   body.innerHTML=`
-    ${manage?`<div style="display:flex;gap:8px;margin-bottom:10px"><button class="btn btn-amber btn-sm" onclick="openSnowRouteEditor()">+ New Route</button></div>`:''}
-    ${active.length?active.map(card).join(''):`<div class="lempty">${manage?'No open routes. Create one to start.':'No routes assigned to you.'}</div>`}
-    ${done.length?`<div class="cust-sec-label" style="margin-top:14px">Completed</div>${done.slice(0,30).map(card).join('')}`:''}`;
+    <div class="cust-sec-label">Runs</div>
+    ${open.length?open.map(runCard).join(''):`<div class="lempty">${manage?'Nothing assigned. Pick a saved route below and assign it to a day.':'No routes assigned to you.'}</div>`}
+    ${done.length?`<div class="cust-sec-label" style="margin-top:14px">Completed</div>${done.slice(0,30).map(runCard).join('')}`:''}
+    ${manage?`
+    <div class="cust-sec-label" style="margin-top:18px;display:flex;align-items:center;gap:10px">Saved routes <button class="btn btn-amber btn-xs" onclick="openSnowRouteEditor()">+ New Route</button></div>
+    ${snowRoutes.length?snowRoutes.map(routeCard).join(''):'<div class="lempty">No saved routes yet.</div>'}`:''}`;
 }
-function openSnowRoute(id){snowOpenRouteId=id;renderSnowView();}
-function closeSnowRoute(){snowOpenRouteId=null;renderSnowView();}
+function openSnowRun(id){snowOpenRunId=id;renderSnowView();}
+function closeSnowRun(){snowOpenRunId=null;renderSnowView();}
 
-function renderSnowRoutePage(id){
+function renderSnowRunPage(id){
   const body=document.getElementById('snowBody');
-  const r=snowRouteById(id);
-  if(!r){snowOpenRouteId=null;renderSnowRoutes();return;}
+  const run=snowRunById(id);
+  if(!run){snowOpenRunId=null;renderSnowRoutes();return;}
+  const rt=snowRouteById(run.route_id);
   const manage=canManageSnow();
-  const isDriver=r.assigned_to===currentUser?.id;
-  const stops=(r.stop_ids||[]).map(snowAccountById).filter(Boolean);
-  const p=snowRouteProgress(r);
+  const isDriver=run.assigned_to===currentUser?.id;
+  const stops=snowRunStopIds(run).map(snowAccountById).filter(Boolean);
+  const p=snowRunProgress(run);
   const maps=snowMapsLinks(stops);
   const stopRow=(a,i)=>{
-    const v=snowVisitFor(r.id,a.id);
+    const v=snowVisitFor(run.id,a.id);
     let state='pending',btn='';
     if(v&&v.left_at) state='done';
     else if(v&&v.arrived_at) state='arrived';
-    const canTap=(isDriver||manage)&&r.status!=='done';
+    const canTap=(isDriver||manage)&&run.status!=='done';
     if(canTap){
-      if(state==='pending') btn=`<button class="btn btn-amber btn-sm" onclick="snowTapStop('${r.id}','${a.id}')">Arrived</button>`;
-      else if(state==='arrived') btn=`<button class="btn btn-sm" style="background:#22c55e;color:#fff" onclick="snowTapStop('${r.id}','${a.id}')">Done — leaving</button>`;
+      if(state==='pending') btn=`<button class="btn btn-amber btn-sm" onclick="snowTapStop('${run.id}','${a.id}')">Arrived</button>`;
+      else if(state==='arrived') btn=`<button class="btn btn-sm" style="background:#22c55e;color:#fff" onclick="snowTapStop('${run.id}','${a.id}')">Done — leaving</button>`;
       else btn=`<span style="color:#22c55e;font-size:12px;font-weight:600">✓ Done</span>`;
     } else if(state==='done') btn=`<span style="color:#22c55e;font-size:12px;font-weight:600">✓ Done</span>`;
     const times=v?`<div style="font-size:11px;color:var(--muted);margin-top:3px">${v.arrived_at?'Arrived '+snowFmtTs(v.arrived_at):''}${v.left_at?' · Left '+snowFmtTs(v.left_at):''}${v.user_id?' · '+esc(snowDriverName(v.user_id)):''}</div>`:'';
@@ -15160,86 +15191,150 @@ function renderSnowRoutePage(id){
   };
   body.innerHTML=`
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap">
-      <button class="btn btn-ghost btn-sm" onclick="closeSnowRoute()">← Routes</button>
-      <div class="lead-name" style="flex:1">❄ ${esc(r.name||'Route')} <span style="font-size:12px;color:var(--muted);font-weight:400">${esc(r.route_date||'')} · ${esc(snowDriverName(r.assigned_to))} · ${p.done}/${p.total}</span></div>
-      ${manage?`<button class="btn btn-ghost btn-sm" onclick="openSnowRouteEditor('${r.id}')">Edit</button>`:''}
+      <button class="btn btn-ghost btn-sm" onclick="closeSnowRun()">← Runs</button>
+      <div class="lead-name" style="flex:1">❄ ${esc(rt?rt.name:'Route')} <span style="font-size:12px;color:var(--muted);font-weight:400">${esc(run.run_date||'')} · ${esc(snowDriverName(run.assigned_to))} · ${p.done}/${p.total}</span></div>
+      ${manage?`<button class="btn btn-ghost btn-sm" onclick="openSnowRunEditor('${run.route_id}','${run.id}')">Edit</button>`:''}
     </div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
       ${maps.map(m=>`<a class="btn btn-amber btn-sm" style="text-decoration:none" href="${m.url}" target="_blank" rel="noopener">🗺 ${m.label}</a>`).join('')}
-      ${(isDriver||manage)&&r.status!=='done'&&p.done===p.total&&p.total>0?`<button class="btn btn-sm" style="background:#22c55e;color:#fff" onclick="snowFinishRoute('${r.id}')">Mark route complete</button>`:''}
-      ${manage&&r.status==='done'?`<button class="btn btn-ghost btn-sm" onclick="snowReopenRoute('${r.id}')">Reopen</button>`:''}
+      ${(isDriver||manage)&&run.status!=='done'&&p.done===p.total&&p.total>0?`<button class="btn btn-sm" style="background:#22c55e;color:#fff" onclick="snowFinishRun('${run.id}')">Mark run complete</button>`:''}
+      ${manage&&run.status==='done'?`<button class="btn btn-ghost btn-sm" onclick="snowReopenRun('${run.id}')">Reopen</button>`:''}
     </div>
-    ${stops.length?stops.map(stopRow).join(''):'<div class="lempty">No stops on this route.</div>'}`;
+    ${stops.length?stops.map(stopRow).join(''):'<div class="lempty">No stops on this run.</div>'}`;
 }
 // One button per stop: first tap = arrived, second tap = done/left.
-function snowTapStop(routeId,accountId){
-  const r=snowRouteById(routeId);const a=snowAccountById(accountId);if(!r||!a)return;
+function snowTapStop(runId,accountId){
+  const run=snowRunById(runId);const a=snowAccountById(accountId);if(!run||!a)return;
   const now=new Date().toISOString();
-  let v=snowVisitFor(routeId,accountId);
+  let v=snowVisitFor(runId,accountId);
   if(!v){
-    v={id:'sv_'+uid(),route_id:routeId,account_id:accountId,customer_id:a.customer_id,
+    v={id:'sv_'+uid(),run_id:runId,route_id:run.route_id||null,account_id:accountId,customer_id:a.customer_id,
        user_id:currentUser?.id||null,arrived_at:now,left_at:null,price:parseFloat(a.price_per_push)||0,
        notes:'',invoiced_doc_id:null,created_at:now,updated_at:now};
     snowVisits.unshift(v);
-    if(r.status!=='active'){r.status='active';saveSnowRoute(r);}
+    if(run.status!=='active'){run.status='active';saveSnowRun(run);}
   } else if(!v.left_at){
     v.left_at=now;
   } else return;
   saveSnowVisit(v);
   renderSnowView();
 }
-function snowFinishRoute(id){const r=snowRouteById(id);if(!r)return;r.status='done';saveSnowRoute(r);renderSnowView();}
-function snowReopenRoute(id){const r=snowRouteById(id);if(!r)return;r.status='active';saveSnowRoute(r);renderSnowView();}
+function snowFinishRun(id){const r=snowRunById(id);if(!r)return;r.status='done';saveSnowRun(r);renderSnowView();}
+function snowReopenRun(id){const r=snowRunById(id);if(!r)return;r.status='active';saveSnowRun(r);renderSnowView();}
 
-// Route editor (create/edit): name, date, driver, which accounts.
-// Stop order = the order on the Accounts tab (reorder there with ▲▼).
-function openSnowRouteEditor(id){
-  const r=id?snowRouteById(id):null;
-  const sel=new Set(r?(r.stop_ids||[]):snowAccounts.filter(a=>a.active!==false).map(a=>a.id));
+// Assign a saved route to a day + driver (create or edit a run)
+function openSnowRunEditor(routeId,runId){
+  const rt=snowRouteById(routeId);if(!rt){alert('Route not found.');return;}
+  const run=runId?snowRunById(runId):null;
   const drivers=teamRoster.filter(m=>m.snowAccess||m.role==='owner'||m.role==='manager');
-  const html=`<div class="modal show" id="snowRouteMod"><div class="modal-content" style="padding:18px">
-    <div class="mtitle" style="margin-bottom:12px">${r?'Edit Route':'New Route'}</div>
-    <div class="fg"><div class="flbl">Route name</div><input class="finput" id="srName" value="${esc(r?r.name:'Route '+snowToday())}"></div>
+  const html=`<div class="modal show" id="snowRunMod"><div class="modal-content" style="padding:18px">
+    <div class="mtitle" style="margin-bottom:4px">${run?'Edit run':'Assign to day'}</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:12px">🛣 ${esc(rt.name)} · ${(rt.stop_ids||[]).length} stops</div>
     <div class="frow">
-      <div class="fg"><div class="flbl">Date</div><input class="finput" type="date" id="srDate" value="${esc(r?(r.route_date||''):snowToday())}"></div>
-      <div class="fg"><div class="flbl">Driver</div><select class="finput" id="srDriver">
+      <div class="fg"><div class="flbl">Date</div><input class="finput" type="date" id="rnDate" value="${esc(run?(run.run_date||''):snowToday())}"></div>
+      <div class="fg"><div class="flbl">Driver</div><select class="finput" id="rnDriver">
         <option value="">— unassigned —</option>
-        ${drivers.map(m=>`<option value="${m.id}" ${r&&r.assigned_to===m.id?'selected':''}>${esc(m.name)}</option>`).join('')}
+        ${drivers.map(m=>`<option value="${m.id}" ${run&&run.assigned_to===m.id?'selected':''}>${esc(m.name)}</option>`).join('')}
       </select></div>
     </div>
-    <div class="flbl" style="margin-top:6px">Stops (in Accounts order)</div>
-    <div style="max-height:40vh;overflow-y:auto;border:1px solid var(--iron);border-radius:8px;padding:6px;margin-bottom:12px">
-      ${snowAccounts.length?snowAccounts.map(a=>`<label style="display:flex;gap:8px;align-items:center;padding:6px 4px;font-size:13px;cursor:pointer;${a.active===false?'opacity:.5':''}">
-        <input type="checkbox" class="srStop" value="${a.id}" ${sel.has(a.id)?'checked':''} style="accent-color:var(--amber)">
-        <span style="flex:1;min-width:0"><b>${esc(snowCustomerName(a.customer_id))}</b><br><span style="color:var(--muted);font-size:11px">${esc(a.address||'')}</span></span>
-      </label>`).join(''):'<div class="lempty">No snow accounts yet — add them on the Accounts tab first.</div>'}
-    </div>
     <div style="display:flex;gap:8px;justify-content:flex-end">
-      ${r?`<button class="btn btn-danger btn-sm" style="margin-right:auto" onclick="snowDeleteRoute('${r.id}')">Delete</button>`:''}
-      <button class="btn btn-ghost btn-sm" onclick="document.getElementById('snowRouteMod').remove()">Cancel</button>
-      <button class="btn btn-amber btn-sm" onclick="saveSnowRouteFromEditor('${r?r.id:''}')">Save</button>
+      ${run?`<button class="btn btn-danger btn-sm" style="margin-right:auto" onclick="snowDeleteRun('${run.id}')">Delete run</button>`:''}
+      <button class="btn btn-ghost btn-sm" onclick="document.getElementById('snowRunMod').remove()">Cancel</button>
+      <button class="btn btn-amber btn-sm" onclick="saveSnowRunFromEditor('${rt.id}','${run?run.id:''}')">Save</button>
     </div>
   </div></div>`;
   document.body.insertAdjacentHTML('beforeend',html);
 }
+function saveSnowRunFromEditor(routeId,runId){
+  const rt=snowRouteById(routeId);if(!rt)return;
+  const date=document.getElementById('rnDate').value;
+  if(!date){alert('Pick a date.');return;}
+  let run=runId?snowRunById(runId):null;
+  const now=new Date().toISOString();
+  if(!run){
+    run={id:'srr_'+uid(),route_id:rt.id,status:'planned',stop_ids:(rt.stop_ids||[]).slice(),created_at:now,updated_at:now};
+    snowRuns.unshift(run);
+  }
+  run.run_date=date;
+  run.assigned_to=document.getElementById('rnDriver').value||null;
+  saveSnowRun(run);
+  document.getElementById('snowRunMod')?.remove();
+  snowOpenRunId=run.id;renderSnowView();
+}
+async function snowDeleteRun(id){
+  if(snowVisits.some(v=>v.run_id===id)){if(!confirm('This run has logged visits. Delete the run anyway? Visits are kept for billing.'))return;}
+  snowRuns=snowRuns.filter(r=>r.id!==id);
+  document.getElementById('snowRunMod')?.remove();
+  snowOpenRunId=null;renderSnowView();
+  try{await sb.del('snow_route_runs',id);}catch(e){console.error(e);alert('Delete failed: '+e.message);}
+}
+
+// Saved-route editor: name, notes, and an ordered stop list (▲▼ per stop).
+let _srOrder=[]; // account ids in stop order while the editor is open
+function openSnowRouteEditor(id){
+  const r=id?snowRouteById(id):null;
+  const chosen=r?(r.stop_ids||[]).filter(snowAccountById):[];
+  const rest=snowAccounts.filter(a=>!chosen.includes(a.id)).map(a=>a.id);
+  _srOrder=chosen.concat(rest);
+  window._srChecked=new Set(r?chosen:snowAccounts.filter(a=>a.active!==false).map(a=>a.id));
+  const html=`<div class="modal show" id="snowRouteMod"><div class="modal-content" style="padding:18px">
+    <div class="mtitle" style="margin-bottom:12px">${r?'Edit Route':'New Route'}</div>
+    <div class="frow">
+      <div class="fg"><div class="flbl">Route name</div><input class="finput" id="srName" value="${esc(r?r.name:'')}" placeholder="e.g. North loop"></div>
+      <div class="fg"><div class="flbl">Notes</div><input class="finput" id="srNotes" value="${esc(r?(r.notes||''):'')}"></div>
+    </div>
+    <div class="flbl" style="margin-top:6px">Stops — check to include, ▲▼ to set drive order</div>
+    <div id="srStopList" style="max-height:40vh;overflow-y:auto;border:1px solid var(--iron);border-radius:8px;padding:6px;margin-bottom:12px"></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      ${r?`<button class="btn btn-danger btn-sm" style="margin-right:auto" onclick="snowDeleteRoute('${r.id}')">Delete</button>`:''}
+      <button class="btn btn-ghost btn-sm" onclick="document.getElementById('snowRouteMod').remove()">Cancel</button>
+      <button class="btn btn-amber btn-sm" onclick="saveSnowRouteFromEditor('${r?r.id:''}')">Save route</button>
+    </div>
+  </div></div>`;
+  document.body.insertAdjacentHTML('beforeend',html);
+  renderSnowRouteStopList();
+}
+function renderSnowRouteStopList(){
+  const el=document.getElementById('srStopList');if(!el)return;
+  const accts=_srOrder.map(snowAccountById).filter(Boolean);
+  if(!accts.length){el.innerHTML='<div class="lempty">No snow accounts yet — add them on the Accounts tab first.</div>';return;}
+  let n=0;
+  el.innerHTML=accts.map((a,i)=>{
+    const on=window._srChecked.has(a.id);const num=on?(++n):'';
+    return `<div style="display:flex;gap:8px;align-items:center;padding:5px 4px;font-size:13px;${a.active===false?'opacity:.5':''}">
+      <input type="checkbox" ${on?'checked':''} style="accent-color:var(--amber)" onchange="snowRouteToggleStop('${a.id}',this.checked)">
+      <span style="width:18px;text-align:right;color:var(--amber);font-weight:700">${num}</span>
+      <span style="flex:1;min-width:0"><b>${esc(snowCustomerName(a.customer_id))}</b><br><span style="color:var(--muted);font-size:11px">${esc(a.address||'')}</span></span>
+      <button class="btn btn-ghost btn-xs" onclick="snowRouteMoveStop('${a.id}',-1)" ${i===0?'disabled':''}>▲</button>
+      <button class="btn btn-ghost btn-xs" onclick="snowRouteMoveStop('${a.id}',1)" ${i===accts.length-1?'disabled':''}>▼</button>
+    </div>`;}).join('');
+}
+function snowRouteToggleStop(id,on){if(on)window._srChecked.add(id);else window._srChecked.delete(id);renderSnowRouteStopList();}
+function snowRouteMoveStop(id,dir){
+  const i=_srOrder.indexOf(id);const j=i+dir;
+  if(i<0||j<0||j>=_srOrder.length)return;
+  [_srOrder[i],_srOrder[j]]=[_srOrder[j],_srOrder[i]];
+  renderSnowRouteStopList();
+}
 function saveSnowRouteFromEditor(id){
-  const stops=[...document.querySelectorAll('.srStop:checked')].map(c=>c.value);
+  const stops=_srOrder.filter(x=>window._srChecked.has(x));
+  if(!stops.length){alert('Check at least one stop.');return;}
   let r=id?snowRouteById(id):null;
   const now=new Date().toISOString();
-  if(!r){r={id:'sr_'+uid(),status:'planned',created_at:now,updated_at:now,notes:''};snowRoutes.unshift(r);}
+  if(!r){r={id:'sr_'+uid(),created_at:now,updated_at:now};snowRoutes.push(r);}
   r.name=document.getElementById('srName').value.trim()||'Route';
-  r.route_date=document.getElementById('srDate').value||null;
-  r.assigned_to=document.getElementById('srDriver').value||null;
+  r.notes=document.getElementById('srNotes').value.trim();
   r.stop_ids=stops;
   saveSnowRoute(r);
   document.getElementById('snowRouteMod')?.remove();
-  snowOpenRouteId=r.id;renderSnowView();
+  snowOpenRunId=null;renderSnowView();
 }
 async function snowDeleteRoute(id){
-  if(!confirm('Delete this route? Logged visits are kept.'))return;
+  if(snowRuns.some(r=>r.route_id===id&&r.status!=='done')){alert('This route has open runs. Finish or delete those first.');return;}
+  if(!confirm('Delete this saved route? Past runs and visits are kept.'))return;
   snowRoutes=snowRoutes.filter(r=>r.id!==id);
   document.getElementById('snowRouteMod')?.remove();
-  snowOpenRouteId=null;renderSnowView();
+  renderSnowView();
   try{await sb.del('snow_routes',id);}catch(e){console.error(e);alert('Delete failed: '+e.message);}
 }
 
