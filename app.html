@@ -1892,6 +1892,7 @@ body:not(.role-owner):not(.role-manager) .role-financial-only{display:none!impor
         <div class="jobs-title" id="jobsTitle">🔧 JOBS</div>
         <div class="jobs-filters" id="jobsFilters"></div>
       </div>
+      <div id="jobsQuickRow" style="margin-bottom:10px;display:none"><button class="btn btn-amber btn-sm" onclick="openQuickJob()">+ New Job (no estimate)</button></div>
       <div id="jobsBody"></div>
     </div>
   </div>
@@ -2479,6 +2480,38 @@ body:not(.role-owner):not(.role-manager) .role-financial-only{display:none!impor
 </div>
 
 <!-- ═══ NOTE FOR TODAY (Execulist board) ═══ -->
+<!-- ═══ QUICK JOB (production job with no estimate) ═══ -->
+<div class="mov" id="quickJobMov">
+  <div class="modal">
+    <div class="mhandle"></div>
+    <div class="mtitle">🔧 NEW JOB</div>
+    <div style="font-size:12px;color:var(--muted);margin:-6px 0 10px;line-height:1.5">For small fixes and punch-list work that don't need an estimate. Goes straight to Jobs → Needs Crew for the project manager to schedule.</div>
+    <div class="fg"><label class="flbl">Customer</label>
+      <input class="finput" id="qjCust" list="qjCustList" placeholder="Start typing a customer name…" autocomplete="off" oninput="qjPickCustomer(this.value)"/>
+      <datalist id="qjCustList"></datalist>
+    </div>
+    <div class="fg"><label class="flbl">Job Address</label><input class="finput" id="qjAddr" placeholder="Street, City" autocomplete="off"/></div>
+    <div class="fg"><label class="flbl">Contact</label><input class="finput" id="qjContact" placeholder="Phone" autocomplete="off"/></div>
+    <div class="fg"><label class="flbl">What needs to be done</label><textarea class="finput" id="qjScope" rows="3" placeholder="e.g. Reseal chimney flashing, replace two cracked shingles on north slope"></textarea></div>
+    <div class="fg"><label class="flbl">Tasks (one per line, optional)</label><textarea class="finput" id="qjTasks" rows="3" placeholder="Remove old sealant&#10;Apply new flashing sealant&#10;Replace 2 shingles"></textarea></div>
+    <div class="frow">
+      <div><label class="flbl">Type</label>
+        <select class="finput" id="qjType">
+          <option value="repair" selected>🔧 Repair</option>
+          <option value="roof_replace">🏠 Roof Replacement</option>
+          <option value="siding_replace">🪟 Siding Replacement</option>
+          <option value="gutter_replace">🌧️ Gutter Replacement</option>
+        </select>
+      </div>
+      <div><label class="flbl">Notes for crew</label><input class="finput" id="qjNotes" placeholder="Gate code, dog, etc." autocomplete="off"/></div>
+    </div>
+    <div class="macts">
+      <button class="btn btn-ghost" onclick="closeMov('quickJobMov')">Cancel</button>
+      <button class="btn btn-amber" onclick="saveQuickJob()">Create Job →</button>
+    </div>
+  </div>
+</div>
+
 <div class="mov" id="exNoteMov">
   <div class="modal">
     <div class="mhandle"></div>
@@ -5865,12 +5898,12 @@ function switchMain(v){
   document.getElementById(viewMap[v]||'vSched').classList.add('active');
   ['bnHome','bnSched','bnJobs','bnSnow','bnCRM','bnEst','bnTasks','bnPipe','bnMsg'].forEach(id=>{const el=document.getElementById(id);if(el)el.classList.toggle('active',id==='bn'+v.charAt(0).toUpperCase()+v.slice(1));});
   ['dtHome','dtSched','dtJobs','dtSnow','dtCRM','dtEst','dtTasks','dtPipe','dtMsg'].forEach(id=>{const el=document.getElementById(id);if(el)el.classList.toggle('active',id==='dt'+v.charAt(0).toUpperCase()+v.slice(1));});
-  const lblMap={home:'New Job',sched:'New Job',jobs:'↻ Refresh',snow:'↻ Refresh',crm:'New Customer',est:'New Estimate',tasks:'New Task',pipe:'New Estimate',msg:'↻ Refresh',mat:'Search'};
+  const lblMap={home:'New Job',sched:'New Job',jobs:(isLaborer()?'↻ Refresh':'New Job'),snow:'↻ Refresh',crm:'New Customer',est:'New Estimate',tasks:'New Task',pipe:'New Estimate',msg:'↻ Refresh',mat:'Search'};
   document.getElementById('daddLbl').textContent=lblMap[v]||'New';
   document.getElementById('daddBtn').onclick=
     v==='home'?()=>openJobMov('backlog'):
     v==='sched'?()=>openJobMov('backlog'):
-    v==='jobs'?()=>renderJobsView():
+    v==='jobs'?()=>(isLaborer()?renderJobsView():openQuickJob()):
     v==='snow'?()=>loadSnowRemote():
     v==='crm'?()=>openCustomerMov():
     v==='est'?()=>openDocEditor():
@@ -5892,7 +5925,7 @@ function switchMain(v){
 function handleFab(){
   if(mainView==='home')openJobMov('backlog');
   else if(mainView==='sched')openJobMov('backlog');
-  else if(mainView==='jobs')renderJobsView();
+  else if(mainView==='jobs'){if(isLaborer())renderJobsView();else openQuickJob();}
   else if(mainView==='snow')loadSnowRemote();
   else if(mainView==='crm')openCustomerMov();
   else if(mainView==='est')openDocEditor();
@@ -10978,6 +11011,7 @@ function renderJobsView(){
       `<button class="btn btn-ghost btn-xs" style="${jobsFilter===k?'border-color:var(--amber);color:var(--amber);':''}" onclick="jobsFilter='${k}';renderJobsView()">${l}</button>`).join('');
   }
   document.getElementById('jobsTitle').textContent=isLaborer()?'🔧 MY JOBS':'🔧 JOBS';
+  { const qr=document.getElementById('jobsQuickRow'); if(qr) qr.style.display=isLaborer()?'none':''; }
   const card=j=>{
     const st=jobStatusOf(j)||'unassigned';
     const wo=j.linkedDocId?docs.find(d=>d.id===j.linkedDocId):null;
@@ -11222,6 +11256,78 @@ function setJobStatus(jobId,status){
       }).catch(()=>{});
     }catch{}
   }
+}
+
+// ── QUICK JOB: production job with no estimate ───────────────
+// Small fixes / punch-list items. Creates a bare work order (so the crew
+// job page has a scope + checklist to show) and a job in Needs Crew.
+let qjLeadId=null;
+function openQuickJob(){
+  if(!isOwnerOrManager()&&!isSalesman()){alert('Only office roles can create jobs.');return;}
+  qjLeadId=null;
+  ['qjCust','qjAddr','qjContact','qjScope','qjTasks','qjNotes'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
+  document.getElementById('qjType').value='repair';
+  // Customer suggestions: lead names (one entry per name)
+  const dl=document.getElementById('qjCustList');
+  if(dl){
+    const seen=new Set();
+    dl.innerHTML=leads.filter(l=>l.name&&!seen.has(l.name)&&seen.add(l.name))
+      .sort((a,b)=>a.name.localeCompare(b.name))
+      .map(l=>`<option value="${esc(l.name)}">${esc(l.address||'')}</option>`).join('');
+  }
+  openMov('quickJobMov');
+  setTimeout(()=>document.getElementById('qjCust')?.focus(),100);
+}
+function qjPickCustomer(name){
+  const l=leads.find(x=>x.name===name);
+  qjLeadId=l?l.id:null;
+  if(l){
+    const a=document.getElementById('qjAddr'),c=document.getElementById('qjContact');
+    if(a&&!a.value) a.value=l.address||'';
+    if(c&&!c.value) c.value=l.phone||l.contact||'';
+  }
+}
+function saveQuickJob(){
+  const name=(document.getElementById('qjCust').value||'').trim();
+  const addr=(document.getElementById('qjAddr').value||'').trim();
+  const contact=(document.getElementById('qjContact').value||'').trim();
+  const scope=(document.getElementById('qjScope').value||'').trim();
+  const tasks=(document.getElementById('qjTasks').value||'').split('\n').map(t=>t.trim()).filter(Boolean);
+  const type=document.getElementById('qjType').value||'repair';
+  const notes=(document.getElementById('qjNotes').value||'').trim();
+  if(!name&&!addr){alert('Enter a customer name or a job address.');return;}
+  if(!scope&&!tasks.length){alert('Describe what needs to be done.');return;}
+  loadDocs();
+  const lead=qjLeadId?leads.find(l=>l.id===qjLeadId):leads.find(l=>l.name===name)||null;
+  // Bare work order so the job page has something to show the crew
+  const wo={
+    id:uid(),type:'workorder',status:'pending',num:nextWoNum(),
+    sourceEstId:null,sourceEstNum:'',
+    clientName:name||lead?.name||'',clientContact:contact,clientAddr:addr,
+    date:'',arrival:'',scope,
+    checklist:tasks.map(t=>({desc:t,qty:1,cat:'labor',done:false})),
+    extras:[],notes,pmId:'',created:Date.now(),
+    activity:[{ts:new Date().toISOString(),msg:'Created as a quick job (no estimate) by '+(currentDisplayName||'')}]
+  };
+  docs.push(wo);saveDocSync(wo);
+  const job={
+    id:uid(),
+    title:(name||addr)+' – '+(APPT_TYPES[type]?.label||'Repair'),
+    note:[addr,contact,scope?scope.slice(0,120):''].filter(Boolean).join(' | '),
+    color:'orange',day:'backlog',endDay:'',
+    leadId:lead?lead.id:null,estId:null,
+    photos:[],checklist:[],
+    apptType:type,startTime:'',endTime:'',
+    assigneeId:null,assigneeIds:[],crewId:null,
+    status:'unassigned',linkedDocId:wo.id,
+    activity:[{ts:new Date().toISOString(),msg:'Quick job created · '+(wo.num||'')+' ('+(currentDisplayName||'')+')'}]
+  };
+  wo.linkedJobId=job.id;saveDocSync(wo);
+  jobs.push(job);saveJob(job);
+  closeMov('quickJobMov');
+  updateBadges();
+  if(mainView!=='jobs'&&canSeeTab('jobs')) switchMain('jobs'); else renderJobsView();
+  openJobPage(job.id);
 }
 
 // Delete a production job. The work order (and material order) stay in
