@@ -1123,6 +1123,7 @@ select.doc-finput option{background:var(--steel-mid);}
 .jobs-title{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;color:var(--amber);}
 .jobs-filters{display:flex;gap:6px;flex-wrap:wrap;}
 #vSnow.active{display:block;overflow-y:auto;}
+#vJobs.active{display:block;overflow-y:auto;-webkit-overflow-scrolling:touch;}
 .jobs-sec{margin:14px 0 6px;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:700;display:flex;align-items:center;gap:8px;}
 .jobs-sec .cnt{background:var(--iron);color:var(--ink,#334155);border-radius:10px;padding:1px 8px;font-size:10px;}
 .jobs-card{display:flex;gap:12px;align-items:center;padding:12px 14px;border:1px solid var(--iron);border-left:4px solid var(--amber);border-radius:10px;background:var(--steel-mid);margin-bottom:8px;cursor:pointer;transition:border-color .12s;}
@@ -2480,6 +2481,40 @@ body:not(.role-owner):not(.role-manager) .role-financial-only{display:none!impor
 </div>
 
 <!-- ═══ NOTE FOR TODAY (Execulist board) ═══ -->
+<!-- ═══ SPLIT / DUPLICATE WORK ORDER ═══ -->
+<div class="mov" id="splitJobMov">
+  <div class="modal">
+    <div class="mhandle"></div>
+    <div class="mtitle">⧉ DUPLICATE / SPLIT WORK ORDER</div>
+    <div style="font-size:12px;color:var(--muted);margin:-6px 0 10px;line-height:1.5">Makes a second work order and job for the same customer — e.g. roofing on one crew, gutters on another. Pick which tasks go on the new one.</div>
+    <div class="frow">
+      <div><label class="flbl">New job type</label>
+        <select class="finput" id="sjType">
+          <option value="repair">🔧 Repair</option>
+          <option value="roof_replace">🏠 Roof Replacement</option>
+          <option value="siding_replace">🪟 Siding Replacement</option>
+          <option value="gutter_replace">🌧️ Gutter Replacement</option>
+        </select>
+      </div>
+      <div><label class="flbl">Tasks</label>
+        <select class="finput" id="sjMode">
+          <option value="move" selected>Move selected to new WO</option>
+          <option value="copy">Copy selected (keep on both)</option>
+        </select>
+      </div>
+    </div>
+    <div class="fg"><label class="flbl">Tasks for the new work order</label>
+      <div style="display:flex;gap:8px;margin-bottom:6px"><button class="btn btn-ghost btn-xs" onclick="sjSelectAll(true)">All</button><button class="btn btn-ghost btn-xs" onclick="sjSelectAll(false)">None</button></div>
+      <div id="sjTasks" style="max-height:38vh;overflow-y:auto;border:1px solid var(--iron);border-radius:8px;padding:6px 10px"></div>
+    </div>
+    <div class="fg"><label class="flbl">Scope note for new WO (optional)</label><input class="finput" id="sjScope" placeholder="e.g. Gutters only" autocomplete="off"/></div>
+    <div class="macts">
+      <button class="btn btn-ghost" onclick="closeMov('splitJobMov')">Cancel</button>
+      <button class="btn btn-amber" onclick="saveSplitJob()">Create New Job →</button>
+    </div>
+  </div>
+</div>
+
 <!-- ═══ QUICK JOB (production job with no estimate) ═══ -->
 <div class="mov" id="quickJobMov">
   <div class="modal">
@@ -11109,6 +11144,7 @@ function renderJobPage(){
     if(st!=='complete') html+=`<button class="btn btn-amber" style="background:#22c55e;color:#fff" onclick="setJobStatus('${j.id}','complete')">✓ Mark Complete</button>`;
     else html+=`<button class="btn btn-ghost" onclick="setJobStatus('${j.id}','scheduled')">↩ Reopen</button>`;
     html+=`<button class="btn btn-ghost" style="color:var(--danger);border-color:var(--danger)" onclick="deleteProductionJob('${j.id}')">🗑 Delete Job</button>`;
+    if(wo) html+=`<button class="btn btn-ghost" style="grid-column:1/-1" onclick="openSplitJob('${j.id}')">⧉ Duplicate / Split Work Order</button>`;
     html+='</div>';
   }
   // Crew actions: start / complete
@@ -11256,6 +11292,75 @@ function setJobStatus(jobId,status){
       }).catch(()=>{});
     }catch{}
   }
+}
+
+// ── SPLIT / DUPLICATE WORK ORDER ─────────────────────────────
+// One sold job that needs two crews (roof + gutters, siding + repair…):
+// clone the work order into a second WO + job for the same customer, and
+// move (or copy) the chosen checklist tasks onto it. Photos go with tasks.
+let sjJobId=null;
+function openSplitJob(jobId){
+  if(!isOwnerOrManager()) return;
+  const j=jobs.find(x=>x.id===jobId);
+  const wo=j&&j.linkedDocId?docs.find(d=>d.id===j.linkedDocId&&d.type==='workorder'):null;
+  if(!j||!wo){alert('This job has no work order to duplicate.');return;}
+  sjJobId=jobId;
+  const items=Array.isArray(wo.checklist)?wo.checklist:[];
+  document.getElementById('sjTasks').innerHTML=items.length?items.map((it,i)=>
+    `<label style="display:flex;gap:8px;align-items:flex-start;padding:6px 0;border-bottom:1px solid var(--iron);font-size:13px;cursor:pointer"><input type="checkbox" class="sj-cb" data-i="${i}" style="margin-top:3px"/><span>${esc(it.desc||'')}${it.qty&&Number(it.qty)>1?' ×'+esc(it.qty):''}${(it.photos||[]).length?' 📷':''}</span></label>`).join('')
+    :'<div style="font-size:12px;color:var(--muted);padding:8px 0">No tasks on this work order — the copy will have the scope only.</div>';
+  document.getElementById('sjScope').value='';
+  document.getElementById('sjType').value=normalizeApptType(j.apptType)||'repair';
+  document.getElementById('sjMode').value='move';
+  openMov('splitJobMov');
+}
+function sjSelectAll(on){document.querySelectorAll('#sjTasks .sj-cb').forEach(c=>c.checked=on);}
+function saveSplitJob(){
+  const j=jobs.find(x=>x.id===sjJobId);
+  const wo=j&&j.linkedDocId?docs.find(d=>d.id===j.linkedDocId&&d.type==='workorder'):null;
+  if(!j||!wo) return;
+  const picked=[...document.querySelectorAll('#sjTasks .sj-cb')].filter(c=>c.checked).map(c=>parseInt(c.dataset.i));
+  const mode=document.getElementById('sjMode').value||'move';
+  const type=document.getElementById('sjType').value||'repair';
+  const scopeNote=(document.getElementById('sjScope').value||'').trim();
+  const items=Array.isArray(wo.checklist)?wo.checklist:[];
+  if(items.length&&!picked.length&&!confirm('No tasks selected — create the new work order with the scope only?')) return;
+  const moved=picked.map(i=>JSON.parse(JSON.stringify(items[i]))).map(it=>({...it,done:false}));
+  const nwo={
+    id:uid(),type:'workorder',status:'pending',num:nextWoNum(),
+    sourceEstId:wo.sourceEstId||null,sourceEstNum:wo.sourceEstNum||'',
+    clientName:wo.clientName||'',clientContact:wo.clientContact||'',clientAddr:wo.clientAddr||'',
+    date:'',arrival:'',
+    scope:scopeNote||wo.scope||'',
+    checklist:moved,extras:[],notes:wo.notes||'',pmId:wo.pmId||'',created:Date.now(),
+    activity:[{ts:new Date().toISOString(),msg:'Split from '+(wo.num||'work order')+' by '+(currentDisplayName||'')}]
+  };
+  if(mode==='move'&&picked.length){
+    const keep=new Set(picked);
+    wo.checklist=items.filter((_,i)=>!keep.has(i));
+    wo.activity=wo.activity||[];wo.activity.push({ts:new Date().toISOString(),msg:picked.length+' task(s) moved to '+nwo.num});
+  }
+  docs.push(nwo);
+  const lead=j.leadId?leads.find(l=>l.id===j.leadId):null;
+  const nj={
+    id:uid(),
+    title:(lead?.name||wo.clientName||j.title)+' – '+(APPT_TYPES[type]?.label||'Repair'),
+    note:j.note||'',
+    color:j.color||'green',day:'backlog',endDay:'',
+    leadId:j.leadId||null,estId:j.estId||null,
+    photos:[],checklist:[],
+    apptType:type,startTime:'',endTime:'',
+    assigneeId:null,assigneeIds:[],crewId:null,
+    status:'unassigned',linkedDocId:nwo.id,linkedMoId:null,
+    activity:[{ts:new Date().toISOString(),msg:'Split from job '+(wo.num||'')+' → '+nwo.num+' ('+(currentDisplayName||'')+')'}]
+  };
+  nwo.linkedJobId=nj.id;
+  jobs.push(nj);
+  saveDocSync(nwo);saveDocSync(wo);saveJob(nj);
+  closeMov('splitJobMov');
+  updateBadges();
+  if(mainView==='jobs') renderJobsView();
+  openJobPage(nj.id);
 }
 
 // ── QUICK JOB: production job with no estimate ───────────────
