@@ -11069,6 +11069,14 @@ function renderJobPage(){
   html+=wo?`<button class="btn btn-amber" onclick="document.getElementById('jpWo').scrollIntoView({behavior:'smooth',block:'start'})">📋 View Job</button>`:`<button class="btn btn-ghost" disabled style="opacity:.6">📋 No work order</button>`;
   html+='</div>';
 
+  // Management actions: complete / reopen / delete
+  if(mgmt){
+    html+='<div class="jp-status-bar">';
+    if(st!=='complete') html+=`<button class="btn btn-amber" style="background:#22c55e;color:#fff" onclick="setJobStatus('${j.id}','complete')">✓ Mark Complete</button>`;
+    else html+=`<button class="btn btn-ghost" onclick="setJobStatus('${j.id}','scheduled')">↩ Reopen</button>`;
+    html+=`<button class="btn btn-ghost" style="color:var(--danger);border-color:var(--danger)" onclick="deleteProductionJob('${j.id}')">🗑 Delete Job</button>`;
+    html+='</div>';
+  }
   // Crew actions: start / complete
   if(!mgmt&&userOnJob(j)){
     html+='<div class="jp-status-bar">';
@@ -11214,6 +11222,27 @@ function setJobStatus(jobId,status){
       }).catch(()=>{});
     }catch{}
   }
+}
+
+// Delete a production job. The work order (and material order) stay in
+// Estimates, just unlinked, so nothing on the estimate side is lost.
+async function deleteProductionJob(jobId){
+  if(!isOwnerOrManager()){alert('Only owners / managers can delete jobs.');return;}
+  const j=jobs.find(x=>x.id===jobId);
+  if(!j) return;
+  const wo=j.linkedDocId?docs.find(d=>d.id===j.linkedDocId):null;
+  const msg='Delete this job?\n\n'+jobCustomerName(j)+(jobAddress(j)?'\n'+jobAddress(j):'')
+    +(wo?'\n\nThe work order '+(wo.num||'')+' is kept in Estimates (unlinked). Delete it there if you don\'t want it.':'')
+    +'\n\nThis cannot be undone.';
+  if(!confirm(msg)) return;
+  if(wo&&wo.linkedJobId===j.id){wo.linkedJobId=null;saveDocSync(wo);}
+  const mo=j.linkedMoId?docs.find(d=>d.id===j.linkedMoId):null;
+  if(mo&&mo.linkedJobId===j.id){mo.linkedJobId=null;saveDocSync(mo);}
+  jobs=jobs.filter(x=>x.id!==j.id);
+  closeJobPage();
+  await delJob(j.id);
+  updateBadges();
+  if(mainView==='jobs') renderJobsView();
 }
 
 function toggleJobTask(woId,idx){
