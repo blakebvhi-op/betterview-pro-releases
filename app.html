@@ -1117,6 +1117,56 @@ select.doc-finput option{background:var(--steel-mid);}
 .tmpl-overlay.open{opacity:1;pointer-events:all;}
 .tmpl-overlay:not(.open) *{pointer-events:none!important;}
 
+/* Jobs tab */
+.jobs-wrap{padding:12px 14px 90px;max-width:900px;margin:0 auto;}
+.jobs-hdr{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:10px;flex-wrap:wrap;}
+.jobs-title{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;color:var(--amber);}
+.jobs-filters{display:flex;gap:6px;flex-wrap:wrap;}
+#vSnow.active{display:block;overflow-y:auto;}
+.jobs-sec{margin:14px 0 6px;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:700;display:flex;align-items:center;gap:8px;}
+.jobs-sec .cnt{background:var(--iron);color:var(--ink,#334155);border-radius:10px;padding:1px 8px;font-size:10px;}
+.job-card{display:flex;gap:12px;align-items:center;padding:12px 14px;border:1px solid var(--iron);border-left:4px solid var(--amber);border-radius:10px;background:var(--bg-card,#1a1c20);margin-bottom:8px;cursor:pointer;transition:border-color .12s;}
+.job-card:active{border-color:var(--amber);}
+.job-card-main{flex:1;min-width:0;}
+.job-card-name{font-weight:700;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.job-card-sub{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;margin-top:2px;}
+.job-card-meta{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;}
+.job-pill{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;padding:2px 8px;border-radius:10px;background:var(--iron);color:var(--muted);}
+.job-pill.st-unassigned{background:rgba(249,115,22,.15);color:#f97316;}
+.job-pill.st-scheduled{background:rgba(59,130,246,.15);color:#3b82f6;}
+.job-pill.st-in_progress{background:rgba(34,197,94,.15);color:#16a34a;}
+.job-pill.st-complete{background:rgba(100,116,139,.15);color:#64748b;}
+.jobs-empty{text-align:center;color:var(--muted);font-size:13px;padding:40px 16px;line-height:1.6;}
+/* Job page overlay */
+.jp-overlay{position:fixed;inset:0;background:var(--steel);z-index:283;display:none;flex-direction:column;}
+.jp-overlay.open{display:flex;}
+.jp-hdr{display:flex;align-items:flex-start;gap:10px;padding:12px 14px;background:var(--steel-mid);border-bottom:1px solid var(--iron);flex-shrink:0;}
+.jp-hdr-txt{flex:1;min-width:0;}
+.jp-hdr-name{font-size:19px;font-weight:700;line-height:1.2;word-break:break-word;}
+.jp-hdr-sub{font-size:12px;color:var(--muted);margin-top:3px;line-height:1.4;}
+.jp-body{flex:1;overflow-y:auto;padding:14px 14px 40px;max-width:900px;width:100%;margin:0 auto;-webkit-overflow-scrolling:touch;}
+.jp-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;}
+.jp-actions .btn,.jp-actions a.btn{justify-content:center;padding:14px;font-size:15px;text-decoration:none;}
+.jp-card{border:1px solid var(--iron);border-radius:10px;background:var(--bg-card,#1a1c20);padding:12px 14px;margin-bottom:12px;}
+.jp-card h3{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--amber);font-weight:700;margin:0 0 8px;padding-bottom:6px;border-bottom:1px dashed var(--iron);}
+.jp-row{display:flex;justify-content:space-between;gap:8px;padding:5px 0;font-size:13px;align-items:baseline;}
+.jp-row .l{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.06em;flex-shrink:0;}
+.jp-row .v{text-align:right;word-break:break-word;}
+.jp-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+.jp-scope{font-size:13px;line-height:1.6;white-space:pre-wrap;padding:4px 0 8px;}
+.jp-item{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--iron);align-items:flex-start;}
+.jp-item:last-child{border-bottom:none;}
+.jp-chk{flex-shrink:0;width:24px;height:24px;border:2px solid var(--iron);border-radius:5px;display:flex;align-items:center;justify-content:center;margin-top:1px;cursor:pointer;background:var(--steel-light);font-weight:900;}
+.jp-item.done .jp-chk{background:#22c55e;border-color:#22c55e;color:#fff;}
+.jp-item.done .jp-txt{text-decoration:line-through;color:var(--muted);}
+.jp-txt{flex:1;font-size:14px;line-height:1.45;}
+.jp-qty{font-size:11px;color:var(--muted);}
+.jp-photos{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;}
+.jp-photos img{width:72px;height:72px;object-fit:cover;border-radius:6px;border:1px solid var(--iron);cursor:pointer;display:block;}
+.jp-notes{font-size:13px;color:var(--muted);white-space:pre-wrap;line-height:1.5;}
+.jp-status-bar{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;}
+.jp-status-bar .btn{justify-content:center;padding:14px;font-size:15px;}
+
 /* Walkthrough (photo estimate) overlay */
 .wt-overlay{position:fixed;inset:0;background:var(--steel);z-index:285;display:none;flex-direction:column;}
 .wt-overlay.open{display:flex;}
@@ -1336,7 +1386,8 @@ select.doc-finput option{background:var(--steel-mid);}
 body.role-salesman .role-hide-salesman,
 body.role-laborer  .role-hide-laborer,
 body.role-laborer  .role-hide-financial,
-body.role-salesman .role-hide-financial{display:none!important;}
+body.role-salesman .role-hide-financial,
+body.role-project_manager .role-hide-financial{display:none!important;}
 /* Profitability panel + cost fields stay hidden for non-financial roles */
 body:not(.role-owner):not(.role-manager) .profit-panel{display:none!important;}
 /* Owner-only elements (Manage Team, etc.) */
@@ -1375,6 +1426,7 @@ body:not(.role-owner):not(.role-manager) .role-financial-only{display:none!impor
 .team-mgr-row.role-manager-row  {border-left-color:#3b82f6;}
 .team-mgr-row.role-salesman-row {border-left-color:#22c55e;}
 .team-mgr-row.role-laborer-row  {border-left-color:#a855f7;}
+.team-mgr-row.role-project_manager-row{border-left-color:#f97316;}
 .tm-avatar{width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#1a1e2e;font-family:'Bebas Neue',sans-serif;font-size:13px;font-weight:700;letter-spacing:1px;flex-shrink:0;margin-top:2px;}
 .team-mgr-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px;}
 .tm-name-input{background:transparent;border:none;border-bottom:1px solid transparent;padding:2px 0;color:var(--white);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;width:100%;outline:none;}
@@ -1468,6 +1520,7 @@ body:not(.role-owner):not(.role-manager) .role-financial-only{display:none!impor
       <div class="user-menu-item role-owner-only" id="manageTeamMenuItem" onclick="openTeamManager()"><span>👥</span><span>Manage Team</span></div>
       <div class="user-menu-item" id="clockMenuItem" onclick="openClockScreen()"><span id="clockMenuIcon">⏱</span><span id="clockMenuLabel">Clock In/Out</span></div>
       <div class="user-menu-item role-owner-only" id="timeReportsMenuItem" onclick="openTimeReports()"><span>📋</span><span>Time Reports</span></div>
+      <div class="user-menu-item role-owner-only" id="snowSettingsMenuItem" onclick="openSnowSettings()"><span>❄</span><span>Snow Plowing</span></div>
       <div class="user-menu-item role-owner-only" id="qbConnectMenuItem" onclick="openQbConnect()"><span id="qbConnectIcon">🟢</span><span id="qbConnectLabel">Connect QuickBooks</span></div>
       <div class="user-menu-item role-financial-only" id="reportsMenuItem" onclick="openReports()"><span>📊</span><span>Reports</span></div>
       <div class="user-menu-item" id="resyncMenuItem" onclick="manualResync()"><span>🔄</span><span>Resync</span></div>
@@ -1478,6 +1531,8 @@ body:not(.role-owner):not(.role-manager) .role-financial-only{display:none!impor
     <div class="dtabs" id="dtabs">
       <button class="dtab active" id="dtHome" onclick="switchMain('home')">🏠 HOME</button>
       <button class="dtab" id="dtSched" onclick="switchMain('sched')">📅 SCHEDULE <span class="dbadge" id="dtBlBadge">0</span></button>
+      <button class="dtab" id="dtJobs" onclick="switchMain('jobs')">🔧 JOBS <span class="dbadge" id="dtJobsBadge">0</span></button>
+      <button class="dtab" id="dtSnow" onclick="switchMain('snow')" style="display:none">❄ SNOW</button>
       <button class="dtab" id="dtCRM" onclick="switchMain('crm')">👥 CUSTOMERS <span class="dbadge" id="dtCrmBadge">0</span></button>
       <button class="dtab" id="dtMsg" onclick="switchMain('msg')">💬 MESSAGES <span class="dbadge" id="dtMsgBadge">0</span></button>
       <button class="dtab" id="dtEst" onclick="switchMain('est')">📄 ESTIMATES</button>
@@ -1498,6 +1553,13 @@ body:not(.role-owner):not(.role-manager) .role-financial-only{display:none!impor
   <button class="bnbtn" id="bnSched" onclick="switchMain('sched')">
     <div class="bnicon">📅</div><div class="bnlbl">SCHEDULE</div>
     <div class="bnbadge" id="bnBlBadge"></div>
+  </button>
+  <button class="bnbtn" id="bnJobs" onclick="switchMain('jobs')">
+    <div class="bnicon">🔧</div><div class="bnlbl">JOBS</div>
+    <div class="bnbadge" id="bnJobsBadge"></div>
+  </button>
+  <button class="bnbtn" id="bnSnow" onclick="switchMain('snow')" style="display:none">
+    <div class="bnicon">❄</div><div class="bnlbl">SNOW</div>
   </button>
   <button class="bnbtn" id="bnCRM" onclick="switchMain('crm')">
     <div class="bnicon">👥</div><div class="bnlbl">CUSTOMERS</div>
@@ -1814,6 +1876,26 @@ body:not(.role-owner):not(.role-manager) .role-financial-only{display:none!impor
     </div>
   </div>
 
+  <!-- ═══ JOBS (production pipeline) ═══ -->
+  <div class="view" id="vSnow">
+    <div class="jobs-wrap">
+      <div class="jobs-hdr">
+        <div class="jobs-title">❄ SNOW PLOWING</div>
+        <div class="jobs-filters" id="snowSubs"></div>
+      </div>
+      <div id="snowBody"></div>
+    </div>
+  </div>
+  <div class="view" id="vJobs">
+    <div class="jobs-wrap">
+      <div class="jobs-hdr">
+        <div class="jobs-title" id="jobsTitle">🔧 JOBS</div>
+        <div class="jobs-filters" id="jobsFilters"></div>
+      </div>
+      <div id="jobsBody"></div>
+    </div>
+  </div>
+
   <!-- ═══ TASKS ═══ -->
   <div class="view" id="vTasks">
     <div class="ex-board">
@@ -2021,6 +2103,8 @@ body:not(.role-owner):not(.role-manager) .role-financial-only{display:none!impor
         <option value="contract">Contract</option>
         <option value="changeorder">Change Order</option>
         <option value="lienwaiver">Lien Waiver</option>
+        <option value="snowestimate">Snow Estimate</option>
+        <option value="snowinvoice">Snow Invoice</option>
       </select>
     </div>
     <div class="doc-hotbar-sep"></div>
@@ -2034,6 +2118,7 @@ body:not(.role-owner):not(.role-manager) .role-financial-only{display:none!impor
     <button class="btn btn-danger btn-sm" onclick="deleteDoc()" title="Delete this document">🗑 Delete</button>
     <button class="btn btn-ghost btn-sm" id="docQbSyncBtn" onclick="syncDocWithQb()" title="Check QuickBooks for this invoice's payment status" style="display:none">🔄 Check QuickBooks</button>
     <button class="btn btn-ghost btn-sm" id="docQbPushBtn" onclick="pushDocToQb()" title="Create this invoice in QuickBooks" style="display:none">📤 Push to QB</button>
+    <button class="btn btn-amber btn-sm" id="docProdBtn" onclick="sendEstimateToProduction()" title="Create the work order and put this job in the Jobs tab">🚀 Send to Production</button>
     <button class="btn btn-ghost btn-sm" id="docSendBtn" onclick="sendDoc()">Send →</button>
   </div>
 
@@ -2431,6 +2516,7 @@ function applyProductBranding(){
 let currentUser=null;
 // Phase 2: role state populated after auth via loadProfile()
 let currentRole=null;          // 'owner' | 'manager' | 'salesman' | 'laborer' | null (= no profile yet)
+let currentSnowAccess=false; // profiles.snow_access — who sees the Snow tab
 let currentCompanyId=null;
 let currentCompany=null; // Phase 1 (SaaS): the tenant's own company row, loaded in loadProfile()
 let currentDisplayName=null;
@@ -2438,20 +2524,26 @@ let currentDisplayName=null;
 // Convenience helpers used everywhere downstream
 function isOwner(){return currentRole==='owner';}
 function isManager(){return currentRole==='manager';}
-function isOwnerOrManager(){return currentRole==='owner'||currentRole==='manager';}
+function isPM(){return currentRole==='project_manager';}
+// "Management" = owner, manager, or project manager. The PM role (added
+// 2026-10) has the same job/doc/schedule rights as a manager but no
+// financials (see canSeeFinancials) and no team management.
+function isOwnerOrManager(){return currentRole==='owner'||currentRole==='manager'||currentRole==='project_manager';}
 function isSalesman(){return currentRole==='salesman';}
 function isLaborer(){return currentRole==='laborer';}
 // Permission predicates — used for UI gating
-function canSeeFinancials(){return isOwnerOrManager();}
+function canSeeFinancials(){return currentRole==='owner'||currentRole==='manager';}
 function canSeeAllLeads(){return isOwnerOrManager();}
 function canManageTeam(){return isOwner();}
 function canManageTemplates(){return isOwnerOrManager();}
 function canSeeTab(tab){
+  // Snow tab: company switch + per-user flag (see canSeeSnow)
+  if(tab==='snow') return canSeeSnow();
   // Tasks tab visible to all roles; Materials view visible to all roles too
   if(!currentRole) return true; // pre-auth or no profile yet — show everything
   if(isLaborer()){
-    // Laborers only see schedule + their assigned tasks + materials
-    return ['home','sched','tasks'].includes(tab);
+    // Laborers: home, their jobs, schedule, tasks
+    return ['home','jobs','sched','tasks'].includes(tab);
   }
   if(isSalesman()){
     // Salesmen see most things except templates management
@@ -2466,7 +2558,7 @@ async function loadProfile(){
   // show an "ask your owner to add you" screen).
   if(!currentUser?.id||!authAccessToken) return false;
   try{
-    const r=await fetch(SB_URL+'/rest/v1/profiles?user_id=eq.'+encodeURIComponent(currentUser.id)+'&select=user_id,role,company_id,display_name',{
+    const r=await fetch(SB_URL+'/rest/v1/profiles?user_id=eq.'+encodeURIComponent(currentUser.id)+'&select=user_id,role,company_id,display_name,snow_access',{
       headers:{'apikey':SB_KEY,'Authorization':'Bearer '+authAccessToken}
     });
     if(!r.ok){console.error('loadProfile failed:',r.status);return false;}
@@ -2478,6 +2570,7 @@ async function loadProfile(){
     }
     const p=rows[0];
     currentRole=p.role;
+    currentSnowAccess=!!p.snow_access;
     currentCompanyId=p.company_id;
     currentDisplayName=p.display_name||currentUser.name;
     // Phase 1 (SaaS): load the tenant's company row for per-tenant branding/letterhead.
@@ -2494,7 +2587,7 @@ async function loadProfile(){
   }catch(e){console.error('loadProfile error:',e);return false;}
 }
 
-function clearProfile(){currentRole=null;currentCompanyId=null;currentCompany=null;currentDisplayName=null;}
+function clearProfile(){currentSnowAccess=false;currentRole=null;currentCompanyId=null;currentCompany=null;currentDisplayName=null;}
 
 // Apply role-based visibility to nav tabs and feature buttons.
 // Called once after profile loads, and whenever role state changes.
@@ -2503,6 +2596,8 @@ function applyRoleBasedUI(){
   const tabMap={
     home: ['bnHome', 'dtHome'],
     sched:['bnSched','dtSched'],
+    jobs: ['bnJobs', 'dtJobs'],
+    snow: ['bnSnow', 'dtSnow'],
     crm:  ['bnCRM',  'dtCRM'],
     est:  ['bnEst',  'dtEst'],
     pipe: ['bnPipe', 'dtPipe'],
@@ -2520,8 +2615,10 @@ function applyRoleBasedUI(){
     const fallback='home';  // every role can see Home
     if(typeof switchMain==='function') switchMain(fallback);
   }
+  // Crew members land on their Jobs list — that is their dashboard.
+  if(isLaborer()&&!window._laborerLanded){window._laborerLanded=true;if(typeof switchMain==='function')switchMain('jobs');}
   // Body class so CSS can hide things by role (profitability, etc.)
-  document.body.classList.remove('role-owner','role-manager','role-salesman','role-laborer','role-none');
+  document.body.classList.remove('role-owner','role-manager','role-project_manager','role-salesman','role-laborer','role-none');
   document.body.classList.add('role-'+(currentRole||'none'));
   // Show role badge in header
   updateRoleBadge();
@@ -2539,8 +2636,8 @@ function updateRoleBadge(){
     if(slot) slot.appendChild(el);
     else return;
   }
-  const labels={owner:'OWNER',manager:'MANAGER',salesman:'SALES',laborer:'CREW'};
-  const colors={owner:'#082850',manager:'#3b82f6',salesman:'#22c55e',laborer:'#a855f7'};
+  const labels={owner:'OWNER',manager:'MANAGER',project_manager:'PROJECT MGR',salesman:'SALES',laborer:'CREW'};
+  const colors={owner:'#082850',manager:'#3b82f6',project_manager:'#f97316',salesman:'#22c55e',laborer:'#a855f7'};
   el.textContent=labels[currentRole]||currentRole.toUpperCase();
   el.style.background=colors[currentRole]||'#64748b';
 }
@@ -3602,7 +3699,7 @@ async function renderTeamManager(){
   let pinsByUser={}; // user_id -> {pin, created_at}
   try{
     const r=await fetch(SB_URL+'/rest/v1/profiles?company_id=eq.'+encodeURIComponent(currentCompanyId)
-      +'&select=user_id,role,display_name,phone,email,color,initials,created_at&order=created_at.asc',{
+      +'&select=*&order=created_at.asc',{
       headers:{'apikey':SB_KEY,'Authorization':'Bearer '+authAccessToken}
     });
     if(!r.ok)throw new Error('profiles fetch failed: '+r.status);
@@ -3666,6 +3763,16 @@ async function renderTeamManager(){
         </div>`;
       }
     })();
+    // Crew membership (laborers only): which crew + crew-lead flag.
+    // Hidden until the production-pipeline migration adds profiles.crew_id.
+    const crewRow=(()=>{
+      if(p.role!=='laborer'||!('crew_id' in p)) return '';
+      const opts='<option value="">— No crew —</option>'+(crews||[]).map(c=>`<option value="${esc(c.id)}"${c.id===p.crew_id?' selected':''}>${esc(c.name)}</option>`).join('');
+      const myCrew=(crews||[]).find(c=>c.id===p.crew_id);
+      const isLead=!!(myCrew&&myCrew.lead_user_id===p.user_id);
+      return `<select class="team-mgr-role-select" style="margin-top:4px" onchange="changeTeamCrew('${p.user_id}',this.value)" ${isOwner()?'':'disabled'} title="Crew">${opts}</select>
+        ${myCrew?`<label style="display:flex;align-items:center;gap:5px;font-size:11px;color:var(--muted);margin-top:4px;cursor:pointer"><input type="checkbox" ${isLead?'checked':''} onchange="setCrewLead('${esc(myCrew.id)}',this.checked?'${p.user_id}':null)" ${isOwner()?'':'disabled'}/> Crew lead</label>`:''}`;
+    })();
     return `<div class="team-mgr-row ${roleClass}">
       <div class="tm-avatar" style="background:${color}">${esc(initials)}</div>
       <div class="team-mgr-info">
@@ -3681,9 +3788,11 @@ async function renderTeamManager(){
         <select class="team-mgr-role-select" data-uid="${p.user_id}" onchange="changeTeamRole('${p.user_id}',this.value)" ${isMe&&isLastOwner?'disabled':''}>
           <option value="owner"    ${p.role==='owner'?'selected':''}>Owner</option>
           <option value="manager"  ${p.role==='manager'?'selected':''}>Manager</option>
-          <option value="salesman" ${p.role==='salesman'?'selected':''}>Salesman</option>
+          <option value="project_manager" ${p.role==='project_manager'?'selected':''}>Project Manager</option>
+          <option value="salesman" ${p.role==='salesman'?'selected':''}>Sales</option>
           <option value="laborer"  ${p.role==='laborer'?'selected':''}>Crew</option>
         </select>
+        ${crewRow}
         ${canDelete?`<button class="btn btn-danger btn-xs" onclick="removeTeamMemberFromCompany('${p.user_id}','${esc(name)}')" title="Remove from team">✕</button>`:''}
       </div>
     </div>`;
@@ -3728,6 +3837,30 @@ async function changeTeamColor(userId,color){
   } else {
     setSS('error','Save failed');
   }
+}
+
+async function changeTeamCrew(userId,crewId){
+  if(!isOwner()){alert('Only owners can assign crews.');renderTeamManager();return;}
+  setSS('syncing','Saving…');
+  const ok=await patchProfile(userId,{crew_id:crewId||null});
+  if(ok){
+    // If they were lead of another crew, clear it
+    for(const c of (crews||[])){
+      if(c.lead_user_id===userId&&c.id!==crewId){try{await sb.req('PATCH','crews?id=eq.'+encodeURIComponent(c.id),{lead_user_id:null});c.lead_user_id=null;}catch(e){console.warn(e);}}
+    }
+    setSS('synced','Saved ✓');
+  } else setSS('error','Save failed');
+  await loadTeamRemote();
+  renderTeamManager();
+}
+async function setCrewLead(crewId,userId){
+  if(!isOwner()){alert('Only owners can set crew leads.');renderTeamManager();return;}
+  try{
+    await sb.req('PATCH','crews?id=eq.'+encodeURIComponent(crewId),{lead_user_id:userId||null,updated_at:new Date().toISOString()});
+    const c=(crews||[]).find(x=>x.id===crewId);if(c)c.lead_user_id=userId||null;
+    setSS('synced','Saved ✓');
+  }catch(e){console.error(e);setSS('error','Save failed');alert('Could not set crew lead: '+e.message);}
+  renderTeamManager();
 }
 
 async function changeTeamRole(userId,newRole){
@@ -4223,10 +4356,12 @@ function lsSet(key,val){try{localStorage.setItem(key,JSON.stringify(val));}catch
 // ── DEBOUNCED SAVE QUEUE ──────────────────────────────────────
 const saveQueue={jobs:{},leads:{},docs:{},templates:{},tasks:{},
   customers:{},customer_addresses:{},tags:{},customer_tags:{},estimate_tags:{},
-  pipeline_boards:{},pipeline_columns:{},pipeline_cards:{},crews:{}};
+  pipeline_boards:{},pipeline_columns:{},pipeline_cards:{},crews:{},
+  snow_accounts:{},snow_routes:{},snow_visits:{}};
 const saveTimers={jobs:{},leads:{},docs:{},templates:{},tasks:{},
   customers:{},customer_addresses:{},tags:{},customer_tags:{},estimate_tags:{},
-  pipeline_boards:{},pipeline_columns:{},pipeline_cards:{},crews:{}};
+  pipeline_boards:{},pipeline_columns:{},pipeline_cards:{},crews:{},
+  snow_accounts:{},snow_routes:{},snow_visits:{}};
 // Persistent queue of saves that haven't reached Supabase yet. Survives
 // reload. Each entry = {table, id, item, attempts, firstQueued}.
 // Stored as an array (not keyed) so multiple edits to the same id over
@@ -4277,6 +4412,10 @@ function _toDb(table,item){
   if(table==='customer_tags') return item;
   if(table==='estimate_tags') return item;
   if(table==='crews') return item;
+  // Snow plowing — stored shape-equivalent
+  if(table==='snow_accounts') return item;
+  if(table==='snow_routes') return item;
+  if(table==='snow_visits') return item;
   // Pipeline kanban
   if(table==='pipeline_boards') return item;
   if(table==='pipeline_columns') return item;
@@ -4335,6 +4474,9 @@ function flushSaveQueue(){
   flush('customer_tags',{...saveQueue.customer_tags});
   flush('estimate_tags',{...saveQueue.estimate_tags});
   flush('crews',{...saveQueue.crews});
+  flush('snow_accounts',{...saveQueue.snow_accounts});
+  flush('snow_routes',{...saveQueue.snow_routes});
+  flush('snow_visits',{...saveQueue.snow_visits});
   // Pipeline kanban
   flush('pipeline_boards',{...saveQueue.pipeline_boards});
   flush('pipeline_columns',{...saveQueue.pipeline_columns});
@@ -4419,7 +4561,7 @@ async function loadAllRemote(){
     sb.get('tasks').catch(()=>[]),         // tasks may not exist for everyone
     sb.get('templates').catch(()=>[]),     // templates likewise
   ]);
-  if(j.length)jobsHaveCrewCols=Object.prototype.hasOwnProperty.call(j[0],'crew_id');
+  if(j.length){jobsHaveCrewCols=Object.prototype.hasOwnProperty.call(j[0],'crew_id');jobsHaveStatus=Object.prototype.hasOwnProperty.call(j[0],'status');}
   jobs=j.map(dbToJob);
   leads=l.map(dbToLead);
   docs=d.map(dbToDoc);
@@ -4491,6 +4633,7 @@ let jobs=[],leads=[];
 // Install timeline (2026-09-08): crews + column-presence flags
 let crews=[];                 // [{id,name,position,company_id}]
 let jobsHaveCrewCols=false;   // jobs.crew_id/materials_delivered/duration_days exist
+let jobsHaveStatus=false;     // jobs.status exists (production-pipeline migration)
 let crewsTableMissing=false;  // public.crews not migrated yet
 // Customer entity (added in Phase 3 refactor) — leads still exist but
 // now reference customers via leads.customer_id. customers is the spine.
@@ -5198,12 +5341,13 @@ const setSS=(s,l)=>{
   document.getElementById('syncDot').className='sync-dot '+s;
   document.getElementById('syncLbl').textContent=l;
 };
-const dbToJob=r=>({id:r.id,title:r.title,note:r.note||'',color:r.color||'amber',day:r.day||'backlog',endDay:r.end_day||'',leadId:r.lead_id||null,photos:safeParseArr(r.photos),checklist:safeParseArr(r.checklist),apptType:normalizeApptType(r.appt_type),startTime:r.start_time||'',endTime:r.end_time||'',assigneeId:r.assignee_id||null,assigneeIds:_normAssigneeIds(r),activity:safeParseArr(r.activity),linkedDocId:r.linked_doc_id||null,linkedMoId:r.linked_mo_id||null,crewId:r.crew_id||null,materialsDelivered:!!r.materials_delivered,durationDays:r.duration_days||null});
+const dbToJob=r=>({id:r.id,title:r.title,note:r.note||'',color:r.color||'amber',day:r.day||'backlog',endDay:r.end_day||'',leadId:r.lead_id||null,photos:safeParseArr(r.photos),checklist:safeParseArr(r.checklist),apptType:normalizeApptType(r.appt_type),startTime:r.start_time||'',endTime:r.end_time||'',assigneeId:r.assignee_id||null,assigneeIds:_normAssigneeIds(r),activity:safeParseArr(r.activity),linkedDocId:r.linked_doc_id||null,linkedMoId:r.linked_mo_id||null,crewId:r.crew_id||null,materialsDelivered:!!r.materials_delivered,durationDays:r.duration_days||null,status:r.status||null});
 const dbToLead=r=>({id:r.id,name:r.name,contact:r.contact||'',phone:r.phone||'',email:r.email||'',types:r.type?r.type.split(',').filter(Boolean):[],value:r.value||'',stage:r.stage||'new',address:r.address||'',notes:r.notes||'',color:r.color||'blue',estId:r.est_id||null,matList:safeParseArr(r.mat_list),source:r.source||'',activity:safeParseArr(r.activity),createdAt:r.created_at||r.created||null,assignedTo:r.assigned_to||null,customer_id:r.customer_id||null});
 const jobToDb=j=>({id:j.id,title:j.title,note:j.note,color:j.color,day:j.day,end_day:j.endDay||'',lead_id:j.leadId||null,photos:JSON.stringify(j.photos||[]),checklist:JSON.stringify(j.checklist||[]),appt_type:normalizeApptType(j.apptType),start_time:j.startTime||'',end_time:j.endTime||'',assignee_id:_firstAssigneeId(j),assignee_ids:getJobAssigneeIds(j),user_id:currentUser?.id||null,updated_at:new Date().toISOString(),activity:JSON.stringify(j.activity||[]),linked_doc_id:j.linkedDocId||null,linked_mo_id:j.linkedMoId||null,
   // Only sent once the columns exist (detected on load) so deploying this
   // before the migration can't 400 every job save.
-  ...(jobsHaveCrewCols?{crew_id:j.crewId||null,materials_delivered:!!j.materialsDelivered,duration_days:j.durationDays?parseInt(j.durationDays):null}:{})});
+  ...(jobsHaveCrewCols?{crew_id:j.crewId||null,materials_delivered:!!j.materialsDelivered,duration_days:j.durationDays?parseInt(j.durationDays):null}:{}),
+  ...(jobsHaveStatus?{status:j.status||null}:{})});
 
 // ── ASSIGNEE HELPERS ────────────────────────────────────────
 // A job can have multiple assignees. The first id in assigneeIds is the
@@ -5647,7 +5791,7 @@ async function loadAppData(){
   setSS('syncing','Syncing…');
   try{
     const[j,l]=await Promise.all([sb.get('jobs'),sb.get('leads')]);
-    if(j.length)jobsHaveCrewCols=Object.prototype.hasOwnProperty.call(j[0],'crew_id');
+    if(j.length){jobsHaveCrewCols=Object.prototype.hasOwnProperty.call(j[0],'crew_id');jobsHaveStatus=Object.prototype.hasOwnProperty.call(j[0],'status');}
     jobs=j.map(dbToJob);leads=l.map(dbToLead);
     lsSet('jobs_cache',j);lsSet('leads_cache',l);
     setSS('synced','Synced');setTimeout(()=>document.getElementById('syncLbl').textContent='',3000);
@@ -5670,7 +5814,7 @@ async function loadAppData(){
   Promise.all([loadDocsRemote(),loadTemplatesRemote(),loadTasksRemote(),
                loadCustomersRemote(),loadCustomerAddressesRemote(),
                loadTagsRemote(),loadCustomerTagsRemote(),loadEstimateTagsRemote(),
-               loadCrewsRemote()
+               loadCrewsRemote(),loadSnowRemote()
   ]).then(([dOk,tOk,tasksOk])=>{
     // Always re-render the estimates list when docs come back from the server,
     // even if the user isn't on the Estimates view yet. switchMain('est') won't
@@ -5715,15 +5859,17 @@ function switchMain(v){
   }
   mainView=v;
   document.querySelectorAll('.view').forEach(x=>x.classList.remove('active'));
-  const viewMap={home:'vHome',sched:'vSched',crm:'vCRM',est:'vEst',tasks:'vTasks',pipe:'vPipe',msg:'vMsg',mat:'vMat'};
+  const viewMap={home:'vHome',sched:'vSched',jobs:'vJobs',snow:'vSnow',crm:'vCRM',est:'vEst',tasks:'vTasks',pipe:'vPipe',msg:'vMsg',mat:'vMat'};
   document.getElementById(viewMap[v]||'vSched').classList.add('active');
-  ['bnHome','bnSched','bnCRM','bnEst','bnTasks','bnPipe','bnMsg'].forEach(id=>{const el=document.getElementById(id);if(el)el.classList.toggle('active',id==='bn'+v.charAt(0).toUpperCase()+v.slice(1));});
-  ['dtHome','dtSched','dtCRM','dtEst','dtTasks','dtPipe','dtMsg'].forEach(id=>{const el=document.getElementById(id);if(el)el.classList.toggle('active',id==='dt'+v.charAt(0).toUpperCase()+v.slice(1));});
-  const lblMap={home:'New Job',sched:'New Job',crm:'New Customer',est:'New Estimate',tasks:'New Task',pipe:'New Estimate',msg:'↻ Refresh',mat:'Search'};
+  ['bnHome','bnSched','bnJobs','bnSnow','bnCRM','bnEst','bnTasks','bnPipe','bnMsg'].forEach(id=>{const el=document.getElementById(id);if(el)el.classList.toggle('active',id==='bn'+v.charAt(0).toUpperCase()+v.slice(1));});
+  ['dtHome','dtSched','dtJobs','dtSnow','dtCRM','dtEst','dtTasks','dtPipe','dtMsg'].forEach(id=>{const el=document.getElementById(id);if(el)el.classList.toggle('active',id==='dt'+v.charAt(0).toUpperCase()+v.slice(1));});
+  const lblMap={home:'New Job',sched:'New Job',jobs:'↻ Refresh',snow:'↻ Refresh',crm:'New Customer',est:'New Estimate',tasks:'New Task',pipe:'New Estimate',msg:'↻ Refresh',mat:'Search'};
   document.getElementById('daddLbl').textContent=lblMap[v]||'New';
   document.getElementById('daddBtn').onclick=
     v==='home'?()=>openJobMov('backlog'):
     v==='sched'?()=>openJobMov('backlog'):
+    v==='jobs'?()=>renderJobsView():
+    v==='snow'?()=>loadSnowRemote():
     v==='crm'?()=>openCustomerMov():
     v==='est'?()=>openDocEditor():
     v==='tasks'?()=>openTaskMov():
@@ -5733,6 +5879,8 @@ function switchMain(v){
   if(v==='home')renderHome();
   else if(v==='crm')renderCustomers();
   else if(v==='sched')renderSched();
+  else if(v==='jobs')renderJobsView();
+  else if(v==='snow')renderSnowView();
   else if(v==='est')renderDocList();
   else if(v==='tasks'){renderTaskList();filterTasks(taskFilter);}
   else if(v==='pipe')renderPipeline();
@@ -5742,6 +5890,8 @@ function switchMain(v){
 function handleFab(){
   if(mainView==='home')openJobMov('backlog');
   else if(mainView==='sched')openJobMov('backlog');
+  else if(mainView==='jobs')renderJobsView();
+  else if(mainView==='snow')loadSnowRemote();
   else if(mainView==='crm')openCustomerMov();
   else if(mainView==='est')openDocEditor();
   else if(mainView==='tasks')openTaskMov();
@@ -7919,6 +8069,12 @@ function attachCardExtras(containerSel){
 }
 // ── SHARED HELPERS ───────────────────────────────────────────
 function promoteLeadToJob(l){
+  // Accepted → production. sendToProduction is idempotent and also builds
+  // the work order from the linked estimate.
+  if(jobs.some(j=>j.leadId===l.id&&j.linkedDocId))return;
+  sendToProduction(l);
+  return;
+  // (legacy body kept for reference; unreachable)
   if(jobs.some(j=>j.leadId===l.id))return;
   const typeStr=(l.types&&l.types.length)?l.types.join(', '):'';
   // Pull scope and value from linked estimate if available
@@ -8216,9 +8372,9 @@ function openJobQuickView(jobId){
 
         <!-- Action buttons -->
         <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px">
-          <a href="${crewUrl}" target="_blank" rel="noopener" class="btn btn-amber" style="text-align:center;text-decoration:none;padding:12px;font-size:14px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:6px">
-            🔗 Crew Link
-          </a>
+          <button class="btn btn-amber" onclick="closeJobQuickView();openJobPage('${j.id}')" style="padding:12px;font-size:14px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:6px">
+            📋 View Job
+          </button>
           ${addr
             ? `<a href="${mapsUrl}" target="_blank" rel="noopener" class="btn btn-amber" style="text-align:center;text-decoration:none;padding:12px;font-size:14px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:6px">📍 Open in Maps</a>`
             : `<button class="btn btn-amber" disabled style="padding:12px;font-size:14px;font-weight:600;display:flex;align-items:center;justify-content:center;gap:6px;opacity:.5;cursor:not-allowed" title="No address on file">📍 No Address</button>`
@@ -9113,6 +9269,13 @@ function updateBadges(){
   const bb=document.getElementById('bnBlBadge');bb.textContent=bl;bb.classList.toggle('show',bl>0);
   const cb=document.getElementById('bnCrmBadge');cb.textContent=cm;cb.classList.toggle('show',cm>0);
   document.getElementById('dtBlBadge').textContent=bl;document.getElementById('dtCrmBadge').textContent=cm;
+  try{
+    const jc=isLaborer()
+      ? productionJobs().filter(j=>j.status!=='complete').length
+      : productionJobs().filter(j=>(j.status||'unassigned')==='unassigned').length;
+    const jb=document.getElementById('bnJobsBadge');if(jb){jb.textContent=jc;jb.classList.toggle('show',jc>0);}
+    const jd=document.getElementById('dtJobsBadge');if(jd)jd.textContent=jc;
+  }catch{}
 }
 function applyLayout(){
   const m=isMobile();
@@ -9483,6 +9646,9 @@ const DOC_TYPES={
   contract:    {label:'Contract',     plural:'Contracts',     prefix:'CT',  emoji:'📜', color:'#a855f7', signable:true,  countsAsWon:true},
   changeorder: {label:'Change Order', plural:'Change Orders', prefix:'CO',  emoji:'✏️', color:'#0891b2', signable:true,  countsAsWon:false},
   lienwaiver:  {label:'Lien Waiver',  plural:'Lien Waivers',  prefix:'LW',  emoji:'⚖️', color:'#dc2626', signable:true,  countsAsWon:false},
+  // Snow plowing — separate numbering, hidden from the Estimates tab
+  snowestimate:{label:'Snow Estimate',plural:'Snow Estimates',prefix:'SNE', emoji:'❄', color:'#0ea5e9', signable:true,  countsAsWon:false},
+  snowinvoice: {label:'Snow Invoice', plural:'Snow Invoices', prefix:'SNI', emoji:'❄', color:'#0ea5e9', signable:false, countsAsWon:false},
 };
 function getDocTypeConfig(type){return DOC_TYPES[type]||DOC_TYPES.estimate;}
 
@@ -9856,7 +10022,7 @@ function renderDocList(){
   buildDocStageSelect();
   const sortSel=document.getElementById('docSortSel');
   if(sortSel&&sortSel.value!==docSort) sortSel.value=docSort;
-  let filtered=docFilter==='all'?docs:docs.filter(d=>d.type===docFilter);
+  let filtered=docFilter==='all'?docs.filter(d=>!isSnowDocType(d.type)):docs.filter(d=>d.type===docFilter);
   // Date range + job-status (lead stage) filters
   filtered=filtered.filter(d=>docInDateRange(d)&&docMatchesStage(d));
   // Apply text search across customer name + address + doc number.
@@ -10027,7 +10193,7 @@ function openDocEditor(id,newType){
   setDocTitle(doc.type,doc.num);
   // Job status = the pipeline stage of the lead this document belongs to.
   updateDocHotbarStage(doc);
-  document.getElementById('docSendBtn').textContent=doc.type==='invoice'?'Mark Paid →':'Convert to Invoice →';
+  document.getElementById('docSendBtn').textContent=(doc.type==='invoice'||doc.type==='snowinvoice')?'Mark Paid →':'Convert to Invoice →';
   // Show "Check QuickBooks" button only when editing an invoice. We don't
   // gate on "is QB connected" here — the click handler shows a clearer
   // error if not connected, and we'd need an async call to check status.
@@ -10048,6 +10214,8 @@ function openDocEditor(id,newType){
       qbPushBtn.style.color='';
     }
   }
+  // "Send to Production" only makes sense on an estimate
+  { const pb=document.getElementById('docProdBtn'); if(pb) pb.style.display=(doc.type==='estimate'&&!isLaborer())?'':'none'; }
   // rebuild line items
   liCounter=0;
   document.getElementById('liRows').innerHTML='';
@@ -10094,7 +10262,7 @@ function updateDocType(){
   const d=collectDoc({id:editDocId||uid()});
   if(!editDocId) d.num=nextDocNum(t);
   setDocTitle(t,d.num);
-  document.getElementById('docSendBtn').textContent=t==='invoice'?'Mark Paid →':'Convert to Invoice →';
+  document.getElementById('docSendBtn').textContent=(t==='invoice'||t==='snowinvoice')?'Mark Paid →':'Convert to Invoice →';
   // Show/hide the Check QuickBooks button based on doc type
   const qbBtn=document.getElementById('docQbSyncBtn');
   if(qbBtn) qbBtn.style.display=t==='invoice'?'':'none';
@@ -10271,12 +10439,26 @@ function saveDoc(){
   const conf=document.getElementById('docSaveConfirm');
   if(conf){conf.style.opacity='1';setTimeout(()=>conf.style.opacity='0',2000);}
   // Auto-sync estimate → lead (non-blocking)
-  try{ if(d.clientName) syncEstToLead(d); } catch(e){ console.error('syncEstToLead error:',e); }
+  try{ if(d.clientName&&!isSnowDocType(d.type)) syncEstToLead(d); } catch(e){ console.error('syncEstToLead error:',e); }
 }
 
 function sendDoc(){
   saveDoc();
   const d=collectDoc(docs.find(x=>x.id===editDocId)||{});
+  if(d.type==='snowestimate'){
+    // snow estimate → snow invoice (no lead-stage sync for snow docs)
+    const oldNum=d.num;
+    d.type='snowinvoice';d.status='invoiced';
+    d.num=nextDocNum('snowinvoice');
+    document.getElementById('docType').value='snowinvoice';
+    document.getElementById('docStatus').value='invoiced';
+    setDocTitle('snowinvoice',d.num);
+    document.getElementById('docSendBtn').textContent='Mark Paid →';
+    saveDoc();
+    try{logDocActivity(d.id,`Snow estimate ${oldNum} converted to Snow invoice ${d.num}`);}catch{}
+    updateDocTotals();updateDocPreview(collectDoc(d));
+    return;
+  }
   if(d.type==='estimate'){
     // convert to invoice
     const oldNum=d.num;
@@ -10484,7 +10666,7 @@ function updateDocPreview(d){
   const co=getCompany();
   const totals=calcDocTotal(d);
   const fmt=v=>'$'+v.toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});
-  const isInv=d.type==='invoice';
+  const isInv=d.type==='invoice'||d.type==='snowinvoice';
   const items=d.lineItems||[];
   const rows=items
     .filter(li=>(li.desc||'').trim())
@@ -10501,7 +10683,7 @@ function updateDocPreview(d){
     <div class="lh-head">
       <div class="lh-logo-wrap">${getCompanyLogoHtml(co)}<div class="lh-company"><div class="lh-company-name">${esc(co.name)}</div><div class="lh-company-tag">${esc(co.tagline)}</div><div style="font-size:9px;color:#94a3b8;margin-top:2px">${esc(co.phone)} · ${esc(co.email)}</div></div></div>
       <div class="lh-doc-info">
-        <div class="lh-doc-type">${isInv?'INVOICE':'ESTIMATE'}</div>
+        <div class="lh-doc-type">${isSnowDocType(d.type)?getDocTypeConfig(d.type).label.toUpperCase():(isInv?'INVOICE':'ESTIMATE')}</div>
         <div class="lh-doc-num">#${esc(d.num||'—')}</div>
         <div class="lh-doc-date">Date: ${d.date||'—'}</div>
         <div class="lh-doc-date">${isInv?'Due':'Valid until'}: ${d.dueDate||'—'}</div>
@@ -10740,6 +10922,303 @@ function generateCustomerLink(){
     const sel=document.getElementById('docStatus');if(sel)sel.value='sent';
     saveDoc();
   }
+}
+
+// ── JOBS TAB + JOB PAGE (production pipeline) ────────────────
+// A "production job" is a schedule job that came from Send to Production:
+// it carries linkedDocId (its work order) and a status:
+//   unassigned → scheduled → in_progress → complete
+// Management (owner/manager/PM) sees every production job grouped by
+// status and assigns crew + dates here. Crew (laborer) sees only the jobs
+// RLS gives them (assigned or their crew's) — this list is their dashboard.
+// The job page replaces the old external crew link: Maps + View Job
+// inside the app, work order and photos included.
+const JOB_STATUS={
+  unassigned: {label:'Needs Crew'},
+  scheduled:  {label:'Scheduled'},
+  in_progress:{label:'In Progress'},
+  complete:   {label:'Complete'},
+};
+let jobsFilter='active';   // active | complete | all
+let jpJobId=null;
+
+function jobStatusOf(j){return j.status||(j.linkedDocId?((j.day&&j.day!=='backlog')?'scheduled':'unassigned'):null);}
+function productionJobs(){return jobs.filter(j=>j.linkedDocId||j.status);}
+function jobCustomerName(j){const lr=j.leadId?leads.find(l=>l.id===j.leadId):null;return lr?.name||j.title||'(untitled job)';}
+function jobAddress(j){
+  const lr=j.leadId?leads.find(l=>l.id===j.leadId):null;
+  if(lr?.address) return lr.address;
+  const wo=j.linkedDocId?docs.find(d=>d.id===j.linkedDocId):null;
+  return wo?.clientAddr||'';
+}
+function jobCrewName(j){const c=(crews||[]).find(x=>x.id===j.crewId);return c?c.name:'';}
+function jobDateLabel(j){
+  if(!j.day||j.day==='backlog') return 'Not scheduled';
+  const a=fmtDayLabel(j.day);
+  return (j.endDay&&j.endDay!==j.day)?a+' → '+fmtDayLabel(j.endDay):a;
+}
+function crewMemberIds(crewId){return (teamRoster||[]).filter(m=>m.crewId===crewId&&m.role==='laborer').map(m=>m.id);}
+function userOnJob(j){
+  if(getJobAssigneeIds(j).includes(currentUser?.id)) return true;
+  const me=(teamRoster||[]).find(m=>m.id===currentUser?.id);
+  return !!(j.crewId&&me&&me.crewId===j.crewId);
+}
+
+function renderJobsView(){
+  const body=document.getElementById('jobsBody');
+  if(!body) return;
+  loadDocs();
+  const today=_isoLocal(new Date());
+  const all=productionJobs();
+  const filt=document.getElementById('jobsFilters');
+  if(filt){
+    filt.innerHTML=[['active','Active'],['complete','Complete'],['all','All']].map(([k,l])=>
+      `<button class="btn btn-ghost btn-xs" style="${jobsFilter===k?'border-color:var(--amber);color:var(--amber);':''}" onclick="jobsFilter='${k}';renderJobsView()">${l}</button>`).join('');
+  }
+  document.getElementById('jobsTitle').textContent=isLaborer()?'🔧 MY JOBS':'🔧 JOBS';
+  const card=j=>{
+    const st=jobStatusOf(j)||'unassigned';
+    const wo=j.linkedDocId?docs.find(d=>d.id===j.linkedDocId):null;
+    const items=wo&&Array.isArray(wo.checklist)?wo.checklist:[];
+    const done=items.filter(x=>x.done).length;
+    const crew=jobCrewName(j);
+    const t=normalizeApptType(j.apptType);
+    const typeLbl=APPT_TYPES[t]?APPT_TYPES[t].emoji+' '+APPT_TYPES[t].label:'';
+    return `<div class="job-card" style="border-left-color:${APPT_TYPES[t]?.color||'var(--amber)'}" onclick="openJobPage('${j.id}')">
+      <div class="job-card-main">
+        <div class="job-card-name">${esc(jobCustomerName(j))}</div>
+        <div class="job-card-sub">${esc(jobAddress(j)||j.note||'')}</div>
+        <div class="job-card-meta">
+          <span class="job-pill st-${st}">${JOB_STATUS[st]?.label||st}</span>
+          <span class="job-pill">${esc(jobDateLabel(j))}</span>
+          ${crew?`<span class="job-pill">👷 ${esc(crew)}</span>`:''}
+          ${typeLbl?`<span class="job-pill">${typeLbl}</span>`:''}
+          ${items.length?`<span class="job-pill">${done}/${items.length} tasks</span>`:''}
+        </div>
+      </div>
+      <div style="color:var(--muted);font-size:18px">›</div>
+    </div>`;
+  };
+  const sec=(title,arr)=>arr.length?`<div class="jobs-sec">${title}<span class="cnt">${arr.length}</span></div>${arr.map(card).join('')}`:'';
+  const byDay=(a,b)=>String(a.day&&a.day!=='backlog'?a.day:'zz').localeCompare(String(b.day&&b.day!=='backlog'?b.day:'zz'));
+  let html='';
+  if(isLaborer()){
+    const mine=all;
+    const inprog=mine.filter(j=>jobStatusOf(j)==='in_progress').sort(byDay);
+    const todayJ=mine.filter(j=>jobStatusOf(j)==='scheduled'&&j.day&&j.day!=='backlog'&&j.day<=today&&(j.endDay||j.day)>=today).sort(byDay);
+    const upcoming=mine.filter(j=>jobStatusOf(j)==='scheduled'&&j.day&&j.day!=='backlog'&&j.day>today).sort(byDay);
+    const past=mine.filter(j=>jobStatusOf(j)==='scheduled'&&j.day&&j.day!=='backlog'&&(j.endDay||j.day)<today).sort(byDay);
+    const unsched=mine.filter(j=>jobStatusOf(j)==='unassigned'||(jobStatusOf(j)==='scheduled'&&(!j.day||j.day==='backlog')));
+    const doneJ=mine.filter(j=>jobStatusOf(j)==='complete').sort(byDay).reverse();
+    if(jobsFilter==='complete') html=sec('✅ Completed',doneJ);
+    else{
+      html=sec('🟢 In progress',inprog)+sec('📍 Today',todayJ)+sec('📅 Upcoming',upcoming)+sec('⚠ Past due',past)+sec('⏳ Waiting on schedule',unsched);
+      if(jobsFilter==='all') html+=sec('✅ Completed',doneJ);
+    }
+    if(!html) html='<div class="jobs-empty">No jobs assigned to you yet.<br>When your crew is put on a job it shows up here.</div>';
+  }else{
+    const g=k=>all.filter(j=>jobStatusOf(j)===k).sort(byDay);
+    const done=g('complete').reverse();
+    if(jobsFilter==='complete') html=sec('✅ Complete',done);
+    else{
+      html=sec('🟠 Needs crew',g('unassigned'))+sec('🔵 Scheduled',g('scheduled'))+sec('🟢 In progress',g('in_progress'));
+      if(jobsFilter==='all') html+=sec('✅ Complete',done);
+    }
+    if(!html) html='<div class="jobs-empty">No production jobs yet.<br>Send an estimate to production (estimate editor → 🚀) or accept a lead to create one.</div>';
+  }
+  body.innerHTML=html;
+  updateBadges();
+}
+
+function openJobPage(jobId){
+  const j=jobs.find(x=>x.id===jobId);
+  if(!j){alert('Job not found.');return;}
+  jpJobId=jobId;
+  renderJobPage();
+  document.getElementById('jpOverlay').classList.add('open');
+  document.getElementById('jpBody').scrollTop=0;
+}
+function closeJobPage(){
+  document.getElementById('jpOverlay').classList.remove('open');
+  jpJobId=null;
+  if(mainView==='jobs') renderJobsView();
+  else if(mainView==='sched'&&typeof renderSched==='function') renderSched();
+}
+
+function renderJobPage(){
+  const j=jobs.find(x=>x.id===jpJobId);
+  if(!j) return;
+  loadDocs();
+  const st=jobStatusOf(j)||'unassigned';
+  const lr=j.leadId?leads.find(l=>l.id===j.leadId):null;
+  const wo=j.linkedDocId?docs.find(d=>d.id===j.linkedDocId&&d.type==='workorder'):null;
+  const mo=j.linkedMoId?docs.find(d=>d.id===j.linkedMoId&&d.type==='matorder'):null;
+  const addr=jobAddress(j);
+  const phone=lr?.phone||lr?.contact||wo?.clientContact||'';
+  const mgmt=isOwnerOrManager();
+  document.getElementById('jpName').textContent=jobCustomerName(j);
+  document.getElementById('jpSub').innerHTML=`<span class="job-pill st-${st}">${JOB_STATUS[st]?.label||st}</span> &nbsp;${esc(jobDateLabel(j))}${jobCrewName(j)?' · 👷 '+esc(jobCrewName(j)):''}${wo?' · '+esc(wo.num||'WO'):''}`;
+
+  // Maps: turn-by-turn to the address; opens the native maps app on phones
+  const mapsUrl=addr?'https://www.google.com/maps/dir/?api=1&destination='+encodeURIComponent(addr)+'&travelmode=driving':'';
+  let html='';
+  html+='<div class="jp-actions">';
+  html+=addr?`<a class="btn btn-amber" href="${esc(mapsUrl)}" target="_blank" rel="noopener">🧭 Maps</a>`:`<button class="btn btn-amber" disabled style="opacity:.5">🧭 No address</button>`;
+  html+=wo?`<button class="btn btn-amber" onclick="document.getElementById('jpWo').scrollIntoView({behavior:'smooth',block:'start'})">📋 View Job</button>`:`<button class="btn btn-ghost" disabled style="opacity:.6">📋 No work order</button>`;
+  html+='</div>';
+
+  // Crew actions: start / complete
+  if(!mgmt&&userOnJob(j)){
+    html+='<div class="jp-status-bar">';
+    if(st==='scheduled'||st==='unassigned') html+=`<button class="btn btn-amber" onclick="setJobStatus('${j.id}','in_progress')">▶ Start Job</button>`;
+    if(st==='in_progress') html+=`<button class="btn btn-amber" style="background:#22c55e;color:#fff" onclick="setJobStatus('${j.id}','complete')">✓ Mark Complete</button>`;
+    if(st==='complete') html+=`<button class="btn btn-ghost" onclick="setJobStatus('${j.id}','in_progress')">↩ Reopen</button>`;
+    html+='</div>';
+  }
+
+  // Details
+  html+='<div class="jp-card"><h3>Job Details</h3>';
+  if(addr) html+=`<div class="jp-row"><span class="l">Address</span><span class="v">${esc(addr)}</span></div>`;
+  if(phone){const digits=String(phone).replace(/[^0-9]/g,'');html+=`<div class="jp-row"><span class="l">Contact</span><span class="v">${digits.length>=10?`<a href="tel:${digits}">${esc(phone)}</a>`:esc(phone)}</span></div>`;}
+  html+=`<div class="jp-row"><span class="l">Scheduled</span><span class="v">${esc(jobDateLabel(j))}${j.startTime?' · '+esc(fmtTimeRange(j.startTime,j.endTime)):''}</span></div>`;
+  html+=`<div class="jp-row"><span class="l">Crew</span><span class="v">${esc(jobCrewName(j)||'Not assigned')}</span></div>`;
+  const t=normalizeApptType(j.apptType);
+  if(APPT_TYPES[t]) html+=`<div class="jp-row"><span class="l">Type</span><span class="v">${APPT_TYPES[t].emoji} ${esc(APPT_TYPES[t].label)}</span></div>`;
+  if(j.note) html+=`<div class="jp-row"><span class="l">Notes</span><span class="v">${esc(j.note)}</span></div>`;
+  html+='</div>';
+
+  // Management: assign crew + schedule + status
+  if(mgmt){
+    const crewOpts='<option value="">— Select crew —</option>'+(crews||[]).map(c=>`<option value="${esc(c.id)}"${c.id===j.crewId?' selected':''}>${esc(c.name)}${crewMemberIds(c.id).length?' ('+crewMemberIds(c.id).length+')':''}</option>`).join('');
+    const stOpts=Object.entries(JOB_STATUS).map(([k,v])=>`<option value="${k}"${k===st?' selected':''}>${v.label}</option>`).join('');
+    html+=`<div class="jp-card"><h3>Assign &amp; Schedule</h3>
+      <div class="fg"><label class="flbl">Crew</label><select class="finput" id="jpCrew">${crewOpts}</select></div>
+      <div class="jp-grid">
+        <div><label class="flbl">Start</label><input class="finput" type="date" id="jpStart" value="${j.day&&j.day!=='backlog'?esc(j.day):''}"/></div>
+        <div><label class="flbl">End</label><input class="finput" type="date" id="jpEnd" value="${esc(j.endDay||'')}"/></div>
+      </div>
+      <div class="jp-grid" style="margin-top:8px">
+        <div><label class="flbl">Arrival</label><input class="finput" type="time" id="jpTime" value="${esc(j.startTime||'')}"/></div>
+        <div><label class="flbl">Status</label><select class="finput" id="jpStatus">${stOpts}</select></div>
+      </div>
+      ${crewsTableMissing?'<div style="font-size:11px;color:#f97316;margin-top:6px">Crews table not migrated yet — run install-timeline-MIGRATION.sql.</div>':''}
+      ${!(crews||[]).length&&!crewsTableMissing?'<div style="font-size:11px;color:var(--muted);margin-top:6px">No crews yet — add crews on the Install Schedule timeline, then put laborers on them in Team Manager.</div>':''}
+      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px;flex-wrap:wrap">
+        <button class="btn btn-ghost btn-sm" onclick="closeJobPage();openJobMov(null,'${j.id}')">✏️ Edit job</button>
+        ${wo?`<button class="btn btn-ghost btn-sm" onclick="closeJobPage();openWorkOrder('${wo.id}')">🔧 Edit work order</button>`:''}
+        <button class="btn btn-amber btn-sm" onclick="saveJobAssignment('${j.id}')">💾 Save</button>
+      </div>
+    </div>`;
+  }
+
+  // Work order — view-ready
+  if(wo){
+    const canCheck=mgmt||userOnJob(j);
+    html+=`<div class="jp-card" id="jpWo"><h3>Work Order ${esc(wo.num||'')}</h3>`;
+    if(wo.arrival) html+=`<div class="jp-row"><span class="l">Arrival</span><span class="v">${esc(wo.arrival)}</span></div>`;
+    if(wo.scope) html+=`<div class="jp-scope">${esc(wo.scope)}</div>`;
+    const items=Array.isArray(wo.checklist)?wo.checklist:[];
+    if(items.length){
+      html+='<div>'+items.map((it,i)=>`<div class="jp-item${it.done?' done':''}">
+        <div class="jp-chk" ${canCheck?`onclick="toggleJobTask('${wo.id}',${i})"`:''}>${it.done?'✓':''}</div>
+        <div class="jp-txt">${esc(it.desc||'')}${it.qty&&Number(it.qty)>1?` <span class="jp-qty">×${esc(it.qty)}</span>`:''}${photoThumbsHtml(it.photos,'jp-photos')}</div>
+      </div>`).join('')+'</div>';
+    } else html+='<div class="jp-notes">No tasks on this work order.</div>';
+    const extras=(wo.extras||[]).filter(e=>(e.desc||'').trim());
+    if(extras.length){
+      html+='<div class="jobs-sec" style="margin-top:12px">Additional items</div>';
+      html+=extras.map(e=>`<div class="jp-item"><div class="jp-chk" style="border-style:dashed"></div><div class="jp-txt">${esc(e.desc)}</div></div>`).join('');
+    }
+    if(wo.notes) html+=`<div style="margin-top:10px;padding-top:8px;border-top:1px dashed var(--iron)"><div class="flbl">Notes</div><div class="jp-notes">${esc(wo.notes)}</div></div>`;
+    html+='</div>';
+  }
+
+  // Material order (if linked)
+  if(mo){
+    const rows=Object.entries(mo.moMaterials||{}).map(([k,v])=>{
+      if(!v||typeof v!=='object') return null;
+      const slots=Object.entries(v).filter(([,x])=>String(x||'').trim()!=='').sort(([a],[b])=>a.localeCompare(b)).map(([,x])=>String(x).trim());
+      return slots.length?{k:k.replace(/_/g,' ').replace(/\b\w/g,c=>c.toUpperCase()),slots}:null;
+    }).filter(Boolean);
+    html+=`<div class="jp-card"><h3>Materials ${esc(mo.num||'')}${j.materialsDelivered?' · 📦 delivered':''}</h3>`;
+    html+=rows.length?rows.map(r=>`<div class="jp-row"><span class="l">${esc(r.k)}</span><span class="v">${esc(r.slots.join(' · '))}</span></div>`).join(''):'<div class="jp-notes">No material lines.</div>';
+    html+='</div>';
+  }
+
+  // Activity
+  const act=(j.activity||[]).slice(-8).reverse();
+  if(act.length){
+    html+='<div class="jp-card"><h3>Activity</h3>'+act.map(a=>`<div class="jp-row"><span class="l">${esc(new Date(a.ts).toLocaleDateString('en-US',{month:'short',day:'numeric'}))}</span><span class="v" style="text-align:left;flex:1">${esc(a.msg||'')}</span></div>`).join('')+'</div>';
+  }
+  document.getElementById('jpBody').innerHTML=html;
+}
+
+function saveJobAssignment(jobId){
+  const j=jobs.find(x=>x.id===jobId);
+  if(!j||!isOwnerOrManager()) return;
+  const crewId=document.getElementById('jpCrew')?.value||'';
+  const start=document.getElementById('jpStart')?.value||'';
+  const end=document.getElementById('jpEnd')?.value||'';
+  const time=document.getElementById('jpTime')?.value||'';
+  let status=document.getElementById('jpStatus')?.value||jobStatusOf(j)||'unassigned';
+  const prevCrew=j.crewId||'';
+  j.crewId=crewId||null;
+  // Crew → people. assignee_ids is what RLS uses, so crew members see the job.
+  if(crewId){
+    const ids=crewMemberIds(crewId);
+    j.assigneeIds=ids;j.assigneeId=ids[0]||null;
+  }else if(prevCrew){
+    j.assigneeIds=[];j.assigneeId=null;
+  }
+  j.day=start||'backlog';
+  j.endDay=(start&&end&&end>=start)?end:'';
+  j.startTime=time||'';
+  // Auto-advance when crew + date are both set and it's still unassigned
+  if(status==='unassigned'&&crewId&&start) status='scheduled';
+  if(status==='scheduled'&&(!crewId||!start)) status='unassigned';
+  const old=jobStatusOf(j);
+  j.status=status;
+  if(!Array.isArray(j.activity)) j.activity=[];
+  const bits=[];
+  if(crewId!==prevCrew) bits.push(crewId?'crew → '+jobCrewName(j):'crew cleared');
+  if(start) bits.push('scheduled '+jobDateLabel(j));
+  if(old!==status) bits.push('status → '+(JOB_STATUS[status]?.label||status));
+  if(bits.length) j.activity.push({ts:new Date().toISOString(),msg:bits.join(' · ')+' ('+(currentDisplayName||'')+')'});
+  saveJob(j);
+  if(!jobsHaveStatus) alert('Saved crew and dates. Job status will not persist until production-pipeline-MIGRATION.sql is run.');
+  setSS('synced','Saved ✓');setTimeout(()=>{const l=document.getElementById('syncLbl');if(l)l.textContent='';},2000);
+  renderJobPage();
+  updateBadges();
+}
+
+function setJobStatus(jobId,status){
+  const j=jobs.find(x=>x.id===jobId);
+  if(!j) return;
+  if(status==='complete'&&!confirm('Mark this job complete?')) return;
+  j.status=status;
+  if(!Array.isArray(j.activity)) j.activity=[];
+  j.activity.push({ts:new Date().toISOString(),msg:(JOB_STATUS[status]?.label||status)+' — '+(currentDisplayName||'crew')});
+  saveJob(j);
+  renderJobPage();
+  // Let the office know — best-effort push through the existing edge function
+  if(status==='complete'||status==='in_progress'){
+    try{
+      fetch(SB_URL+'/functions/v1/notify-message',{method:'POST',
+        headers:{apikey:SB_KEY,Authorization:'Bearer '+authAccessToken,'Content-Type':'application/json'},
+        body:JSON.stringify({title:(status==='complete'?'Job complete: ':'Job started: ')+jobCustomerName(j),body:(currentDisplayName||'Crew')+' · '+(jobAddress(j)||''),url:'/app.html',company_id:currentCompanyId,roles:['owner','manager','project_manager']})
+      }).catch(()=>{});
+    }catch{}
+  }
+}
+
+function toggleJobTask(woId,idx){
+  const wo=docs.find(d=>d.id===woId);
+  if(!wo||!Array.isArray(wo.checklist)||!wo.checklist[idx]) return;
+  wo.checklist[idx].done=!wo.checklist[idx].done;
+  if(wo.checklist[idx].done){wo.checklist[idx].doneBy=currentDisplayName||currentUser?.id||'';wo.checklist[idx].doneAt=new Date().toISOString();}
+  else{delete wo.checklist[idx].doneBy;delete wo.checklist[idx].doneAt;}
+  saveDocSync(wo);
+  renderJobPage();
 }
 
 // ── WALKTHROUGH (PHOTO ESTIMATE) ─────────────────────────────
@@ -11013,6 +11492,126 @@ function nextWoNum(){
   return 'WO-'+String(next).padStart(4,'0');
 }
 
+// Pure builder: estimate → work order object (not yet in docs).
+// Line-item photos from the walkthrough ride along on each checklist task.
+function buildWorkOrderFromEstimate(est){
+  return {
+    id:uid(),
+    type:'workorder',
+    status:'pending',
+    num:nextWoNum(),
+    sourceEstId:est.id,
+    sourceEstNum:est.num||'',
+    clientName:est.clientName||'',
+    clientContact:est.clientContact||'',
+    clientAddr:est.clientAddr||'',
+    date:est.date||new Date().toISOString().slice(0,10),
+    arrival:'',
+    scope:est.scope||'',
+    checklist:(est.lineItems||[]).filter(li=>(li.desc||'').trim()).map(li=>({
+      desc:li.desc||'',
+      qty:li.qty||1,
+      cat:li.cat||'other',
+      done:false,
+      ...(Array.isArray(li.photos)&&li.photos.length?{photos:li.photos}:{})
+    })),
+    extras:[],
+    notes:'',
+    pmId:'',
+    created:Date.now()
+  };
+}
+
+// ── SEND TO PRODUCTION ───────────────────────────────────────
+// The ONE path from a sold estimate to the Jobs tab. Called automatically
+// when a lead reaches Accepted (signature does this) and manually from the
+// estimate editor. Idempotent: re-running links to the existing WO/job
+// instead of creating duplicates.
+//   lead → estimate (lead.estId) → work order (sourceEstId) → job
+//   (linkedDocId = WO, status 'unassigned', backlog until a PM schedules it)
+function apptTypeFromText(txt){
+  const t=String(txt||'').toLowerCase();
+  if(/gutter/.test(t)) return 'gutter_replace';
+  if(/siding|wrap|soffit|fascia/.test(t)) return 'siding_replace';
+  if(/repair|leak|patch/.test(t)) return 'repair';
+  if(/roof|shingle/.test(t)) return 'roof_replace';
+  return 'repair';
+}
+function sendToProduction(lead,opts){
+  opts=opts||{};
+  if(!lead) return null;
+  loadDocs();
+  const est=lead.estId?docs.find(d=>d.id===lead.estId&&d.type==='estimate'):null;
+  // Work order
+  let wo=null;
+  if(est){
+    wo=docs.find(d=>d.type==='workorder'&&d.sourceEstId===est.id)||null;
+    if(!wo){
+      wo=buildWorkOrderFromEstimate(est);
+      docs.push(wo);
+      saveDocSync(wo);
+      try{logDocActivity(wo.id,'Created from estimate '+(est.num||'')+' (sent to production)');}catch{}
+    }
+  }
+  // Job: reuse this lead's existing production/backlog job if there is one
+  let job=jobs.find(j=>j.leadId===lead.id&&wo&&j.linkedDocId===wo.id)
+        ||jobs.find(j=>j.leadId===lead.id&&!j.linkedDocId&&(j.day==='backlog'||!j.day));
+  const typeStr=(lead.types&&lead.types.length)?lead.types.join(', '):'';
+  if(!job){
+    job={
+      id:uid(),
+      title:lead.name+(typeStr?' – '+typeStr:''),
+      note:[lead.address,lead.contact,lead.phone].filter(Boolean).join(' | '),
+      color:lead.color||'green',
+      day:'backlog',endDay:'',
+      leadId:lead.id,
+      estId:est?est.id:null,
+      photos:[],checklist:[],
+      apptType:apptTypeFromText(typeStr+' '+(est?est.scope:'')),
+      startTime:'',endTime:'',
+      assigneeId:null,assigneeIds:[],
+      crewId:null,
+      activity:[{ts:new Date().toISOString(),msg:'Sent to production'+(wo?' with work order '+(wo.num||''):'')}]
+    };
+    jobs.push(job);
+  }
+  if(wo){
+    job.linkedDocId=wo.id;
+    wo.linkedJobId=job.id;
+    // Material order for the same estimate, if one exists
+    const mo=docs.find(d=>d.type==='matorder'&&d.sourceEstId===est.id);
+    if(mo&&!job.linkedMoId){job.linkedMoId=mo.id;mo.linkedJobId=job.id;saveDocSync(mo);}
+    saveDocSync(wo);
+  }
+  if(!job.status) job.status=(job.day&&job.day!=='backlog')?'scheduled':'unassigned';
+  saveJob(job);
+  updateBadges();
+  if(typeof renderJobsView==='function'&&mainView==='jobs') renderJobsView();
+  if(opts.toast!==false){setSS('synced','Sent to production ✓');setTimeout(()=>{const l=document.getElementById('syncLbl');if(l)l.textContent='';},2500);}
+  return job;
+}
+
+// Manual trigger from the estimate editor
+function sendEstimateToProduction(){
+  if(!editDocId){alert('Save the estimate first.');return;}
+  saveDoc();
+  const d=docs.find(x=>x.id===editDocId);
+  if(!d||d.type!=='estimate'){alert('Only estimates can be sent to production.');return;}
+  let lead=leads.find(l=>l.estId===d.id);
+  if(!lead&&docLinkedLeadId) lead=leads.find(l=>l.id===docLinkedLeadId);
+  if(!lead){alert('Link a customer to this estimate first.');return;}
+  if(lead.estId!==d.id){lead.estId=d.id;}
+  if(!confirm('Send '+(d.num||'this estimate')+' to production?\n\nThis creates the work order and puts the job in the Jobs tab for crew assignment.')) return;
+  const order=['new','contact','quote','accepted'];
+  if(order.indexOf(lead.stage)<order.indexOf('accepted')){
+    lead.activity=lead.activity||[];lead.activity.push({ts:new Date().toISOString(),msg:'Stage → Accepted (sent to production)'});
+    lead.stage='accepted';
+  }
+  saveLead(lead);
+  const job=sendToProduction(lead);
+  if(job){const ed=document.getElementById('docEditor');if(ed)ed.classList.remove('open');editDocId=null;switchMain('jobs');openJobPage(job.id);}
+}
+
 function openWorkOrder(woId){
   // Two entry points:
   //   - From an estimate ("Generate Work Order"): editDocId points to estimate, woId is null
@@ -11038,33 +11637,7 @@ function openWorkOrder(woId){
       }
     } else {
       // Build a fresh work order from the estimate
-      wo={
-        id:uid(),
-        type:'workorder',
-        status:'pending',
-        num:nextWoNum(),
-        sourceEstId:est.id,
-        sourceEstNum:est.num||'',
-        clientName:est.clientName||'',
-        clientContact:est.clientContact||'',
-        clientAddr:est.clientAddr||'',
-        date:est.date||new Date().toISOString().slice(0,10),
-        arrival:'',
-        scope:est.scope||'',
-        // Convert each estimate line item into a checklist entry (no prices)
-        checklist:(est.lineItems||[]).filter(li=>(li.desc||'').trim()).map(li=>({
-          desc:li.desc||'',
-          qty:li.qty||1,
-          cat:li.cat||'other',
-          done:false,
-          // walkthrough photos travel with the task so the crew sees them
-          ...(Array.isArray(li.photos)&&li.photos.length?{photos:li.photos}:{})
-        })),
-        extras:[],          // additional items added during the job
-        notes:'',
-        pmId:'',
-        created:Date.now()
-      };
+      wo=buildWorkOrderFromEstimate(est);
       // Add to docs immediately so collectWorkOrder() can find it
       docs.push(wo);
       saveDocs();
@@ -11263,6 +11836,20 @@ function tryAddBacklogJobForWO(wo){
     const lead=leads.find(l=>l.estId===wo.sourceEstId);
     if(lead) leadId=lead.id;
   }
+  // If Accepted already created this lead's backlog job, link to it instead
+  // of spawning a second one.
+  if(leadId){
+    const existingJob=jobs.find(j=>j.leadId===leadId&&!j.linkedDocId&&(j.day==='backlog'||!j.day));
+    if(existingJob){
+      existingJob.linkedDocId=wo.id;
+      if(!existingJob.status) existingJob.status='unassigned';
+      wo.linkedJobId=existingJob.id;
+      saveJob(existingJob);saveDocSync(wo);
+      setSS('synced','Work Order linked to job ✓');
+      setTimeout(()=>document.getElementById('syncLbl').textContent='',2500);
+      return;
+    }
+  }
   const job={
     id:uid(),
     title,
@@ -11278,6 +11865,7 @@ function tryAddBacklogJobForWO(wo){
     endTime:'',
     assigneeId:null,
     assigneeIds:[],
+    status:'unassigned',
     linkedDocId:wo.id,     // ← job knows its WO
     activity:[{ts:new Date().toISOString(),msg:'Created from work order '+(wo.num||'')}]
   };
@@ -13266,7 +13854,9 @@ function _profileToTeamMember(p){
     color:     p.color||TEAM_COLORS[0],
     initials:  p.initials||getInitials(p.display_name||''),
     phone:     p.phone||'',
-    email:     p.email||''
+    email:     p.email||'',
+    crewId:    p.crew_id||null,
+    snowAccess:!!p.snow_access
   };
 }
 
@@ -13275,7 +13865,7 @@ async function loadTeamRemote(){
   if(!currentCompanyId||!authAccessToken) return false;
   try{
     const r=await fetch(SB_URL+'/rest/v1/profiles?company_id=eq.'+encodeURIComponent(currentCompanyId)
-      +'&select=user_id,display_name,role,color,initials,phone,email&order=display_name.asc',{
+      +'&select=*&order=display_name.asc',{
       headers:{'apikey':SB_KEY,'Authorization':'Bearer '+authAccessToken}
     });
     if(!r.ok)return false;
@@ -14388,6 +14978,491 @@ if(!window._inboxCapBound){
   },true);
 }
 try{ startMessageAlerts(); }catch(e){ console.error('alerts init',e); }
+
+// ════════════════════════════════════════════════════════════════════
+// SNOW PLOWING MODULE (seasonal)
+// ════════════════════════════════════════════════════════════════════
+// Tables: snow_accounts, snow_routes, snow_visits (see snow-plowing-MIGRATION.sql)
+// Docs:   snowestimate / snowinvoice live in the normal `docs` table but are
+//         hidden from the Estimates tab and numbered separately (SNE-/SNI-).
+// Access: companies.snow_enabled (owner toggle) AND
+//         (owner | manager | profiles.snow_access).
+let snowAccounts=[],snowRoutes=[],snowVisits=[];
+let snowTableMissing=false;
+let snowSub='routes';          // routes | accounts | billing
+let snowOpenRouteId=null;      // route page open inside the Snow view
+// function declaration (hoisted) — renderDocList/updateDocPreview can run before this block is reached
+function isSnowDocType(t){return t==='snowestimate'||t==='snowinvoice';}
+
+function snowEnabled(){return !!(currentCompany&&currentCompany.snow_enabled);}
+function canManageSnow(){return isOwner()||isManager()||isPM();}
+function canSeeSnow(){
+  if(!currentRole) return false;
+  return snowEnabled()&&(isOwner()||isManager()||!!currentSnowAccess);
+}
+
+async function loadSnowRemote(){
+  if(!snowEnabled()){snowAccounts=[];snowRoutes=[];snowVisits=[];return true;}
+  try{
+    const [a,r,v]=await Promise.all([
+      sb.req('GET','snow_accounts?order=sort_order.asc,created_at.asc'),
+      sb.req('GET','snow_routes?order=route_date.desc,created_at.desc'),
+      sb.req('GET','snow_visits?order=created_at.desc')
+    ]);
+    snowAccounts=a;snowRoutes=r.map(x=>({...x,stop_ids:Array.isArray(x.stop_ids)?x.stop_ids:safeParseArr(x.stop_ids)}));snowVisits=v;
+    snowTableMissing=false;
+    if(mainView==='snow') renderSnowView();
+    return true;
+  }catch(e){
+    console.error('loadSnowRemote:',e);
+    snowTableMissing=true;snowAccounts=[];snowRoutes=[];snowVisits=[];
+    if(mainView==='snow') renderSnowView();
+    return false;
+  }
+}
+function saveSnowAccount(a){a.updated_at=new Date().toISOString();setSS('syncing','Saving…');queueSave('snow_accounts',a);}
+function saveSnowRoute(r){
+  r.updated_at=new Date().toISOString();setSS('syncing','Saving…');
+  // Drivers can't INSERT routes (RLS), and the save queue upserts via POST,
+  // so a driver's status change goes out as a PATCH instead.
+  if(canManageSnow()) queueSave('snow_routes',r);
+  else snowPatch('snow_routes',r.id,{status:r.status,updated_at:r.updated_at});
+}
+async function snowPatch(table,id,fields){
+  try{
+    const r=await fetch(SB_URL+'/rest/v1/'+table+'?id=eq.'+encodeURIComponent(id),{
+      method:'PATCH',
+      headers:{'apikey':SB_KEY,'Authorization':'Bearer '+authAccessToken,'Content-Type':'application/json'},
+      body:JSON.stringify(fields)
+    });
+    if(!r.ok) throw new Error(await r.text());
+    setSS('synced','Saved ✓');setTimeout(()=>{const l=document.getElementById('syncLbl');if(l)l.textContent='';},2000);
+  }catch(e){console.error('snowPatch:',e);setSS('error','Save failed');}
+}
+function saveSnowVisit(v){v.updated_at=new Date().toISOString();setSS('syncing','Saving…');queueSave('snow_visits',v);}
+
+// ── helpers ──────────────────────────────────────────────────────────
+function snowCustomerName(id){const c=customers.find(x=>x.id===id);return c?c.name:'(customer removed)';}
+function snowAccountById(id){return snowAccounts.find(a=>a.id===id);}
+function snowRouteById(id){return snowRoutes.find(r=>r.id===id);}
+function snowDriverName(uid_){const m=teamRoster.find(t=>t.id===uid_);return m?m.name:'(unassigned)';}
+function snowFmtTs(ts){if(!ts)return'';const d=new Date(ts);return d.toLocaleDateString('en-US',{month:'short',day:'numeric'})+' '+d.toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'});}
+function snowFmtMoney(v){return '$'+(parseFloat(v)||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2});}
+function snowToday(){return new Date().toISOString().split('T')[0];}
+function snowVisitFor(routeId,accountId){return snowVisits.find(v=>v.route_id===routeId&&v.account_id===accountId);}
+function snowPrimaryAddress(customerId){
+  const addrs=addressesForCustomer(customerId);
+  const a=addrs.find(x=>x.is_primary)||addrs[0];
+  if(a) return [a.street,a.city,a.state,a.zip].filter(Boolean).join(', ');
+  const l=leadsForCustomer(customerId).find(x=>x.address);
+  return l?l.address:'';
+}
+// Google Maps directions link. Origin omitted = device's current location.
+// Max 9 waypoints + destination per link, so long routes are split into legs.
+function snowMapsLinks(stopAccounts){
+  const addrs=stopAccounts.map(a=>a.address).filter(Boolean);
+  const links=[];
+  for(let i=0;i<addrs.length;i+=10){
+    const chunk=addrs.slice(i,i+10);
+    const dest=chunk[chunk.length-1];
+    const wps=chunk.slice(0,-1);
+    let url='https://www.google.com/maps/dir/?api=1&destination='+encodeURIComponent(dest);
+    if(wps.length) url+='&waypoints='+encodeURIComponent(wps.join('|'));
+    links.push({label:addrs.length>10?`Stops ${i+1}–${i+chunk.length}`:'Open route in Maps',url});
+  }
+  return links;
+}
+
+// ── view shell ───────────────────────────────────────────────────────
+function renderSnowView(){
+  const body=document.getElementById('snowBody');if(!body)return;
+  const subs=document.getElementById('snowSubs');
+  const manage=canManageSnow();
+  if(!manage&&snowSub!=='routes') snowSub='routes';
+  subs.innerHTML=[['routes','🛣 Routes'],['accounts','🏠 Accounts'],['billing','💰 Billing']]
+    .filter(([k])=>manage||k==='routes')
+    .map(([k,l])=>`<button class="sched-sub-pill ${snowSub===k?'active':''}" onclick="setSnowSub('${k}')">${l}</button>`).join('');
+  if(snowTableMissing){
+    body.innerHTML=`<div class="lempty">❄ Snow tables not found.<br><br>Run <b>snow-plowing-MIGRATION.sql</b> in the Supabase SQL editor, then tap Resync.</div>`;
+    return;
+  }
+  if(snowOpenRouteId){renderSnowRoutePage(snowOpenRouteId);return;}
+  if(snowSub==='accounts') renderSnowAccounts();
+  else if(snowSub==='billing') renderSnowBilling();
+  else renderSnowRoutes();
+}
+function setSnowSub(k){snowSub=k;snowOpenRouteId=null;renderSnowView();}
+
+// ── ROUTES ───────────────────────────────────────────────────────────
+function snowRouteProgress(r){
+  const ids=r.stop_ids||[];
+  const done=ids.filter(id=>{const v=snowVisitFor(r.id,id);return v&&v.left_at;}).length;
+  return {done,total:ids.length};
+}
+function renderSnowRoutes(){
+  const body=document.getElementById('snowBody');
+  const manage=canManageSnow();
+  let list=manage?snowRoutes:snowRoutes.filter(r=>r.assigned_to===currentUser?.id);
+  const active=list.filter(r=>r.status!=='done');
+  const done=list.filter(r=>r.status==='done');
+  const card=r=>{
+    const p=snowRouteProgress(r);
+    const st=r.status==='done'?'#22c55e':r.status==='active'?'#f59e0b':'#94a3b8';
+    return `<div class="lead-card" style="cursor:pointer" onclick="openSnowRoute('${r.id}')">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+        <div class="lead-name">❄ ${esc(r.name||'Route')}</div>
+        <span class="lbadge" style="background:${st};color:#fff">${(r.status||'planned').toUpperCase()}</span>
+      </div>
+      <div style="font-size:12px;color:var(--muted);margin-top:4px">${esc(r.route_date||'no date')} · ${esc(snowDriverName(r.assigned_to))} · ${p.done}/${p.total} stops done</div>
+    </div>`;
+  };
+  body.innerHTML=`
+    ${manage?`<div style="display:flex;gap:8px;margin-bottom:10px"><button class="btn btn-amber btn-sm" onclick="openSnowRouteEditor()">+ New Route</button></div>`:''}
+    ${active.length?active.map(card).join(''):`<div class="lempty">${manage?'No open routes. Create one to start.':'No routes assigned to you.'}</div>`}
+    ${done.length?`<div class="cust-sec-label" style="margin-top:14px">Completed</div>${done.slice(0,30).map(card).join('')}`:''}`;
+}
+function openSnowRoute(id){snowOpenRouteId=id;renderSnowView();}
+function closeSnowRoute(){snowOpenRouteId=null;renderSnowView();}
+
+function renderSnowRoutePage(id){
+  const body=document.getElementById('snowBody');
+  const r=snowRouteById(id);
+  if(!r){snowOpenRouteId=null;renderSnowRoutes();return;}
+  const manage=canManageSnow();
+  const isDriver=r.assigned_to===currentUser?.id;
+  const stops=(r.stop_ids||[]).map(snowAccountById).filter(Boolean);
+  const p=snowRouteProgress(r);
+  const maps=snowMapsLinks(stops);
+  const stopRow=(a,i)=>{
+    const v=snowVisitFor(r.id,a.id);
+    let state='pending',btn='';
+    if(v&&v.left_at) state='done';
+    else if(v&&v.arrived_at) state='arrived';
+    const canTap=(isDriver||manage)&&r.status!=='done';
+    if(canTap){
+      if(state==='pending') btn=`<button class="btn btn-amber btn-sm" onclick="snowTapStop('${r.id}','${a.id}')">Arrived</button>`;
+      else if(state==='arrived') btn=`<button class="btn btn-sm" style="background:#22c55e;color:#fff" onclick="snowTapStop('${r.id}','${a.id}')">Done — leaving</button>`;
+      else btn=`<span style="color:#22c55e;font-size:12px;font-weight:600">✓ Done</span>`;
+    } else if(state==='done') btn=`<span style="color:#22c55e;font-size:12px;font-weight:600">✓ Done</span>`;
+    const times=v?`<div style="font-size:11px;color:var(--muted);margin-top:3px">${v.arrived_at?'Arrived '+snowFmtTs(v.arrived_at):''}${v.left_at?' · Left '+snowFmtTs(v.left_at):''}${v.user_id?' · '+esc(snowDriverName(v.user_id)):''}</div>`:'';
+    const border=state==='done'?'#22c55e':state==='arrived'?'#f59e0b':'var(--iron)';
+    return `<div class="lead-card" style="border-left:4px solid ${border}">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+        <div style="min-width:0">
+          <div class="lead-name">${i+1}. ${esc(snowCustomerName(a.customer_id))}</div>
+          <div style="font-size:12px;color:var(--muted)"><a href="https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(a.address||'')}" target="_blank" rel="noopener" style="color:inherit">${esc(a.address||'(no address)')}</a></div>
+          ${a.notes?`<div style="font-size:11px;color:var(--amber);margin-top:2px">${esc(a.notes)}</div>`:''}
+          ${times}
+        </div>
+        <div style="flex-shrink:0">${btn}</div>
+      </div>
+    </div>`;
+  };
+  body.innerHTML=`
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap">
+      <button class="btn btn-ghost btn-sm" onclick="closeSnowRoute()">← Routes</button>
+      <div class="lead-name" style="flex:1">❄ ${esc(r.name||'Route')} <span style="font-size:12px;color:var(--muted);font-weight:400">${esc(r.route_date||'')} · ${esc(snowDriverName(r.assigned_to))} · ${p.done}/${p.total}</span></div>
+      ${manage?`<button class="btn btn-ghost btn-sm" onclick="openSnowRouteEditor('${r.id}')">Edit</button>`:''}
+    </div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
+      ${maps.map(m=>`<a class="btn btn-amber btn-sm" style="text-decoration:none" href="${m.url}" target="_blank" rel="noopener">🗺 ${m.label}</a>`).join('')}
+      ${(isDriver||manage)&&r.status!=='done'&&p.done===p.total&&p.total>0?`<button class="btn btn-sm" style="background:#22c55e;color:#fff" onclick="snowFinishRoute('${r.id}')">Mark route complete</button>`:''}
+      ${manage&&r.status==='done'?`<button class="btn btn-ghost btn-sm" onclick="snowReopenRoute('${r.id}')">Reopen</button>`:''}
+    </div>
+    ${stops.length?stops.map(stopRow).join(''):'<div class="lempty">No stops on this route.</div>'}`;
+}
+// One button per stop: first tap = arrived, second tap = done/left.
+function snowTapStop(routeId,accountId){
+  const r=snowRouteById(routeId);const a=snowAccountById(accountId);if(!r||!a)return;
+  const now=new Date().toISOString();
+  let v=snowVisitFor(routeId,accountId);
+  if(!v){
+    v={id:'sv_'+uid(),route_id:routeId,account_id:accountId,customer_id:a.customer_id,
+       user_id:currentUser?.id||null,arrived_at:now,left_at:null,price:parseFloat(a.price_per_push)||0,
+       notes:'',invoiced_doc_id:null,created_at:now,updated_at:now};
+    snowVisits.unshift(v);
+    if(r.status!=='active'){r.status='active';saveSnowRoute(r);}
+  } else if(!v.left_at){
+    v.left_at=now;
+  } else return;
+  saveSnowVisit(v);
+  renderSnowView();
+}
+function snowFinishRoute(id){const r=snowRouteById(id);if(!r)return;r.status='done';saveSnowRoute(r);renderSnowView();}
+function snowReopenRoute(id){const r=snowRouteById(id);if(!r)return;r.status='active';saveSnowRoute(r);renderSnowView();}
+
+// Route editor (create/edit): name, date, driver, which accounts.
+// Stop order = the order on the Accounts tab (reorder there with ▲▼).
+function openSnowRouteEditor(id){
+  const r=id?snowRouteById(id):null;
+  const sel=new Set(r?(r.stop_ids||[]):snowAccounts.filter(a=>a.active!==false).map(a=>a.id));
+  const drivers=teamRoster.filter(m=>m.snowAccess||m.role==='owner'||m.role==='manager');
+  const html=`<div class="modal show" id="snowRouteMod"><div class="modal-content" style="padding:18px">
+    <div class="mtitle" style="margin-bottom:12px">${r?'Edit Route':'New Route'}</div>
+    <div class="fg"><div class="flbl">Route name</div><input class="finput" id="srName" value="${esc(r?r.name:'Route '+snowToday())}"></div>
+    <div class="frow">
+      <div class="fg"><div class="flbl">Date</div><input class="finput" type="date" id="srDate" value="${esc(r?(r.route_date||''):snowToday())}"></div>
+      <div class="fg"><div class="flbl">Driver</div><select class="finput" id="srDriver">
+        <option value="">— unassigned —</option>
+        ${drivers.map(m=>`<option value="${m.id}" ${r&&r.assigned_to===m.id?'selected':''}>${esc(m.name)}</option>`).join('')}
+      </select></div>
+    </div>
+    <div class="flbl" style="margin-top:6px">Stops (in Accounts order)</div>
+    <div style="max-height:40vh;overflow-y:auto;border:1px solid var(--iron);border-radius:8px;padding:6px;margin-bottom:12px">
+      ${snowAccounts.length?snowAccounts.map(a=>`<label style="display:flex;gap:8px;align-items:center;padding:6px 4px;font-size:13px;cursor:pointer;${a.active===false?'opacity:.5':''}">
+        <input type="checkbox" class="srStop" value="${a.id}" ${sel.has(a.id)?'checked':''} style="accent-color:var(--amber)">
+        <span style="flex:1;min-width:0"><b>${esc(snowCustomerName(a.customer_id))}</b><br><span style="color:var(--muted);font-size:11px">${esc(a.address||'')}</span></span>
+      </label>`).join(''):'<div class="lempty">No snow accounts yet — add them on the Accounts tab first.</div>'}
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      ${r?`<button class="btn btn-danger btn-sm" style="margin-right:auto" onclick="snowDeleteRoute('${r.id}')">Delete</button>`:''}
+      <button class="btn btn-ghost btn-sm" onclick="document.getElementById('snowRouteMod').remove()">Cancel</button>
+      <button class="btn btn-amber btn-sm" onclick="saveSnowRouteFromEditor('${r?r.id:''}')">Save</button>
+    </div>
+  </div></div>`;
+  document.body.insertAdjacentHTML('beforeend',html);
+}
+function saveSnowRouteFromEditor(id){
+  const stops=[...document.querySelectorAll('.srStop:checked')].map(c=>c.value);
+  let r=id?snowRouteById(id):null;
+  const now=new Date().toISOString();
+  if(!r){r={id:'sr_'+uid(),status:'planned',created_at:now,updated_at:now,notes:''};snowRoutes.unshift(r);}
+  r.name=document.getElementById('srName').value.trim()||'Route';
+  r.route_date=document.getElementById('srDate').value||null;
+  r.assigned_to=document.getElementById('srDriver').value||null;
+  r.stop_ids=stops;
+  saveSnowRoute(r);
+  document.getElementById('snowRouteMod')?.remove();
+  snowOpenRouteId=r.id;renderSnowView();
+}
+async function snowDeleteRoute(id){
+  if(!confirm('Delete this route? Logged visits are kept.'))return;
+  snowRoutes=snowRoutes.filter(r=>r.id!==id);
+  document.getElementById('snowRouteMod')?.remove();
+  snowOpenRouteId=null;renderSnowView();
+  try{await sb.del('snow_routes',id);}catch(e){console.error(e);alert('Delete failed: '+e.message);}
+}
+
+// ── ACCOUNTS ─────────────────────────────────────────────────────────
+function renderSnowAccounts(){
+  const body=document.getElementById('snowBody');
+  const row=(a,i)=>`<div class="lead-card" style="${a.active===false?'opacity:.55':''}">
+    <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+      <div style="min-width:0;flex:1;cursor:pointer" onclick="openSnowAccountEditor('${a.id}')">
+        <div class="lead-name">${i+1}. ${esc(snowCustomerName(a.customer_id))} <span style="color:var(--amber);font-size:12px">${snowFmtMoney(a.price_per_push)}/push</span>${a.active===false?' <span class="lbadge">INACTIVE</span>':''}</div>
+        <div style="font-size:12px;color:var(--muted)">${esc(a.address||'(no address)')}</div>
+        ${a.notes?`<div style="font-size:11px;color:var(--muted);margin-top:2px">${esc(a.notes)}</div>`:''}
+      </div>
+      <div style="display:flex;flex-direction:column;gap:2px;flex-shrink:0">
+        <button class="btn btn-ghost btn-xs" onclick="snowMoveAccount('${a.id}',-1)" ${i===0?'disabled':''}>▲</button>
+        <button class="btn btn-ghost btn-xs" onclick="snowMoveAccount('${a.id}',1)" ${i===snowAccounts.length-1?'disabled':''}>▼</button>
+      </div>
+    </div></div>`;
+  body.innerHTML=`
+    <div style="display:flex;gap:8px;margin-bottom:10px;align-items:center">
+      <button class="btn btn-amber btn-sm" onclick="openSnowAccountEditor()">+ Add Account</button>
+      <span style="font-size:11px;color:var(--muted)">Order here = drive order on routes</span>
+    </div>
+    ${snowAccounts.length?snowAccounts.map(row).join(''):'<div class="lempty">No snow accounts yet.</div>'}`;
+}
+function snowMoveAccount(id,dir){
+  const i=snowAccounts.findIndex(a=>a.id===id);const j=i+dir;
+  if(i<0||j<0||j>=snowAccounts.length)return;
+  [snowAccounts[i],snowAccounts[j]]=[snowAccounts[j],snowAccounts[i]];
+  snowAccounts.forEach((a,k)=>{if(a.sort_order!==k){a.sort_order=k;saveSnowAccount(a);}});
+  renderSnowView();
+}
+function openSnowAccountEditor(id){
+  const a=id?snowAccountById(id):null;
+  const html=`<div class="modal show" id="snowAcctMod"><div class="modal-content" style="padding:18px">
+    <div class="mtitle" style="margin-bottom:12px">${a?'Edit Snow Account':'Add Snow Account'}</div>
+    <div class="fg"><div class="flbl">Customer</div>
+      ${a?`<div class="finput" style="opacity:.8">${esc(snowCustomerName(a.customer_id))}</div>`:
+      `<input class="finput" id="saCustSearch" placeholder="Search customers by name or phone…" oninput="snowCustSearch(this.value)" autocomplete="off">
+       <div id="saCustDrop" style="max-height:160px;overflow-y:auto"></div>
+       <input type="hidden" id="saCustId" value="">`}
+    </div>
+    <div class="fg"><div class="flbl">Plow address</div><input class="finput" id="saAddr" value="${esc(a?a.address:'')}" placeholder="Street, City, ST ZIP"></div>
+    <div class="frow">
+      <div class="fg"><div class="flbl">Price per push ($)</div><input class="finput" type="number" step="0.01" min="0" id="saPrice" value="${a?a.price_per_push:''}"></div>
+      <div class="fg"><div class="flbl">Active</div><select class="finput" id="saActive"><option value="1" ${!a||a.active!==false?'selected':''}>Yes</option><option value="0" ${a&&a.active===false?'selected':''}>No (off this season)</option></select></div>
+    </div>
+    <div class="fg"><div class="flbl">Driver notes (gate code, where to pile, etc.)</div><input class="finput" id="saNotes" value="${esc(a?(a.notes||''):'')}"></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      ${a?`<button class="btn btn-danger btn-sm" style="margin-right:auto" onclick="snowDeleteAccount('${a.id}')">Delete</button>`:''}
+      <button class="btn btn-ghost btn-sm" onclick="document.getElementById('snowAcctMod').remove()">Cancel</button>
+      <button class="btn btn-amber btn-sm" onclick="saveSnowAccountFromEditor('${a?a.id:''}')">Save</button>
+    </div>
+  </div></div>`;
+  document.body.insertAdjacentHTML('beforeend',html);
+  if(!a) setTimeout(()=>document.getElementById('saCustSearch')?.focus(),50);
+}
+function snowCustSearch(q){
+  const drop=document.getElementById('saCustDrop');
+  q=(q||'').trim().toLowerCase();
+  if(q.length<2){drop.innerHTML='';return;}
+  const digits=q.replace(/\D/g,'');
+  const hits=customers.filter(c=>!c.archived_at&&((c.name||'').toLowerCase().includes(q)||(digits&&(c.phone_normalized||c.phone||'').replace(/\D/g,'').includes(digits)))).slice(0,8);
+  drop.innerHTML=hits.map(c=>`<div class="lead-card" style="padding:8px 10px;cursor:pointer;margin:4px 0" onclick="snowPickCustomer('${c.id}')"><b>${esc(c.name||'')}</b> <span style="color:var(--muted);font-size:11px">${esc(formatPhone(c.phone||''))}</span></div>`).join('')||'<div style="font-size:12px;color:var(--muted);padding:6px">No matches</div>';
+}
+function snowPickCustomer(id){
+  const c=customers.find(x=>x.id===id);if(!c)return;
+  document.getElementById('saCustId').value=id;
+  document.getElementById('saCustSearch').value=c.name||'';
+  document.getElementById('saCustDrop').innerHTML='';
+  const addr=document.getElementById('saAddr');
+  if(!addr.value) addr.value=snowPrimaryAddress(id);
+}
+function saveSnowAccountFromEditor(id){
+  let a=id?snowAccountById(id):null;
+  const now=new Date().toISOString();
+  if(!a){
+    const cid=document.getElementById('saCustId').value;
+    if(!cid){alert('Pick a customer first.');return;}
+    if(snowAccounts.some(x=>x.customer_id===cid&&(x.address||'')===(document.getElementById('saAddr').value.trim()))){alert('That customer already has a snow account at this address.');return;}
+    a={id:'sa_'+uid(),customer_id:cid,sort_order:snowAccounts.length,created_at:now,updated_at:now};
+    snowAccounts.push(a);
+  }
+  a.address=document.getElementById('saAddr').value.trim();
+  a.price_per_push=parseFloat(document.getElementById('saPrice').value)||0;
+  a.active=document.getElementById('saActive').value==='1';
+  a.notes=document.getElementById('saNotes').value.trim();
+  if(!a.address){alert('Address is required — the route needs it for Maps.');return;}
+  saveSnowAccount(a);
+  document.getElementById('snowAcctMod')?.remove();
+  renderSnowView();
+}
+async function snowDeleteAccount(id){
+  if(snowVisits.some(v=>v.account_id===id&&!v.invoiced_doc_id)){alert('This account has uninvoiced visits. Invoice them first, or mark the account inactive instead.');return;}
+  if(!confirm('Delete this snow account? Past visits and invoices are kept.'))return;
+  snowAccounts=snowAccounts.filter(a=>a.id!==id);
+  snowRoutes.forEach(r=>{if((r.stop_ids||[]).includes(id)){r.stop_ids=r.stop_ids.filter(x=>x!==id);saveSnowRoute(r);}});
+  document.getElementById('snowAcctMod')?.remove();
+  renderSnowView();
+  try{await sb.del('snow_accounts',id);}catch(e){console.error(e);alert('Delete failed: '+e.message);}
+}
+
+// ── BILLING ──────────────────────────────────────────────────────────
+function snowUninvoicedVisits(accountId){
+  return snowVisits.filter(v=>v.account_id===accountId&&v.left_at&&!v.invoiced_doc_id)
+    .sort((x,y)=>(x.arrived_at||'').localeCompare(y.arrived_at||''));
+}
+function renderSnowBilling(){
+  const body=document.getElementById('snowBody');
+  const rows=snowAccounts.map(a=>{
+    const vs=snowUninvoicedVisits(a.id);
+    const amt=vs.reduce((s,v)=>s+(parseFloat(v.price)||0),0);
+    return `<div class="lead-card">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">
+        <div style="min-width:0;flex:1">
+          <div class="lead-name">${esc(snowCustomerName(a.customer_id))}</div>
+          <div style="font-size:12px;color:var(--muted)">${esc(a.address||'')}</div>
+          <div style="font-size:12px;margin-top:3px">${vs.length} uninvoiced push${vs.length===1?'':'es'} · <b style="color:var(--amber)">${snowFmtMoney(amt)}</b></div>
+        </div>
+        <div style="display:flex;gap:6px;flex-shrink:0;flex-wrap:wrap">
+          <button class="btn btn-ghost btn-sm" onclick="snowCreateEstimate('${a.id}')">Estimate</button>
+          <button class="btn btn-amber btn-sm" onclick="snowCreateInvoice('${a.id}')" ${vs.length?'':'disabled'}>Invoice ${vs.length?`(${vs.length})`:''}</button>
+        </div>
+      </div></div>`;
+  });
+  const snowDocs=docs.filter(d=>isSnowDocType(d.type)).sort((x,y)=>(y.created||0)-(x.created||0));
+  body.innerHTML=`
+    <div class="cust-sec-label">Ready to bill</div>
+    ${rows.length?rows.join(''):'<div class="lempty">No snow accounts yet.</div>'}
+    <div class="cust-sec-label" style="margin-top:14px">Snow documents</div>
+    ${snowDocs.length?snowDocs.slice(0,60).map(d=>{const cfg=getDocTypeConfig(d.type);return `<div class="lead-card" style="cursor:pointer;padding:9px 12px" onclick="openDocEditor('${d.id}')">
+      <div style="display:flex;justify-content:space-between;gap:8px;align-items:center">
+        <div><b style="color:${cfg.color}">${esc(d.num||'')}</b> ${esc(d.clientName||'')}<div style="font-size:11px;color:var(--muted)">${esc(d.date||'')} · ${(d.status||'draft').toUpperCase()}</div></div>
+        <div style="font-weight:600">${snowFmtMoney(calcDocTotal(d).grand)}</div>
+      </div></div>`;}).join(''):'<div class="lempty">No snow estimates or invoices yet.</div>'}`;
+}
+function _snowBaseDoc(a,type){
+  const c=customers.find(x=>x.id===a.customer_id)||{};
+  const d=new Date();const due=new Date(d.getTime()+15*864e5);
+  return {id:uid(),type,status:'draft',num:nextDocNum(type),customerId:a.customer_id,
+    clientName:c.name||'',clientContact:[formatPhone(c.phone||''),c.email||''].filter(Boolean).join(' · '),clientAddr:a.address||'',
+    date:snowToday(),dueDate:due.toISOString().split('T')[0],scope:'',lineItems:[],tax:0,discount:0,notes:'',
+    created:Date.now(),activity:[],checklist:[],extras:[],leadSource:'snow'};
+}
+function snowCreateEstimate(accountId){
+  const a=snowAccountById(accountId);if(!a)return;
+  const d=_snowBaseDoc(a,'snowestimate');
+  d.scope='Seasonal snow plowing — '+(a.address||'');
+  d.lineItems=[{cat:'labor',desc:'Snow plowing, per push (billed per visit)',qty:1,price:parseFloat(a.price_per_push)||0}];
+  d.notes='Billed per push at the rate above. Invoices are issued for completed visits.';
+  docs.push(d);saveDocs();saveDocSync(d);
+  switchMain('est');openDocEditor(d.id);
+}
+function snowCreateInvoice(accountId){
+  const a=snowAccountById(accountId);if(!a)return;
+  const vs=snowUninvoicedVisits(accountId);
+  if(!vs.length){alert('No completed, uninvoiced visits for this account.');return;}
+  const d=_snowBaseDoc(a,'snowinvoice');
+  d.status='invoiced';
+  d.scope='Snow plowing — '+(a.address||'');
+  d.lineItems=vs.map(v=>({cat:'labor',desc:'Snow plowing — '+snowFmtTs(v.arrived_at),qty:1,price:parseFloat(v.price)||0}));
+  docs.push(d);saveDocs();saveDocSync(d);
+  vs.forEach(v=>{v.invoiced_doc_id=d.id;saveSnowVisit(v);});
+  try{logDocActivity(d.id,`Snow invoice created from ${vs.length} visit${vs.length===1?'':'s'}`);}catch{}
+  switchMain('est');openDocEditor(d.id);
+}
+
+// ── SETTINGS (owner): company toggle + per-user access ───────────────
+function openSnowSettings(){
+  if(!isOwner()){alert('Only the owner can change snow plowing settings.');return;}
+  const html=`<div class="modal show" id="snowSetMod"><div class="modal-content" style="padding:18px">
+    <div class="mtitle" style="margin-bottom:12px">❄ Snow Plowing</div>
+    <label style="display:flex;gap:10px;align-items:center;font-size:14px;padding:10px;border:1px solid var(--iron);border-radius:8px;margin-bottom:14px;cursor:pointer">
+      <input type="checkbox" id="ssEnabled" ${snowEnabled()?'checked':''} style="accent-color:var(--amber);width:18px;height:18px" onchange="snowSetEnabled(this.checked)">
+      <span><b>Snow season is on</b><br><span style="font-size:11px;color:var(--muted)">Off hides the Snow tab for everyone. Data is kept.</span></span>
+    </label>
+    <div class="flbl">Who can see the Snow tab</div>
+    <div style="font-size:11px;color:var(--muted);margin-bottom:6px">Owners and managers always can. Check anyone else who runs routes.</div>
+    <div style="max-height:40vh;overflow-y:auto">
+      ${teamRoster.map(m=>{const always=m.role==='owner'||m.role==='manager';return `<label style="display:flex;gap:10px;align-items:center;padding:8px 4px;font-size:13px;${always?'opacity:.6':'cursor:pointer'}">
+        <input type="checkbox" ${always||m.snowAccess?'checked':''} ${always?'disabled':''} style="accent-color:var(--amber)" onchange="snowSetUserAccess('${m.id}',this.checked)">
+        <span>${esc(m.name)} <span style="color:var(--muted);font-size:11px">${esc(m.role)}</span></span>
+      </label>`;}).join('')||'<div class="lempty">No team members loaded.</div>'}
+    </div>
+    <div style="display:flex;justify-content:flex-end;margin-top:12px"><button class="btn btn-amber btn-sm" onclick="document.getElementById('snowSetMod').remove()">Done</button></div>
+  </div></div>`;
+  document.body.insertAdjacentHTML('beforeend',html);
+}
+async function snowSetEnabled(on){
+  setSS('syncing','Saving…');
+  try{
+    const r=await fetch(SB_URL+'/rest/v1/companies?id=eq.'+encodeURIComponent(currentCompanyId),{
+      method:'PATCH',
+      headers:{'apikey':SB_KEY,'Authorization':'Bearer '+authAccessToken,'Content-Type':'application/json','Prefer':'return=representation'},
+      body:JSON.stringify({snow_enabled:!!on})
+    });
+    if(!r.ok) throw new Error('PATCH failed: '+r.status+' '+(await r.text()));
+    const rows=await r.json();
+    if(!rows.length) throw new Error('No company row updated — check the companies_owner_update policy from the migration.');
+    if(currentCompany) currentCompany.snow_enabled=!!on;
+    setSS('synced','Saved ✓');setTimeout(()=>{const l=document.getElementById('syncLbl');if(l)l.textContent='';},2000);
+    applyRoleBasedUI();
+    if(on) loadSnowRemote();
+  }catch(e){
+    console.error(e);setSS('error','Save failed');alert('Could not save: '+e.message);
+    const cb=document.getElementById('ssEnabled');if(cb)cb.checked=!on;
+  }
+}
+async function snowSetUserAccess(userId,on){
+  setSS('syncing','Saving…');
+  try{
+    const r=await fetch(SB_URL+'/rest/v1/profiles?user_id=eq.'+encodeURIComponent(userId),{
+      method:'PATCH',
+      headers:{'apikey':SB_KEY,'Authorization':'Bearer '+authAccessToken,'Content-Type':'application/json','Prefer':'return=representation'},
+      body:JSON.stringify({snow_access:!!on,updated_at:new Date().toISOString()})
+    });
+    if(!r.ok) throw new Error('PATCH failed: '+r.status);
+    const m=teamRoster.find(t=>t.id===userId);if(m)m.snowAccess=!!on;
+    if(userId===currentUser?.id){currentSnowAccess=!!on;applyRoleBasedUI();}
+    setSS('synced','Saved ✓');setTimeout(()=>{const l=document.getElementById('syncLbl');if(l)l.textContent='';},2000);
+  }catch(e){console.error(e);setSS('error','Save failed');alert('Could not save: '+e.message);}
+}
+
 try{ _registerSW(); }catch(e){}
 try{ _refreshPushBtn(); }catch(e){}
 
@@ -14485,6 +15560,18 @@ try{ _refreshPushBtn(); }catch(e){}
       </div>
     </div>
   </div>
+</div>
+
+<!-- ═══ JOB PAGE OVERLAY (Jobs tab → one job) ═══ -->
+<div class="jp-overlay" id="jpOverlay">
+  <div class="jp-hdr">
+    <div class="jp-hdr-txt">
+      <div class="jp-hdr-name" id="jpName"></div>
+      <div class="jp-hdr-sub" id="jpSub"></div>
+    </div>
+    <button class="btn btn-ghost btn-sm" onclick="closeJobPage()">✕</button>
+  </div>
+  <div class="jp-body" id="jpBody"></div>
 </div>
 
 <!-- ═══ WALKTHROUGH (PHOTO ESTIMATE) OVERLAY ═══ -->
@@ -14697,6 +15784,7 @@ try{ _refreshPushBtn(); }catch(e){}
           <select class="finput" id="tmAddRole" style="flex:0 0 130px;">
             <option value="manager">Manager</option>
             <option value="salesman" selected>Salesman</option>
+            <option value="project_manager">Project Manager</option>
             <option value="laborer">Crew (Laborer)</option>
             <option value="owner">Owner</option>
           </select>
