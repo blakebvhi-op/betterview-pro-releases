@@ -1123,10 +1123,9 @@ select.doc-finput option{background:var(--steel-mid);}
 .jobs-title{font-family:'Bebas Neue',sans-serif;font-size:22px;letter-spacing:2px;color:var(--amber);}
 .jobs-filters{display:flex;gap:6px;flex-wrap:wrap;}
 #vSnow.active{display:block;overflow-y:auto;}
-#vJobs.active{display:block;overflow-y:auto;-webkit-overflow-scrolling:touch;}
 .jobs-sec{margin:14px 0 6px;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--muted);font-weight:700;display:flex;align-items:center;gap:8px;}
 .jobs-sec .cnt{background:var(--iron);color:var(--ink,#334155);border-radius:10px;padding:1px 8px;font-size:10px;}
-.jobs-card{display:flex;gap:12px;align-items:center;padding:12px 14px;border:1px solid var(--iron);border-left:4px solid var(--amber);border-radius:10px;background:var(--steel-mid);margin-bottom:8px;cursor:pointer;transition:border-color .12s;}
+.jobs-card{display:flex;gap:12px;align-items:center;padding:12px 14px;border:1px solid var(--iron);border-left:4px solid var(--amber);border-radius:10px;background:var(--bg-card,#1a1c20);margin-bottom:8px;cursor:pointer;transition:border-color .12s;}
 .jobs-card:active{border-color:var(--amber);}
 .jobs-card-main{flex:1;min-width:0;}
 .jobs-card-name{font-weight:700;font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
@@ -1148,19 +1147,19 @@ select.doc-finput option{background:var(--steel-mid);}
 .jp-body{flex:1;overflow-y:auto;padding:14px 14px 40px;max-width:900px;width:100%;margin:0 auto;-webkit-overflow-scrolling:touch;}
 .jp-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;}
 .jp-actions .btn,.jp-actions a.btn{justify-content:center;padding:14px;font-size:15px;text-decoration:none;}
-.jp-card{border:1px solid var(--iron);border-radius:10px;background:var(--steel-mid);color:var(--white);padding:12px 14px;margin-bottom:12px;}
+.jp-card{border:1px solid var(--iron);border-radius:10px;background:var(--bg-card,#1a1c20);padding:12px 14px;margin-bottom:12px;}
 .jp-card h3{font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--amber);font-weight:700;margin:0 0 8px;padding-bottom:6px;border-bottom:1px dashed var(--iron);}
 .jp-row{display:flex;justify-content:space-between;gap:8px;padding:5px 0;font-size:13px;align-items:baseline;}
 .jp-row .l{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.06em;flex-shrink:0;}
 .jp-row .v{text-align:right;word-break:break-word;}
 .jp-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
-.jp-scope{font-size:13px;line-height:1.6;white-space:pre-wrap;padding:4px 0 8px;color:var(--white);}
+.jp-scope{font-size:13px;line-height:1.6;white-space:pre-wrap;padding:4px 0 8px;}
 .jp-item{display:flex;gap:10px;padding:10px 0;border-bottom:1px solid var(--iron);align-items:flex-start;}
 .jp-item:last-child{border-bottom:none;}
 .jp-chk{flex-shrink:0;width:24px;height:24px;border:2px solid var(--iron);border-radius:5px;display:flex;align-items:center;justify-content:center;margin-top:1px;cursor:pointer;background:var(--steel-light);font-weight:900;}
 .jp-item.done .jp-chk{background:#22c55e;border-color:#22c55e;color:#fff;}
 .jp-item.done .jp-txt{text-decoration:line-through;color:var(--muted);}
-.jp-txt{flex:1;font-size:14px;line-height:1.45;color:var(--white);}
+.jp-txt{flex:1;font-size:14px;line-height:1.45;}
 .jp-qty{font-size:11px;color:var(--muted);}
 .jp-photos{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;}
 .jp-photos img{width:72px;height:72px;object-fit:cover;border-radius:6px;border:1px solid var(--iron);cursor:pointer;display:block;}
@@ -1177,7 +1176,7 @@ select.doc-finput option{background:var(--steel-mid);}
 .wt-hdr-sub{font-size:12px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .wt-list{flex:1;overflow-y:auto;padding:12px 14px 120px;-webkit-overflow-scrolling:touch;}
 .wt-empty{text-align:center;color:var(--muted);font-size:13px;padding:50px 20px;line-height:1.6;}
-.wt-item{display:flex;gap:10px;padding:10px;border:1px solid var(--iron);border-radius:10px;background:var(--steel-mid);margin-bottom:8px;align-items:flex-start;}
+.wt-item{display:flex;gap:10px;padding:10px;border:1px solid var(--iron);border-radius:10px;background:var(--bg-card,#1a1c20);margin-bottom:8px;align-items:flex-start;}
 .wt-item-img{width:72px;height:72px;border-radius:8px;object-fit:cover;flex-shrink:0;background:var(--steel-light);cursor:pointer;}
 .wt-item-noimg{width:72px;height:72px;border-radius:8px;flex-shrink:0;background:var(--steel-light);display:flex;align-items:center;justify-content:center;font-size:24px;color:var(--muted);}
 .wt-item-body{flex:1;min-width:0;}
@@ -1893,7 +1892,6 @@ body:not(.role-owner):not(.role-manager) .role-financial-only{display:none!impor
         <div class="jobs-title" id="jobsTitle">🔧 JOBS</div>
         <div class="jobs-filters" id="jobsFilters"></div>
       </div>
-      <div id="jobsQuickRow" style="margin-bottom:10px;display:none"><button class="btn btn-amber btn-sm" onclick="openQuickJob()">+ New Job (no estimate)</button></div>
       <div id="jobsBody"></div>
     </div>
   </div>
@@ -2481,72 +2479,6 @@ body:not(.role-owner):not(.role-manager) .role-financial-only{display:none!impor
 </div>
 
 <!-- ═══ NOTE FOR TODAY (Execulist board) ═══ -->
-<!-- ═══ SPLIT / DUPLICATE WORK ORDER ═══ -->
-<div class="mov" id="splitJobMov">
-  <div class="modal">
-    <div class="mhandle"></div>
-    <div class="mtitle">⧉ DUPLICATE / SPLIT WORK ORDER</div>
-    <div style="font-size:12px;color:var(--muted);margin:-6px 0 10px;line-height:1.5">Makes a second work order and job for the same customer — e.g. roofing on one crew, gutters on another. Pick which tasks go on the new one.</div>
-    <div class="frow">
-      <div><label class="flbl">New job type</label>
-        <select class="finput" id="sjType">
-          <option value="repair">🔧 Repair</option>
-          <option value="roof_replace">🏠 Roof Replacement</option>
-          <option value="siding_replace">🪟 Siding Replacement</option>
-          <option value="gutter_replace">🌧️ Gutter Replacement</option>
-        </select>
-      </div>
-      <div><label class="flbl">Tasks</label>
-        <select class="finput" id="sjMode">
-          <option value="move" selected>Move selected to new WO</option>
-          <option value="copy">Copy selected (keep on both)</option>
-        </select>
-      </div>
-    </div>
-    <div class="fg"><label class="flbl">Tasks for the new work order</label>
-      <div style="display:flex;gap:8px;margin-bottom:6px"><button class="btn btn-ghost btn-xs" onclick="sjSelectAll(true)">All</button><button class="btn btn-ghost btn-xs" onclick="sjSelectAll(false)">None</button></div>
-      <div id="sjTasks" style="max-height:38vh;overflow-y:auto;border:1px solid var(--iron);border-radius:8px;padding:6px 10px"></div>
-    </div>
-    <div class="fg"><label class="flbl">Scope note for new WO (optional)</label><input class="finput" id="sjScope" placeholder="e.g. Gutters only" autocomplete="off"/></div>
-    <div class="macts">
-      <button class="btn btn-ghost" onclick="closeMov('splitJobMov')">Cancel</button>
-      <button class="btn btn-amber" onclick="saveSplitJob()">Create New Job →</button>
-    </div>
-  </div>
-</div>
-
-<!-- ═══ QUICK JOB (production job with no estimate) ═══ -->
-<div class="mov" id="quickJobMov">
-  <div class="modal">
-    <div class="mhandle"></div>
-    <div class="mtitle">🔧 NEW JOB</div>
-    <div style="font-size:12px;color:var(--muted);margin:-6px 0 10px;line-height:1.5">For small fixes and punch-list work that don't need an estimate. Goes straight to Jobs → Needs Crew for the project manager to schedule.</div>
-    <div class="fg"><label class="flbl">Customer</label>
-      <input class="finput" id="qjCust" list="qjCustList" placeholder="Start typing a customer name…" autocomplete="off" oninput="qjPickCustomer(this.value)"/>
-      <datalist id="qjCustList"></datalist>
-    </div>
-    <div class="fg"><label class="flbl">Job Address</label><input class="finput" id="qjAddr" placeholder="Street, City" autocomplete="off"/></div>
-    <div class="fg"><label class="flbl">Contact</label><input class="finput" id="qjContact" placeholder="Phone" autocomplete="off"/></div>
-    <div class="fg"><label class="flbl">What needs to be done</label><textarea class="finput" id="qjScope" rows="3" placeholder="e.g. Reseal chimney flashing, replace two cracked shingles on north slope"></textarea></div>
-    <div class="fg"><label class="flbl">Tasks (one per line, optional)</label><textarea class="finput" id="qjTasks" rows="3" placeholder="Remove old sealant&#10;Apply new flashing sealant&#10;Replace 2 shingles"></textarea></div>
-    <div class="frow">
-      <div><label class="flbl">Type</label>
-        <select class="finput" id="qjType">
-          <option value="repair" selected>🔧 Repair</option>
-          <option value="roof_replace">🏠 Roof Replacement</option>
-          <option value="siding_replace">🪟 Siding Replacement</option>
-          <option value="gutter_replace">🌧️ Gutter Replacement</option>
-        </select>
-      </div>
-      <div><label class="flbl">Notes for crew</label><input class="finput" id="qjNotes" placeholder="Gate code, dog, etc." autocomplete="off"/></div>
-    </div>
-    <div class="macts">
-      <button class="btn btn-ghost" onclick="closeMov('quickJobMov')">Cancel</button>
-      <button class="btn btn-amber" onclick="saveQuickJob()">Create Job →</button>
-    </div>
-  </div>
-</div>
-
 <div class="mov" id="exNoteMov">
   <div class="modal">
     <div class="mhandle"></div>
@@ -5933,12 +5865,12 @@ function switchMain(v){
   document.getElementById(viewMap[v]||'vSched').classList.add('active');
   ['bnHome','bnSched','bnJobs','bnSnow','bnCRM','bnEst','bnTasks','bnPipe','bnMsg'].forEach(id=>{const el=document.getElementById(id);if(el)el.classList.toggle('active',id==='bn'+v.charAt(0).toUpperCase()+v.slice(1));});
   ['dtHome','dtSched','dtJobs','dtSnow','dtCRM','dtEst','dtTasks','dtPipe','dtMsg'].forEach(id=>{const el=document.getElementById(id);if(el)el.classList.toggle('active',id==='dt'+v.charAt(0).toUpperCase()+v.slice(1));});
-  const lblMap={home:'New Job',sched:'New Job',jobs:(isLaborer()?'↻ Refresh':'New Job'),snow:'↻ Refresh',crm:'New Customer',est:'New Estimate',tasks:'New Task',pipe:'New Estimate',msg:'↻ Refresh',mat:'Search'};
+  const lblMap={home:'New Job',sched:'New Job',jobs:'↻ Refresh',snow:'↻ Refresh',crm:'New Customer',est:'New Estimate',tasks:'New Task',pipe:'New Estimate',msg:'↻ Refresh',mat:'Search'};
   document.getElementById('daddLbl').textContent=lblMap[v]||'New';
   document.getElementById('daddBtn').onclick=
     v==='home'?()=>openJobMov('backlog'):
     v==='sched'?()=>openJobMov('backlog'):
-    v==='jobs'?()=>(isLaborer()?renderJobsView():openQuickJob()):
+    v==='jobs'?()=>renderJobsView():
     v==='snow'?()=>loadSnowRemote():
     v==='crm'?()=>openCustomerMov():
     v==='est'?()=>openDocEditor():
@@ -5960,7 +5892,7 @@ function switchMain(v){
 function handleFab(){
   if(mainView==='home')openJobMov('backlog');
   else if(mainView==='sched')openJobMov('backlog');
-  else if(mainView==='jobs'){if(isLaborer())renderJobsView();else openQuickJob();}
+  else if(mainView==='jobs')renderJobsView();
   else if(mainView==='snow')loadSnowRemote();
   else if(mainView==='crm')openCustomerMov();
   else if(mainView==='est')openDocEditor();
@@ -11046,7 +10978,6 @@ function renderJobsView(){
       `<button class="btn btn-ghost btn-xs" style="${jobsFilter===k?'border-color:var(--amber);color:var(--amber);':''}" onclick="jobsFilter='${k}';renderJobsView()">${l}</button>`).join('');
   }
   document.getElementById('jobsTitle').textContent=isLaborer()?'🔧 MY JOBS':'🔧 JOBS';
-  { const qr=document.getElementById('jobsQuickRow'); if(qr) qr.style.display=isLaborer()?'none':''; }
   const card=j=>{
     const st=jobStatusOf(j)||'unassigned';
     const wo=j.linkedDocId?docs.find(d=>d.id===j.linkedDocId):null;
@@ -11138,15 +11069,6 @@ function renderJobPage(){
   html+=wo?`<button class="btn btn-amber" onclick="document.getElementById('jpWo').scrollIntoView({behavior:'smooth',block:'start'})">📋 View Job</button>`:`<button class="btn btn-ghost" disabled style="opacity:.6">📋 No work order</button>`;
   html+='</div>';
 
-  // Management actions: complete / reopen / delete
-  if(mgmt){
-    html+='<div class="jp-status-bar">';
-    if(st!=='complete') html+=`<button class="btn btn-amber" style="background:#22c55e;color:#fff" onclick="setJobStatus('${j.id}','complete')">✓ Mark Complete</button>`;
-    else html+=`<button class="btn btn-ghost" onclick="setJobStatus('${j.id}','scheduled')">↩ Reopen</button>`;
-    html+=`<button class="btn btn-ghost" style="color:var(--danger);border-color:var(--danger)" onclick="deleteProductionJob('${j.id}')">🗑 Delete Job</button>`;
-    if(wo) html+=`<button class="btn btn-ghost" style="grid-column:1/-1" onclick="openSplitJob('${j.id}')">⧉ Duplicate / Split Work Order</button>`;
-    html+='</div>';
-  }
   // Crew actions: start / complete
   if(!mgmt&&userOnJob(j)){
     html+='<div class="jp-status-bar">';
@@ -11171,7 +11093,7 @@ function renderJobPage(){
   if(mgmt){
     const crewOpts='<option value="">— Select crew —</option>'+(crews||[]).map(c=>`<option value="${esc(c.id)}"${c.id===j.crewId?' selected':''}>${esc(c.name)}${crewMemberIds(c.id).length?' ('+crewMemberIds(c.id).length+')':''}</option>`).join('');
     const stOpts=Object.entries(JOB_STATUS).map(([k,v])=>`<option value="${k}"${k===st?' selected':''}>${v.label}</option>`).join('');
-    html+=`<div class="jp-card"><h3>Assign &amp; Schedule <span style="font-weight:400;letter-spacing:0;text-transform:none;color:var(--muted)">· project manager</span></h3>
+    html+=`<div class="jp-card"><h3>Assign &amp; Schedule</h3>
       <div class="fg"><label class="flbl">Crew</label><select class="finput" id="jpCrew">${crewOpts}</select></div>
       <div class="jp-grid">
         <div><label class="flbl">Start</label><input class="finput" type="date" id="jpStart" value="${j.day&&j.day!=='backlog'?esc(j.day):''}"/></div>
@@ -11265,9 +11187,6 @@ function saveJobAssignment(jobId){
   if(old!==status) bits.push('status → '+(JOB_STATUS[status]?.label||status));
   if(bits.length) j.activity.push({ts:new Date().toISOString(),msg:bits.join(' · ')+' ('+(currentDisplayName||'')+')'});
   saveJob(j);
-  // Keep the work order's printed "Scheduled" / "Arrival" in step with the job
-  const wo=j.linkedDocId?docs.find(d=>d.id===j.linkedDocId&&d.type==='workorder'):null;
-  if(wo&&(wo.date!==(start||'')||wo.arrival!==(time||''))){wo.date=start||'';wo.arrival=time||'';saveDocSync(wo);}
   if(!jobsHaveStatus) alert('Saved crew and dates. Job status will not persist until production-pipeline-MIGRATION.sql is run.');
   setSS('synced','Saved ✓');setTimeout(()=>{const l=document.getElementById('syncLbl');if(l)l.textContent='';},2000);
   renderJobPage();
@@ -11292,168 +11211,6 @@ function setJobStatus(jobId,status){
       }).catch(()=>{});
     }catch{}
   }
-}
-
-// ── SPLIT / DUPLICATE WORK ORDER ─────────────────────────────
-// One sold job that needs two crews (roof + gutters, siding + repair…):
-// clone the work order into a second WO + job for the same customer, and
-// move (or copy) the chosen checklist tasks onto it. Photos go with tasks.
-let sjJobId=null;
-function openSplitJob(jobId){
-  if(!isOwnerOrManager()) return;
-  const j=jobs.find(x=>x.id===jobId);
-  const wo=j&&j.linkedDocId?docs.find(d=>d.id===j.linkedDocId&&d.type==='workorder'):null;
-  if(!j||!wo){alert('This job has no work order to duplicate.');return;}
-  sjJobId=jobId;
-  const items=Array.isArray(wo.checklist)?wo.checklist:[];
-  document.getElementById('sjTasks').innerHTML=items.length?items.map((it,i)=>
-    `<label style="display:flex;gap:8px;align-items:flex-start;padding:6px 0;border-bottom:1px solid var(--iron);font-size:13px;cursor:pointer"><input type="checkbox" class="sj-cb" data-i="${i}" style="margin-top:3px"/><span>${esc(it.desc||'')}${it.qty&&Number(it.qty)>1?' ×'+esc(it.qty):''}${(it.photos||[]).length?' 📷':''}</span></label>`).join('')
-    :'<div style="font-size:12px;color:var(--muted);padding:8px 0">No tasks on this work order — the copy will have the scope only.</div>';
-  document.getElementById('sjScope').value='';
-  document.getElementById('sjType').value=normalizeApptType(j.apptType)||'repair';
-  document.getElementById('sjMode').value='move';
-  openMov('splitJobMov');
-}
-function sjSelectAll(on){document.querySelectorAll('#sjTasks .sj-cb').forEach(c=>c.checked=on);}
-function saveSplitJob(){
-  const j=jobs.find(x=>x.id===sjJobId);
-  const wo=j&&j.linkedDocId?docs.find(d=>d.id===j.linkedDocId&&d.type==='workorder'):null;
-  if(!j||!wo) return;
-  const picked=[...document.querySelectorAll('#sjTasks .sj-cb')].filter(c=>c.checked).map(c=>parseInt(c.dataset.i));
-  const mode=document.getElementById('sjMode').value||'move';
-  const type=document.getElementById('sjType').value||'repair';
-  const scopeNote=(document.getElementById('sjScope').value||'').trim();
-  const items=Array.isArray(wo.checklist)?wo.checklist:[];
-  if(items.length&&!picked.length&&!confirm('No tasks selected — create the new work order with the scope only?')) return;
-  const moved=picked.map(i=>JSON.parse(JSON.stringify(items[i]))).map(it=>({...it,done:false}));
-  const nwo={
-    id:uid(),type:'workorder',status:'pending',num:nextWoNum(),
-    sourceEstId:wo.sourceEstId||null,sourceEstNum:wo.sourceEstNum||'',
-    clientName:wo.clientName||'',clientContact:wo.clientContact||'',clientAddr:wo.clientAddr||'',
-    date:'',arrival:'',
-    scope:scopeNote||wo.scope||'',
-    checklist:moved,extras:[],notes:wo.notes||'',pmId:wo.pmId||'',created:Date.now(),
-    activity:[{ts:new Date().toISOString(),msg:'Split from '+(wo.num||'work order')+' by '+(currentDisplayName||'')}]
-  };
-  if(mode==='move'&&picked.length){
-    const keep=new Set(picked);
-    wo.checklist=items.filter((_,i)=>!keep.has(i));
-    wo.activity=wo.activity||[];wo.activity.push({ts:new Date().toISOString(),msg:picked.length+' task(s) moved to '+nwo.num});
-  }
-  docs.push(nwo);
-  const lead=j.leadId?leads.find(l=>l.id===j.leadId):null;
-  const nj={
-    id:uid(),
-    title:(lead?.name||wo.clientName||j.title)+' – '+(APPT_TYPES[type]?.label||'Repair'),
-    note:j.note||'',
-    color:j.color||'green',day:'backlog',endDay:'',
-    leadId:j.leadId||null,estId:j.estId||null,
-    photos:[],checklist:[],
-    apptType:type,startTime:'',endTime:'',
-    assigneeId:null,assigneeIds:[],crewId:null,
-    status:'unassigned',linkedDocId:nwo.id,linkedMoId:null,
-    activity:[{ts:new Date().toISOString(),msg:'Split from job '+(wo.num||'')+' → '+nwo.num+' ('+(currentDisplayName||'')+')'}]
-  };
-  nwo.linkedJobId=nj.id;
-  jobs.push(nj);
-  saveDocSync(nwo);saveDocSync(wo);saveJob(nj);
-  closeMov('splitJobMov');
-  updateBadges();
-  if(mainView==='jobs') renderJobsView();
-  openJobPage(nj.id);
-}
-
-// ── QUICK JOB: production job with no estimate ───────────────
-// Small fixes / punch-list items. Creates a bare work order (so the crew
-// job page has a scope + checklist to show) and a job in Needs Crew.
-let qjLeadId=null;
-function openQuickJob(){
-  if(!isOwnerOrManager()&&!isSalesman()){alert('Only office roles can create jobs.');return;}
-  qjLeadId=null;
-  ['qjCust','qjAddr','qjContact','qjScope','qjTasks','qjNotes'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
-  document.getElementById('qjType').value='repair';
-  // Customer suggestions: lead names (one entry per name)
-  const dl=document.getElementById('qjCustList');
-  if(dl){
-    const seen=new Set();
-    dl.innerHTML=leads.filter(l=>l.name&&!seen.has(l.name)&&seen.add(l.name))
-      .sort((a,b)=>a.name.localeCompare(b.name))
-      .map(l=>`<option value="${esc(l.name)}">${esc(l.address||'')}</option>`).join('');
-  }
-  openMov('quickJobMov');
-  setTimeout(()=>document.getElementById('qjCust')?.focus(),100);
-}
-function qjPickCustomer(name){
-  const l=leads.find(x=>x.name===name);
-  qjLeadId=l?l.id:null;
-  if(l){
-    const a=document.getElementById('qjAddr'),c=document.getElementById('qjContact');
-    if(a&&!a.value) a.value=l.address||'';
-    if(c&&!c.value) c.value=l.phone||l.contact||'';
-  }
-}
-function saveQuickJob(){
-  const name=(document.getElementById('qjCust').value||'').trim();
-  const addr=(document.getElementById('qjAddr').value||'').trim();
-  const contact=(document.getElementById('qjContact').value||'').trim();
-  const scope=(document.getElementById('qjScope').value||'').trim();
-  const tasks=(document.getElementById('qjTasks').value||'').split('\n').map(t=>t.trim()).filter(Boolean);
-  const type=document.getElementById('qjType').value||'repair';
-  const notes=(document.getElementById('qjNotes').value||'').trim();
-  if(!name&&!addr){alert('Enter a customer name or a job address.');return;}
-  if(!scope&&!tasks.length){alert('Describe what needs to be done.');return;}
-  loadDocs();
-  const lead=qjLeadId?leads.find(l=>l.id===qjLeadId):leads.find(l=>l.name===name)||null;
-  // Bare work order so the job page has something to show the crew
-  const wo={
-    id:uid(),type:'workorder',status:'pending',num:nextWoNum(),
-    sourceEstId:null,sourceEstNum:'',
-    clientName:name||lead?.name||'',clientContact:contact,clientAddr:addr,
-    date:'',arrival:'',scope,
-    checklist:tasks.map(t=>({desc:t,qty:1,cat:'labor',done:false})),
-    extras:[],notes,pmId:'',created:Date.now(),
-    activity:[{ts:new Date().toISOString(),msg:'Created as a quick job (no estimate) by '+(currentDisplayName||'')}]
-  };
-  docs.push(wo);saveDocSync(wo);
-  const job={
-    id:uid(),
-    title:(name||addr)+' – '+(APPT_TYPES[type]?.label||'Repair'),
-    note:[addr,contact,scope?scope.slice(0,120):''].filter(Boolean).join(' | '),
-    color:'orange',day:'backlog',endDay:'',
-    leadId:lead?lead.id:null,estId:null,
-    photos:[],checklist:[],
-    apptType:type,startTime:'',endTime:'',
-    assigneeId:null,assigneeIds:[],crewId:null,
-    status:'unassigned',linkedDocId:wo.id,
-    activity:[{ts:new Date().toISOString(),msg:'Quick job created · '+(wo.num||'')+' ('+(currentDisplayName||'')+')'}]
-  };
-  wo.linkedJobId=job.id;saveDocSync(wo);
-  jobs.push(job);saveJob(job);
-  closeMov('quickJobMov');
-  updateBadges();
-  if(mainView!=='jobs'&&canSeeTab('jobs')) switchMain('jobs'); else renderJobsView();
-  openJobPage(job.id);
-}
-
-// Delete a production job. The work order (and material order) stay in
-// Estimates, just unlinked, so nothing on the estimate side is lost.
-async function deleteProductionJob(jobId){
-  if(!isOwnerOrManager()){alert('Only owners / managers can delete jobs.');return;}
-  const j=jobs.find(x=>x.id===jobId);
-  if(!j) return;
-  const wo=j.linkedDocId?docs.find(d=>d.id===j.linkedDocId):null;
-  const msg='Delete this job?\n\n'+jobCustomerName(j)+(jobAddress(j)?'\n'+jobAddress(j):'')
-    +(wo?'\n\nThe work order '+(wo.num||'')+' is kept in Estimates (unlinked). Delete it there if you don\'t want it.':'')
-    +'\n\nThis cannot be undone.';
-  if(!confirm(msg)) return;
-  if(wo&&wo.linkedJobId===j.id){wo.linkedJobId=null;saveDocSync(wo);}
-  const mo=j.linkedMoId?docs.find(d=>d.id===j.linkedMoId):null;
-  if(mo&&mo.linkedJobId===j.id){mo.linkedJobId=null;saveDocSync(mo);}
-  jobs=jobs.filter(x=>x.id!==j.id);
-  closeJobPage();
-  await delJob(j.id);
-  updateBadges();
-  if(mainView==='jobs') renderJobsView();
 }
 
 function toggleJobTask(woId,idx){
@@ -11750,7 +11507,7 @@ function buildWorkOrderFromEstimate(est){
     clientName:est.clientName||'',
     clientContact:est.clientContact||'',
     clientAddr:est.clientAddr||'',
-    date:'',            // scheduled date is set by the PM on the job page, not from the estimate
+    date:est.date||new Date().toISOString().slice(0,10),
     arrival:'',
     scope:est.scope||'',
     checklist:(est.lineItems||[]).filter(li=>(li.desc||'').trim()).map(li=>({
@@ -11846,7 +11603,7 @@ function sendEstimateToProduction(){
   if(!lead&&docLinkedLeadId) lead=leads.find(l=>l.id===docLinkedLeadId);
   if(!lead){alert('Link a customer to this estimate first.');return;}
   if(lead.estId!==d.id){lead.estId=d.id;}
-  if(!confirm('Send '+(d.num||'this estimate')+' to production?\n\nThis creates the work order and puts the job in the Jobs tab under "Needs Crew". No dates or crew needed now — the project manager schedules it.')) return;
+  if(!confirm('Send '+(d.num||'this estimate')+' to production?\n\nThis creates the work order and puts the job in the Jobs tab for crew assignment.')) return;
   const order=['new','contact','quote','accepted'];
   if(order.indexOf(lead.stage)<order.indexOf('accepted')){
     lead.activity=lead.activity||[];lead.activity.push({ts:new Date().toISOString(),msg:'Stage → Accepted (sent to production)'});
@@ -11854,12 +11611,7 @@ function sendEstimateToProduction(){
   }
   saveLead(lead);
   const job=sendToProduction(lead);
-  if(job){
-    const ed=document.getElementById('docEditor');if(ed)ed.classList.remove('open');editDocId=null;
-    const wo=job.linkedDocId?docs.find(x=>x.id===job.linkedDocId):null;
-    switchMain(canSeeTab('jobs')?'jobs':'est');
-    alert('✓ Sent to production'+(wo?' — '+(wo.num||'work order')+' created':'')+'.\n\nThe job is in Jobs → Needs Crew. The project manager assigns a crew and dates from there.');
-  }
+  if(job){const ed=document.getElementById('docEditor');if(ed)ed.classList.remove('open');editDocId=null;switchMain('jobs');openJobPage(job.id);}
 }
 
 function openWorkOrder(woId){
@@ -15292,7 +15044,7 @@ async function snowPatch(table,id,fields){
     setSS('synced','Saved ✓');setTimeout(()=>{const l=document.getElementById('syncLbl');if(l)l.textContent='';},2000);
   }catch(e){console.error('snowPatch:',e);setSS('error','Save failed');}
 }
-function saveSnowVisit(v){v.updated_at=new Date().toISOString();setSS('syncing','Saving…');queueSave('snow_visits',v);}
+function saveSnowVisit(v){v.updated_at=new Date().toISOString();delete v.edited_by;setSS('syncing','Saving…');queueSave('snow_visits',v);}
 
 // ── helpers ──────────────────────────────────────────────────────────
 function snowCustomerName(id){const c=customers.find(x=>x.id===id);return c?c.name:'(customer removed)';}
@@ -15438,7 +15190,7 @@ function renderSnowRunPage(id){
       else if(state==='arrived') btn=`<button class="btn btn-sm" style="background:#22c55e;color:#fff" onclick="snowTapStop('${run.id}','${a.id}')">Done — leaving</button>`;
       else btn=`<span style="color:#22c55e;font-size:12px;font-weight:600">✓ Done</span>`;
     } else if(state==='done') btn=`<span style="color:#22c55e;font-size:12px;font-weight:600">✓ Done</span>`;
-    const times=v?`<div style="font-size:11px;color:var(--muted);margin-top:3px">${v.arrived_at?'Arrived '+snowFmtTs(v.arrived_at):''}${v.left_at?' · Left '+snowFmtTs(v.left_at):''}${v.user_id?' · '+esc(snowDriverName(v.user_id)):''}</div>`:'';
+    const times=v?`<div style="font-size:11px;color:var(--muted);margin-top:3px">${v.arrived_at?'Arrived '+snowFmtTs(v.arrived_at):''}${v.left_at?' · Left '+snowFmtTs(v.left_at):''}${v.user_id?' · '+esc(snowDriverName(v.user_id)):''}${v.invoiced_doc_id?' · <span style="color:#22c55e">invoiced</span>':''}${manage?` · <a href="#" onclick="event.preventDefault();openSnowVisitEditor('${v.id}')" style="color:var(--amber)">edit</a>`:''}</div>`:'';
     const border=state==='done'?'#22c55e':state==='arrived'?'#f59e0b':'var(--iron)';
     // Reorder / drop a stop on THIS run (saved route is untouched). Only
     // while the run is open and the stop hasn't been started.
@@ -15464,6 +15216,7 @@ function renderSnowRunPage(id){
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap">
       <button class="btn btn-ghost btn-sm" onclick="closeSnowRun()">← Runs</button>
       <div class="lead-name" style="flex:1">❄ ${esc(rt?rt.name:'Route')} <span style="font-size:12px;color:var(--muted);font-weight:400">${esc(run.run_date||'')} · ${esc(snowDriverName(run.assigned_to))} · ${p.done}/${p.total}</span></div>
+      ${manage&&run.status!=='done'?`<button class="btn btn-ghost btn-sm" onclick="openSnowAddStop('${run.id}')">+ Add stop</button>`:''}
       ${manage?`<button class="btn btn-ghost btn-sm" onclick="openSnowRunEditor('${run.route_id}','${run.id}')">Edit</button>`:''}
     </div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">
@@ -15504,6 +15257,82 @@ function snowRunRemoveStop(runId,accountId){
   if(!confirm('Remove this stop from today\'s run? The saved route keeps it.'))return;
   run.stop_ids=snowRunStopIds(run).filter(x=>x!==accountId);
   saveSnowRun(run);renderSnowView();
+}
+// Add any account to this run (end of the list). Doesn't touch the saved route.
+function openSnowAddStop(runId){
+  const run=snowRunById(runId);if(!run)return;
+  const on=new Set(snowRunStopIds(run));
+  const avail=snowAccounts.filter(a=>!on.has(a.id));
+  const html=`<div class="modal show" id="snowAddStopMod"><div class="modal-content" style="padding:18px">
+    <div class="mtitle" style="margin-bottom:10px">Add stop to this run</div>
+    <input class="finput" id="asFilter" placeholder="Filter by name or address…" oninput="snowAddStopFilter(this.value)" autocomplete="off" style="margin-bottom:8px">
+    <div id="asList" style="max-height:45vh;overflow-y:auto;border:1px solid var(--iron);border-radius:8px;padding:6px;margin-bottom:12px">
+      ${avail.length?avail.map(a=>`<div class="as-row lead-card" data-q="${esc((snowCustomerName(a.customer_id)+' '+(a.address||'')).toLowerCase())}" style="padding:8px 10px;cursor:pointer;margin:4px 0;${a.active===false?'opacity:.5':''}" onclick="snowAddStopPick('${run.id}','${a.id}')">
+        <b>${esc(snowCustomerName(a.customer_id))}</b><div style="font-size:11px;color:var(--muted)">${esc(a.address||'')}</div></div>`).join(''):'<div class="lempty">Every account is already on this run.</div>'}
+    </div>
+    <div style="display:flex;justify-content:flex-end"><button class="btn btn-ghost btn-sm" onclick="document.getElementById('snowAddStopMod').remove()">Close</button></div>
+  </div></div>`;
+  document.body.insertAdjacentHTML('beforeend',html);
+  setTimeout(()=>document.getElementById('asFilter')?.focus(),50);
+}
+function snowAddStopFilter(q){q=(q||'').trim().toLowerCase();document.querySelectorAll('#asList .as-row').forEach(r=>{r.style.display=!q||r.dataset.q.includes(q)?'':'none';});}
+function snowAddStopPick(runId,accountId){
+  const run=snowRunById(runId);if(!run)return;
+  run.stop_ids=snowRunStopIds(run).concat([accountId]);
+  saveSnowRun(run);
+  document.getElementById('snowAddStopMod')?.remove();
+  renderSnowView();
+}
+
+// Fix a mis-logged visit: change the times, or delete it. Invoiced visits
+// are locked — the invoice is the record; delete the invoice first.
+function _snowToLocalInput(ts){if(!ts)return'';const d=new Date(ts);const p=n=>String(n).padStart(2,'0');return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;}
+function openSnowVisitEditor(visitId){
+  if(!canManageSnow()){alert('Only a manager can edit visits.');return;}
+  const v=snowVisits.find(x=>x.id===visitId);if(!v)return;
+  const a=snowAccountById(v.account_id);
+  const locked=!!v.invoiced_doc_id;
+  const inv=locked?docs.find(d=>d.id===v.invoiced_doc_id):null;
+  const html=`<div class="modal show" id="snowVisitMod"><div class="modal-content" style="padding:18px">
+    <div class="mtitle" style="margin-bottom:4px">Edit visit</div>
+    <div style="font-size:12px;color:var(--muted);margin-bottom:12px">${esc(a?snowCustomerName(a.customer_id):'')} · ${esc(a?a.address:'')}</div>
+    ${locked?`<div style="background:rgba(34,197,94,.12);border:1px solid #22c55e;border-radius:8px;padding:10px;font-size:12px;margin-bottom:12px">This visit is on invoice <b>${esc(inv?inv.num:'')}</b>. Open that invoice and fix the line there, or delete the invoice to unlock the visit.</div>`:''}
+    <div class="frow">
+      <div class="fg"><div class="flbl">Arrived</div><input class="finput" type="datetime-local" id="svArr" value="${_snowToLocalInput(v.arrived_at)}" ${locked?'disabled':''}></div>
+      <div class="fg"><div class="flbl">Left</div><input class="finput" type="datetime-local" id="svLeft" value="${_snowToLocalInput(v.left_at)}" ${locked?'disabled':''}></div>
+    </div>
+    <div class="fg"><div class="flbl">Price for this push ($)</div><input class="finput" type="number" step="0.01" min="0" id="svPrice" value="${v.price||0}" ${locked?'disabled':''}></div>
+    <div class="fg"><div class="flbl">Note</div><input class="finput" id="svNote" value="${esc(v.notes||'')}" ${locked?'disabled':''}></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end">
+      ${!locked?`<button class="btn btn-danger btn-sm" style="margin-right:auto" onclick="snowDeleteVisit('${v.id}')">Delete visit</button>`:''}
+      <button class="btn btn-ghost btn-sm" onclick="document.getElementById('snowVisitMod').remove()">${locked?'Close':'Cancel'}</button>
+      ${!locked?`<button class="btn btn-amber btn-sm" onclick="saveSnowVisitFromEditor('${v.id}')">Save</button>`:''}
+    </div>
+  </div></div>`;
+  document.body.insertAdjacentHTML('beforeend',html);
+}
+function saveSnowVisitFromEditor(visitId){
+  const v=snowVisits.find(x=>x.id===visitId);if(!v||v.invoiced_doc_id)return;
+  const arr=document.getElementById('svArr').value;const left=document.getElementById('svLeft').value;
+  if(!arr){alert('Arrived time is required. Use Delete if the stop was never made.');return;}
+  if(left&&new Date(left)<new Date(arr)){alert('Left time is before arrived time.');return;}
+  v.arrived_at=new Date(arr).toISOString();
+  v.left_at=left?new Date(left).toISOString():null;
+  v.price=parseFloat(document.getElementById('svPrice').value)||0;
+  v.notes=document.getElementById('svNote').value.trim();
+  v.edited_by=currentUser?.id||null;
+  saveSnowVisit(v);
+  document.getElementById('snowVisitMod')?.remove();
+  renderSnowView();
+}
+async function snowDeleteVisit(visitId){
+  const v=snowVisits.find(x=>x.id===visitId);if(!v)return;
+  if(v.invoiced_doc_id){alert('This visit is already invoiced.');return;}
+  if(!confirm('Delete this visit? The stop goes back to not-done and will not be billed.'))return;
+  snowVisits=snowVisits.filter(x=>x.id!==visitId);
+  document.getElementById('snowVisitMod')?.remove();
+  renderSnowView();
+  try{await sb.del('snow_visits',visitId);}catch(e){console.error(e);alert('Delete failed: '+e.message);loadSnowRemote();}
 }
 function snowFinishRun(id){const r=snowRunById(id);if(!r)return;r.status='done';saveSnowRun(r);renderSnowView();}
 function snowReopenRun(id){const r=snowRunById(id);if(!r)return;r.status='active';saveSnowRun(r);renderSnowView();}
