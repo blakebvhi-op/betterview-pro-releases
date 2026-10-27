@@ -15693,34 +15693,103 @@ function snowUninvoicedVisits(accountId){
   return snowVisits.filter(v=>v.account_id===accountId&&v.left_at&&!v.invoiced_doc_id)
     .sort((x,y)=>(x.arrived_at||'').localeCompare(y.arrived_at||''));
 }
+let snowBillSel=new Set();     // selected visit ids on the Billing tab
+let snowBillOpen=new Set();    // expanded account ids
 function renderSnowBilling(){
   const body=document.getElementById('snowBody');
-  const rows=snowAccounts.map(a=>{
-    const vs=snowUninvoicedVisits(a.id);
+  const allUn=snowAccounts.map(a=>[a,snowUninvoicedVisits(a.id)]).filter(([a,vs])=>vs.length);
+  const allIds=new Set(allUn.flatMap(([a,vs])=>vs.map(v=>v.id)));
+  snowBillSel.forEach(id=>{if(!allIds.has(id))snowBillSel.delete(id);});
+  const selVisits=[...snowBillSel].map(id=>snowVisits.find(v=>v.id===id)).filter(Boolean);
+  const selAmt=selVisits.reduce((s,v)=>s+(parseFloat(v.price)||0),0);
+  const selAccts=new Set(selVisits.map(v=>v.account_id)).size;
+  const visitRow=v=>`<label style="display:flex;gap:8px;align-items:center;padding:6px 4px;font-size:12px;border-top:1px solid var(--iron)">
+      <input type="checkbox" ${snowBillSel.has(v.id)?'checked':''} style="accent-color:var(--amber)" onchange="snowBillToggle('${v.id}',this.checked)">
+      <span style="flex:1;min-width:0">${snowFmtTs(v.arrived_at)}${v.left_at?' → '+new Date(v.left_at).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'}):''} <span style="color:var(--muted)">· ${esc(snowDriverName(v.user_id))}</span>${v.notes?`<div style="color:var(--muted);font-size:11px">${esc(v.notes)}</div>`:''}</span>
+      <b>${snowFmtMoney(v.price)}</b>
+      <button class="btn btn-ghost btn-xs" onclick="event.preventDefault();openSnowVisitEditor('${v.id}')">✎</button>
+      <button class="btn btn-ghost btn-xs" style="color:var(--danger)" onclick="event.preventDefault();snowDeleteVisit('${v.id}')">✕</button>
+    </label>`;
+  const acctRow=(a,vs)=>{
     const amt=vs.reduce((s,v)=>s+(parseFloat(v.price)||0),0);
+    const open=snowBillOpen.has(a.id);
+    const nSel=vs.filter(v=>snowBillSel.has(v.id)).length;
     return `<div class="lead-card">
       <div style="display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap">
-        <div style="min-width:0;flex:1">
-          <div class="lead-name">${esc(snowCustomerName(a.customer_id))}</div>
+        <input type="checkbox" ${nSel===vs.length?'checked':''} style="accent-color:var(--amber)" title="Select all pushes for this account" onchange="snowBillToggleAcct('${a.id}',this.checked)">
+        <div style="min-width:0;flex:1;cursor:pointer" onclick="snowBillExpand('${a.id}')">
+          <div class="lead-name">${open?'▾':'▸'} ${esc(snowCustomerName(a.customer_id))}</div>
           <div style="font-size:12px;color:var(--muted)">${esc(a.address||'')}</div>
-          <div style="font-size:12px;margin-top:3px">${vs.length} uninvoiced push${vs.length===1?'':'es'} · <b style="color:var(--amber)">${snowFmtMoney(amt)}</b></div>
+          <div style="font-size:12px;margin-top:3px">${vs.length} push${vs.length===1?'':'es'} · <b style="color:var(--amber)">${snowFmtMoney(amt)}</b>${nSel?` · ${nSel} selected`:''}</div>
         </div>
         <div style="display:flex;gap:6px;flex-shrink:0;flex-wrap:wrap">
           <button class="btn btn-ghost btn-sm" onclick="snowCreateEstimate('${a.id}')">Estimate</button>
-          <button class="btn btn-amber btn-sm" onclick="snowCreateInvoice('${a.id}')" ${vs.length?'':'disabled'}>Invoice ${vs.length?`(${vs.length})`:''}</button>
+          <button class="btn btn-amber btn-sm" onclick="snowCreateInvoice('${a.id}')">Invoice all (${vs.length})</button>
         </div>
-      </div></div>`;
-  });
+      </div>
+      ${open?`<div style="margin-top:8px">${vs.map(visitRow).join('')}</div>`:''}
+    </div>`;
+  };
+  const noVisitAccts=snowAccounts.filter(a=>!snowUninvoicedVisits(a.id).length);
   const snowDocs=docs.filter(d=>isSnowDocType(d.type)).sort((x,y)=>(y.created||0)-(x.created||0));
   body.innerHTML=`
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px;position:sticky;top:0;background:var(--steel);padding:4px 0;z-index:2">
+      <label style="font-size:12px;display:flex;gap:6px;align-items:center;cursor:pointer"><input type="checkbox" ${allIds.size&&snowBillSel.size===allIds.size?'checked':''} style="accent-color:var(--amber)" onchange="snowBillSelectAll(this.checked)"> All (${allIds.size})</label>
+      <span style="font-size:12px;color:var(--muted)">${snowBillSel.size?`${snowBillSel.size} selected · ${snowFmtMoney(selAmt)} · ${selAccts} account${selAccts===1?'':'s'}`:'Select pushes to delete or invoice in bulk'}</span>
+      <div style="margin-left:auto;display:flex;gap:6px">
+        <button class="btn btn-danger btn-sm" ${snowBillSel.size?'':'disabled'} onclick="snowBillDeleteSelected()">Delete selected</button>
+        <button class="btn btn-amber btn-sm" ${snowBillSel.size?'':'disabled'} onclick="snowBillInvoiceSelected()">Invoice selected</button>
+      </div>
+    </div>
     <div class="cust-sec-label">Ready to bill</div>
-    ${rows.length?rows.join(''):'<div class="lempty">No snow accounts yet.</div>'}
+    ${allUn.length?allUn.map(([a,vs])=>acctRow(a,vs)).join(''):'<div class="lempty">No uninvoiced pushes.</div>'}
+    ${noVisitAccts.length?`<details style="margin-top:10px"><summary style="font-size:12px;color:var(--muted);cursor:pointer">${noVisitAccts.length} account${noVisitAccts.length===1?'':'s'} with nothing to bill — send an estimate</summary>
+      ${noVisitAccts.map(a=>`<div class="lead-card" style="padding:8px 12px;display:flex;justify-content:space-between;align-items:center;gap:8px"><div style="min-width:0"><b style="font-size:13px">${esc(snowCustomerName(a.customer_id))}</b><div style="font-size:11px;color:var(--muted)">${esc(a.address||'')}</div></div><button class="btn btn-ghost btn-sm" onclick="snowCreateEstimate('${a.id}')">Estimate</button></div>`).join('')}</details>`:''}
     <div class="cust-sec-label" style="margin-top:14px">Snow documents</div>
     ${snowDocs.length?snowDocs.slice(0,60).map(d=>{const cfg=getDocTypeConfig(d.type);return `<div class="lead-card" style="cursor:pointer;padding:9px 12px" onclick="openDocEditor('${d.id}')">
       <div style="display:flex;justify-content:space-between;gap:8px;align-items:center">
         <div><b style="color:${cfg.color}">${esc(d.num||'')}</b> ${esc(d.clientName||'')}<div style="font-size:11px;color:var(--muted)">${esc(d.date||'')} · ${(d.status||'draft').toUpperCase()}</div></div>
         <div style="font-weight:600">${snowFmtMoney(calcDocTotal(d).grand)}</div>
       </div></div>`;}).join(''):'<div class="lempty">No snow estimates or invoices yet.</div>'}`;
+}
+function snowBillExpand(id){if(snowBillOpen.has(id))snowBillOpen.delete(id);else snowBillOpen.add(id);renderSnowView();}
+function snowBillToggle(id,on){if(on)snowBillSel.add(id);else snowBillSel.delete(id);renderSnowView();}
+function snowBillToggleAcct(accountId,on){snowUninvoicedVisits(accountId).forEach(v=>{if(on)snowBillSel.add(v.id);else snowBillSel.delete(v.id);});if(on)snowBillOpen.add(accountId);renderSnowView();}
+function snowBillSelectAll(on){snowBillSel.clear();if(on)snowAccounts.forEach(a=>snowUninvoicedVisits(a.id).forEach(v=>snowBillSel.add(v.id)));renderSnowView();}
+async function snowBillDeleteSelected(){
+  const ids=[...snowBillSel].filter(id=>{const v=snowVisits.find(x=>x.id===id);return v&&!v.invoiced_doc_id;});
+  if(!ids.length)return;
+  if(!confirm(`Delete ${ids.length} push${ids.length===1?'':'es'}? They will not be billed. This can't be undone.`))return;
+  snowVisits=snowVisits.filter(v=>!ids.includes(v.id));
+  snowBillSel.clear();renderSnowView();
+  const fails=[];
+  for(const id of ids){try{await sb.del('snow_visits',id);}catch(e){console.error(e);fails.push(id);}}
+  if(fails.length){alert(fails.length+' delete(s) failed — resyncing.');loadSnowRemote();}
+}
+// One invoice per account from whatever is selected.
+function snowBillInvoiceSelected(){
+  const sel=[...snowBillSel].map(id=>snowVisits.find(v=>v.id===id)).filter(v=>v&&!v.invoiced_doc_id&&v.left_at);
+  if(!sel.length)return;
+  const byAcct={};sel.forEach(v=>{(byAcct[v.account_id]=byAcct[v.account_id]||[]).push(v);});
+  const n=Object.keys(byAcct).length;
+  if(!confirm(`Create ${n} invoice${n===1?'':'s'} from ${sel.length} push${sel.length===1?'':'es'}?`))return;
+  const made=[];
+  Object.entries(byAcct).forEach(([aid,vs])=>{const d=_snowInvoiceFromVisits(aid,vs);if(d)made.push(d);});
+  snowBillSel.clear();
+  if(made.length===1){switchMain('est');openDocEditor(made[0].id);}
+  else renderSnowView();
+}
+function _snowInvoiceFromVisits(accountId,vs){
+  const a=snowAccountById(accountId);if(!a||!vs.length)return null;
+  vs=vs.slice().sort((x,y)=>(x.arrived_at||'').localeCompare(y.arrived_at||''));
+  const d=_snowBaseDoc(a,'snowinvoice');
+  d.status='invoiced';
+  d.scope='Snow plowing — '+(a.address||'');
+  d.lineItems=vs.map(v=>({cat:'labor',desc:'Snow plowing — '+snowFmtTs(v.arrived_at),qty:1,price:parseFloat(v.price)||0}));
+  docs.push(d);saveDocs();saveDocSync(d);
+  vs.forEach(v=>{v.invoiced_doc_id=d.id;saveSnowVisit(v);});
+  try{logDocActivity(d.id,`Snow invoice created from ${vs.length} visit${vs.length===1?'':'s'}`);}catch{}
+  return d;
 }
 function _snowBaseDoc(a,type){
   const c=customers.find(x=>x.id===a.customer_id)||{};
@@ -15740,17 +15809,10 @@ function snowCreateEstimate(accountId){
   switchMain('est');openDocEditor(d.id);
 }
 function snowCreateInvoice(accountId){
-  const a=snowAccountById(accountId);if(!a)return;
   const vs=snowUninvoicedVisits(accountId);
   if(!vs.length){alert('No completed, uninvoiced visits for this account.');return;}
-  const d=_snowBaseDoc(a,'snowinvoice');
-  d.status='invoiced';
-  d.scope='Snow plowing — '+(a.address||'');
-  d.lineItems=vs.map(v=>({cat:'labor',desc:'Snow plowing — '+snowFmtTs(v.arrived_at),qty:1,price:parseFloat(v.price)||0}));
-  docs.push(d);saveDocs();saveDocSync(d);
-  vs.forEach(v=>{v.invoiced_doc_id=d.id;saveSnowVisit(v);});
-  try{logDocActivity(d.id,`Snow invoice created from ${vs.length} visit${vs.length===1?'':'s'}`);}catch{}
-  switchMain('est');openDocEditor(d.id);
+  const d=_snowInvoiceFromVisits(accountId,vs);
+  if(d){switchMain('est');openDocEditor(d.id);}
 }
 
 // ── SETTINGS (owner): company toggle + per-user access ───────────────
