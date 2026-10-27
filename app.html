@@ -14996,7 +14996,7 @@ try{ startMessageAlerts(); }catch(e){ console.error('alerts init',e); }
 //         (owner | manager | profiles.snow_access).
 let snowAccounts=[],snowRoutes=[],snowRuns=[],snowVisits=[];
 let snowTableMissing=false;
-let snowSub='routes';          // routes | accounts | billing
+let snowSub='mine';            // mine | routes(dispatch) | accounts | billing
 // function declaration (hoisted) — renderDocList/updateDocPreview can run before this block is reached
 function isSnowDocType(t){return t==='snowestimate'||t==='snowinvoice';}
 
@@ -15087,9 +15087,9 @@ function renderSnowView(){
   const body=document.getElementById('snowBody');if(!body)return;
   const subs=document.getElementById('snowSubs');
   const manage=canManageSnow();
-  if(!manage&&snowSub!=='routes') snowSub='routes';
-  subs.innerHTML=[['routes','🛣 Dispatch'],['accounts','🏠 Accounts'],['billing','💰 Billing']]
-    .filter(([k])=>manage||k==='routes')
+  if(!manage&&snowSub!=='mine') snowSub='mine';
+  subs.innerHTML=[['mine','🚚 My Route'],['routes','🛣 Dispatch'],['accounts','🏠 Accounts'],['billing','💰 Billing']]
+    .filter(([k])=>manage||k==='mine')
     .map(([k,l])=>`<button class="sched-sub-pill ${snowSub===k?'active':''}" onclick="setSnowSub('${k}')">${l}</button>`).join('');
   if(snowTableMissing){
     body.innerHTML=`<div class="lempty">❄ Snow tables not found.<br><br>Run <b>snow-plowing-MIGRATION.sql</b> in the Supabase SQL editor, then tap Resync.</div>`;
@@ -15098,7 +15098,8 @@ function renderSnowView(){
   if(snowOpenRunId){renderSnowRunPage(snowOpenRunId);return;}
   if(snowSub==='accounts') renderSnowAccounts();
   else if(snowSub==='billing') renderSnowBilling();
-  else renderSnowRoutes();
+  else if(snowSub==='routes') renderSnowRoutes();
+  else renderSnowMine();
 }
 function setSnowSub(k){snowSub=k;snowOpenRunId=null;renderSnowView();}
 
@@ -15162,10 +15163,9 @@ function renderSnowRoutes(){
       ${runs.length?runs.map((r,i)=>runCard(r,i,runs.length)).join(''):'<div style="font-size:11px;color:var(--muted);padding:10px 4px;text-align:center">nothing queued</div>'}
     </div>`;
   };
-  let drivers=snowDrivers();
-  if(!manage) drivers=drivers.filter(m=>m.id===currentUser?.id);
+  const drivers=snowDrivers();
   const unassigned=dayRuns.filter(r=>!r.assigned_to);
-  const cols=drivers.map(m=>col(m.id,m.name)).join('')+(manage&&unassigned.length?col(null,'Unassigned'):'');
+  const cols=drivers.map(m=>col(m.id,m.name)).join('')+(unassigned.length?col(null,'Unassigned'):'');
   const routeChip=r=>`<div class="lead-card" style="padding:7px 10px;display:flex;align-items:center;gap:8px">
       <div style="flex:1;min-width:0;cursor:pointer" onclick="openSnowRouteEditor('${r.id}')"><b style="font-size:13px">🛣 ${esc(r.name||'Route')}</b> <span style="font-size:11px;color:var(--muted)">${(r.stop_ids||[]).length} stops</span></div>
       <select class="finput" style="font-size:11px;padding:3px 6px;width:auto" onchange="snowQuickAssign('${r.id}',this.value);this.value=''">
@@ -15184,6 +15184,38 @@ function renderSnowRoutes(){
     ${manage?`
     <div class="cust-sec-label" style="margin-top:18px;display:flex;align-items:center;gap:10px">Saved routes <button class="btn btn-amber btn-xs" onclick="openSnowRouteEditor()">+ New Route</button></div>
     ${snowRoutes.length?snowRoutes.map(routeChip).join(''):'<div class="lempty">No saved routes yet.</div>'}`:''}`;
+}
+// MY ROUTE — the signed-in user's own queue. Today first, then upcoming,
+// then recent completed. Same for owners and crew.
+function renderSnowMine(){
+  const body=document.getElementById('snowBody');
+  const me=currentUser?.id;const today=snowToday();
+  const mine=snowRuns.filter(r=>r.assigned_to===me);
+  const byQ=(a,b)=>(a.run_date||'').localeCompare(b.run_date||'')||(a.queue_order||0)-(b.queue_order||0);
+  const todayRuns=mine.filter(r=>r.run_date===today&&r.status!=='done').sort(byQ);
+  const upcoming=mine.filter(r=>r.run_date>today&&r.status!=='done').sort(byQ);
+  const overdue=mine.filter(r=>r.run_date<today&&r.status!=='done').sort(byQ);
+  const done=mine.filter(r=>r.status==='done').sort((a,b)=>(b.run_date||'').localeCompare(a.run_date||'')).slice(0,15);
+  const card=(run,qi)=>{
+    const p=snowRunProgress(run);const rt=snowRouteById(run.route_id);
+    const st=run.status==='done'?'#22c55e':run.status==='active'?'#f59e0b':'var(--iron)';
+    const first=snowRunStopIds(run).map(snowAccountById).filter(Boolean).find(a=>{const v=snowVisitFor(run.id,a.id);return !(v&&v.left_at);});
+    return `<div class="lead-card" style="cursor:pointer;border-left:4px solid ${st}" onclick="openSnowRun('${run.id}')">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:8px">
+        <div style="min-width:0;flex:1">
+          <div class="lead-name">${qi!=null?`<span style="color:var(--amber)">#${qi+1}</span> `:''}❄ ${esc(rt?rt.name:'(route deleted)')}</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:2px">${esc(run.run_date||'')} · ${p.done}/${p.total} stops${run.status==='active'?' · in progress':''}</div>
+          ${first&&run.status!=='done'?`<div style="font-size:11px;color:var(--muted)">Next: ${esc(snowCustomerName(first.customer_id))} — ${esc(first.address||'')}</div>`:''}
+        </div>
+        <span class="lbadge" style="background:${run.status==='done'?'#22c55e':run.status==='active'?'#f59e0b':'#94a3b8'};color:#fff">${(run.status||'planned').toUpperCase()}</span>
+      </div></div>`;
+  };
+  const sec=(label,list,numbered)=>list.length?`<div class="cust-sec-label" style="margin-top:12px">${label}</div>${list.map((r,i)=>card(r,numbered?i:null)).join('')}`:'';
+  body.innerHTML=`
+    ${overdue.length?`<div style="background:rgba(239,68,68,.1);border:1px solid #ef4444;border-radius:8px;padding:8px 10px;font-size:12px;margin-bottom:6px">${overdue.length} unfinished route${overdue.length===1?'':'s'} from earlier days</div>${overdue.map(r=>card(r)).join('')}`:''}
+    ${todayRuns.length?sec('Today',todayRuns,true):`<div class="lempty">${overdue.length?'':'Nothing on your route today.'}</div>`}
+    ${sec('Upcoming',upcoming,false)}
+    ${sec('Completed',done,false)}`;
 }
 // one-tap assign from the saved-routes tray → end of that driver's queue on the board date
 function snowQuickAssign(routeId,driverId){
@@ -15251,7 +15283,7 @@ function renderSnowRunPage(id){
   };
   body.innerHTML=`
     <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap">
-      <button class="btn btn-ghost btn-sm" onclick="closeSnowRun()">← Board</button>
+      <button class="btn btn-ghost btn-sm" onclick="closeSnowRun()">← ${snowSub==='routes'?'Dispatch':'My Route'}</button>
       <div class="lead-name" style="flex:1">❄ ${esc(rt?rt.name:'Route')} <span style="font-size:12px;color:var(--muted);font-weight:400">${esc(run.run_date||'')} · ${esc(snowDriverName(run.assigned_to))} · ${p.done}/${p.total}</span></div>
       ${manage&&run.status!=='done'?`<button class="btn btn-ghost btn-sm" onclick="openSnowAddStop('${run.id}')">+ Add stop</button>`:''}
       ${manage?`<button class="btn btn-ghost btn-sm" onclick="openSnowRunEditor('${run.route_id}','${run.id}')">Edit</button>`:''}
